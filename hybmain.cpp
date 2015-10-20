@@ -98,7 +98,7 @@ int main(int argc, char** argv){
         alps::results_type<hybridization>::type results = collect_results(s);
         std::string output_path = boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/simulation/results";
         save_results(results, parms, output_file, output_path); //"/simulation/results");
-        //master_final_tasks(results, parms, output_file);
+        master_final_tasks(results, parms, output_file);
 #ifdef ALPS_HAVE_MPI
       } else{ //on any slave: send back results to master.
         collect_results(s);
@@ -131,7 +131,7 @@ void master_final_tasks(const alps::results_type<hybridization>::type &results,
                         const std::string &output_name){
   //do some post processing: collect Green functions and write
   //them into hdf5 files; calls compute vertex at the very end
-  //std::cout << "final task starts...\n";
+  std::cout << "final task starts...\n";
   //std::cout << results["Sign"].count() << std::endl;
   alps::hdf5::archive solver_output(output_name, "a");
 //
