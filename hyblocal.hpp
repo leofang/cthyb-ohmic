@@ -90,6 +90,9 @@ private:
   chemical_potential mu_;
   ret_int_fun K_;
   
+  // Leo Fang: number of reservoirs
+  int n_env_;   
+
   double beta_;
   int n_orbitals_;
   bool use_retarded_interaction_;

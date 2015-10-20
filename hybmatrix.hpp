@@ -38,9 +38,15 @@
 
 //simple matrix that uses BLAS calls for rank one and matrix vector.
 typedef std::map<double,std::size_t> hyb_map_t;
+// Leo Fang: a vectorized vesion of the above map for colored operators
+typedef std::vector< std::map<double,std::size_t> > hyb_vector_map_t;
+
 class hybmatrix:public blas_matrix{
 public:
-  hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; }
+  hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; 
+  //Leo Fang: introduce multiple reservoirs
+  n_env_=p["N_ENV"]|1;
+}
   hybmatrix(const hybmatrix &rhs) 
       :blas_matrix(rhs)
       ,cdagger_index_map_(rhs.cdagger_index_map_)
@@ -76,12 +82,20 @@ public:
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
   void measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl, const std::map<double,double> &F_prefactor, double sign) const;
   void consistency_check() const;
+
 private:
 
   //map of start/end times and their corresponding rows and columns in the matrix.
   hyb_map_t cdagger_index_map_;
   hyb_map_t c_index_map_;
-    
+
+  // Leo Fang: a vectorized vesion of the above map for colored operators
+  hyb_vector_map_t cdagger_index_vector_map_;
+  hyb_vector_map_t c_index_vector_map_;
+ 
+  // Leo Fang: number of reservoirs
+  int n_env_;
+   
   //auxiliary column and row vectors for inserting and removing elements.
   std::vector<double> Q;
   std::vector<double> R;

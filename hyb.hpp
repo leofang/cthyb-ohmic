@@ -120,6 +120,9 @@ private:
   std::size_t n_orbitals;
   double sign;
 
+  //Leo Fang: number of reservoirs
+  std::size_t n_env;
+
   //physics parameters
   double beta;
 //  double U_,MU_;

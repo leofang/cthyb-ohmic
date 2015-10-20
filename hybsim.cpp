@@ -64,7 +64,8 @@ hyb_config(parms)
   total_sweeps = parms["SWEEPS"];                                                  //Sweeps to be done in total
   n_orbitals = parms["N_ORBITALS"];                                                //number of orbitals
   sign = 1.;                                                                       //fermionic sign. plus or minus one.
-  
+  n_env = parms["N_ENV"]|1;							   //Leo Fang: number of reservoirs
+
   //initializing physics parameters
   beta = parms["BETA"];                                                            //inverse temperature
 //  U_ = parms["U"];

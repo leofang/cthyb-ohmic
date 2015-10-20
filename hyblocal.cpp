@@ -38,6 +38,7 @@ K_(p){
   beta_=p["BETA"];
   n_orbitals_=p["N_ORBITALS"];
 //    std::cerr << "Start ...";
+  n_env_=p["N_ENV"]|1;   //Leo Fang: number of reservoirs
   segments_.resize(n_orbitals_);
   zero_order_orbital_occupied_.resize(n_orbitals_,false);
 //    std::cerr << " done\n";
