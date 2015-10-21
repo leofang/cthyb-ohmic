@@ -102,6 +102,9 @@ private:
 } local_configuration;
 
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
+
+
+
 #ifndef COLORS
 #define COLORS
 #define cblack "\033[22;30m"

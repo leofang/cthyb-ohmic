@@ -29,6 +29,7 @@
 
 #include"hyblocal.hpp"
 #include<algorithm>
+#include<iomanip>
 
 local_configuration::local_configuration(const alps::params &p, int crank):
 crank_(crank),
@@ -162,6 +163,7 @@ double local_configuration::local_weight_change(const segment &seg, int orb, boo
   return weight;
 }
 
+
 bool local_configuration::has_overlap(const segment &seg,const int orb) {
 //  bool overlap = false;
   if(zero_order_orbital_occupied_[orb]){
@@ -185,6 +187,8 @@ double local_configuration::segment_overlap(const segment &seg1, const segment &
   double t2=std::min(seg1.t_end_, seg2.t_end_);
   return t2-t1<0?0.:t2-t1;
 }
+
+
 //find the distance to the next segment start (the next creation operator)
 double local_configuration::find_next_segment_start_distance(double time, int orbital){
   if(segments_[orbital].size()==0) return beta_; //no segments present
@@ -193,6 +197,8 @@ double local_configuration::find_next_segment_start_distance(double time, int or
     return (beta_-time+segments_[orbital].begin()->t_start_); //wrap around
   return it->t_start_-time;
 }
+
+
 //find the distance to the next segment end (the next annihilation operator)
 //this is a tiny bit more involved, the end time may be part of the previous segment
 double local_configuration::find_next_segment_end_distance(double time, int orbital){
@@ -214,11 +220,14 @@ double local_configuration::find_next_segment_end_distance(double time, int orbi
   return std::min(distance, distance2);
 }
 
+
 void local_configuration::insert_segment(const segment &new_segment, int orbital){
   segments_[orbital].insert(new_segment);
   if(!times_set_.insert(new_segment.t_start_).second){std::stringstream s; s<<crank_; throw std::logic_error("rank "+s.str()+": insert segment start time could not be inserted.");}
   if(!times_set_.insert(new_segment.t_end_).second){std::stringstream s; s<<crank_; std::cout<<*this<<std::endl; std::cout<<"inserted segment: "<<new_segment<<"into orbital: "<<orbital<<std::endl; throw std::logic_error("rank "+s.str()+": insert segment end time could not be inserted.");}
 }
+
+
 void local_configuration::insert_antisegment(const segment &new_antisegment, int orbital){
   //find segment of which this one is a part
   //full line case
@@ -240,6 +249,8 @@ void local_configuration::insert_antisegment(const segment &new_antisegment, int
   if(!times_set_.insert(new_antisegment.t_start_).second){std::stringstream s; s<<crank_; throw std::logic_error("rank "+s.str()+": insert antisegment start time could not be inserted.");}
   if(!times_set_.insert(new_antisegment.t_end_).second){std::stringstream s; s<<crank_; throw std::logic_error("rank "+s.str()+": insert antisegment start time could not be inserted.");}
 }
+
+
 void local_configuration::remove_antisegment(const segment &new_antisegment, int orbital){
   //find segment of which this one is a part
   //full line case
@@ -280,12 +291,15 @@ void local_configuration::remove_antisegment(const segment &new_antisegment, int
   }
 }
 
+
 segment local_configuration::get_segment(int k, int orbital) const{
   std::set<segment>::const_iterator it= segments_[orbital].begin();
   if(k>=(int)(segments_[orbital].size())) throw std::logic_error("not enough segments to get this one.");
   advance(it, k);
   return *it;
 }
+
+
 void local_configuration::remove_segment(const segment &new_segment, int orbital){
   //std::cout<<clmagenta<<*this<<cblack<<std::endl;
   //std::cout<<clmagenta<<"segment to remove: "<<new_segment<<cblack<<std::endl;
@@ -306,6 +320,8 @@ void local_configuration::remove_segment(const segment &new_segment, int orbital
     throw std::logic_error("did not find end time to remove!");
   }
 }
+
+
 //compute the segment overlap and segment length, and return the weight
 //this is an O(k n_orbital) procedure in the expansion order and the number or orbitals.
 double local_configuration::local_energy(const segment &seg, int orb,bool d_mu_only) const{
@@ -357,6 +373,8 @@ double local_configuration::local_energy(const segment &seg, int orb,bool d_mu_o
     }
     return energy;
 }
+
+
 void local_configuration::check_consistency()const {
   for(int i=0;i<n_orbitals_;++i){
     if(order(i)<2) continue; //nothing to check if none or only one segment present
@@ -390,6 +408,8 @@ void local_configuration::check_consistency()const {
     }
   }
 }
+
+
 //get a vector back that for every creation time has the occupation in all the other orbitals
 //we could make this linear in tauprime, right now it is quadratic with lots of searches.
 //returns a vector n(\tau') which we need for the improved estimators.
@@ -465,6 +485,8 @@ void local_configuration::check_consistency()const {
  }
  }
  */
+
+
 double local_configuration::density(int i, double tauprime) const{//density on orbital i at time tauprime
   if(segments_[i].size()==0) return zero_order_orbital_occupied_[i]?1.:0.;
   else{
@@ -528,6 +550,8 @@ void local_configuration::get_F_prefactor(std::vector<std::map<double,double> > 
     }
   }
 }
+
+
 /*
  void local_configuration::measure_density(std::vector<double> &densities, double sign) const{
  for(int i=0;i<n_orbitals_;++i){
@@ -547,6 +571,8 @@ void local_configuration::get_F_prefactor(std::vector<std::map<double,double> > 
  }
  }
  */
+
+
 void local_configuration::measure_density(std::vector<double> &densities, double sign) const{
   for(int i=0;i<n_orbitals_;++i) densities[i]+=segment_density(i)*sign;
 }
@@ -562,6 +588,8 @@ double local_configuration::segment_density(int i) const{//density on orbital i 
   }
   return density;
 }
+
+
 double local_configuration::measure_nn(int i, int j) const{
   if(i==j) return segment_density(i); //does not make much sense to call this function for i==j; also correct without this, but slow for i==j
   if(segments_[i].size()==0){
@@ -583,6 +611,8 @@ double local_configuration::measure_nn(int i, int j) const{
     }
   }
 }
+
+
 /*
  void local_configuration::get_density_vectors(std::vector<std::vector<double> > &n_vector) const{
  for(int i=0;i<n_orbitals_;++i){
@@ -594,6 +624,8 @@ double local_configuration::measure_nn(int i, int j) const{
  }
  }
  */
+
+
 void local_configuration::get_density_vectors(std::vector<std::vector<double> > &n_vectors) const{
   //this gives the same result as using local_configuration.density(), but is faster (linear in k instead of k log k for search in the map)
   for(int i=0; i<n_orbitals_; ++i){
@@ -623,6 +655,8 @@ void local_configuration::get_density_vectors(std::vector<std::vector<double> > 
     }
   }
 }
+
+
 void local_configuration::measure_nnw(int i, std::vector<double> &nnw_re, double sign) const{
   int N_W=nnw_re.size();
   //wm=0 has to be treated separately
@@ -643,6 +677,7 @@ void local_configuration::measure_nnw(int i, std::vector<double> &nnw_re, double
     }
   }
 }
+
 
 void local_configuration::state_map_segment_insert(state_map &states, const segment &s, int index) const{
   //works also for the case where an operator is inserted exactly at the point of an already present kink
@@ -685,7 +720,8 @@ void local_configuration::state_map_segment_insert(state_map &states, const segm
   states[s.t_end_]=current_state-index;//- for annihilator
 
 }
-#include<iomanip>
+
+
 void local_configuration::measure_sector_statistics(std::vector<double> &sector_statistics, double sign) const{//complexity: linear in n_orbitals_
   state_map states; //key is time, value is state
   //state map is organized such that an entry with time t and value s means that the impurity
@@ -726,6 +762,8 @@ void local_configuration::measure_sector_statistics(std::vector<double> &sector_
   }
 
 }
+
+
 // return the total weight of the local configuration
 //this is an expensive debug operation
 double local_configuration::full_weight() const{
