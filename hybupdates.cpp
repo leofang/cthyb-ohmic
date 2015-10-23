@@ -101,13 +101,16 @@ void hybridization::update(){
   //if(sweeps%1000==0) {std::cout <<  sweeps << " sweeps has been done...\n";}
 }
 
+
 void hybridization::change_zero_order_state_update(){
   //choose the orbital in which we do the update
   nprop[0]++;
   int orbital=(int)(random()*n_orbitals);
   
   //changing the zero order state only makes sense if we are at zero order.
-  if(!local_config.order(orbital)==0) return;
+  // Leo: To do: re-organize the code here. A parenthesis can be added anywhere since the outcome is unaffected
+  // One can also use .exists() to determine whether it's empty or not. 
+  if( (!local_config.order(orbital)) == 0) return;
   
   //propose to change orbital from occuppied to unoccuppied.
   if(local_config.zero_order_orbital_occupied(orbital)){
@@ -131,6 +134,7 @@ void hybridization::change_zero_order_state_update(){
     }
   }
 }
+
 
 //// Perform a complete swap of segments between two orbitals
 //// THIS IS TOTALLY EXPERIMENTAL
@@ -329,23 +333,48 @@ void hybridization::global_flip_update()
 void hybridization::shift_segment_update(){
   ///TODO: implement this update!
 }
+
+
 void hybridization::insert_remove_segment_update(){
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
+
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red and blue) are considered, but it can be easily changed
+  if(random()<0.5){size_t color = 0;} 
+  else            {size_t color = 1;}
+
   if(random()<0.5){ insert_segment_update(orbital);}
   else            { remove_segment_update(orbital);}
 }
+
+
 void hybridization::insert_remove_antisegment_update(){
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
+
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red and blue) are considered, but it can be easily changed
+  if(random()<0.5){size_t color = 0;}
+  else            {size_t color = 1;}
+
   if(random()<0.5){ insert_antisegment_update(orbital);}
   else            { remove_antisegment_update(orbital);}
 }
+
+
 void hybridization::insert_remove_spin_flip_update(){
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
+
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red and blue) are considered, but it can be easily changed
+  if(random()<0.5){size_t color = 0;}
+  else            {size_t color = 1;}
+
   spin_flip_update(orbital);
 }
+
 
 void hybridization::insert_segment_update(int orbital){
   nprop[1]++;
@@ -353,6 +382,10 @@ void hybridization::insert_segment_update(int orbital){
   if(local_config.order(orbital)==0 && local_config.zero_order_orbital_occupied(orbital)) return; //can't insert segment, orbital is fully occuppied.
   double t_start=random()*beta; //start time of a segment
   if(local_config.exists(t_start)){ /*std::cerr<<"rare event, duplicate: "<<t_start<<std::endl; */ return;} //time already exists.
+  
+  //Leo: decide the color of the segment
+  int color=(int)(random()*n_env); 
+
   double t_next_segment_start=local_config.find_next_segment_start_distance(t_start,orbital);
   double t_next_segment_end=local_config.find_next_segment_end_distance(t_start,orbital);
   //std::cout<<"============================================"<<cblack<<std::endl;
@@ -368,6 +401,9 @@ void hybridization::insert_segment_update(int orbital){
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
   if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
   
+  //Leo: paint the color on the segment
+  //segment new_segment(t_start, t_end, color, color);
+
   //compute local weight of the new segment with t_start and t_end
   segment new_segment(t_start, t_end);
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, false);
@@ -391,6 +427,8 @@ void hybridization::insert_segment_update(int orbital){
     hyb_config.insert_segment(new_segment, orbital);
   }
 }
+
+
 void hybridization::remove_segment_update(int orbital){
   nprop[2]++;
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
@@ -429,6 +467,8 @@ void hybridization::remove_segment_update(int orbital){
 //      std::cout << clgreen<<"weight change removal: "<<fwa<<" control: "<<fwo*std::abs(weight_change)<<std::endl;
   }
 }
+
+
 void hybridization::insert_antisegment_update(int orbital){
   nprop[3]++;
   if(local_config.order(orbital)==0 && !local_config.zero_order_orbital_occupied(orbital)) return; //can't insert an antisegment, orbital is empty.
@@ -444,7 +484,7 @@ void hybridization::insert_antisegment_update(int orbital){
   double t_end=t_start+t_len; //((t_len<0.1*beta)?t_len:0.1*beta); //random()*t_next_segment_end;
   if(t_end >= beta) t_end-=beta;
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
-  if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
+  if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;  } //time already exists.
   
   //std::cout<<clgreen<<"antisegment insertion update: "<<std::endl<<cblack<<*this<<std::endl;
   //std::cout<<clgreen<<" antisegment start time: (cdagger): "<<t_start<<" end time (c): "<<t_end<<std::endl;
@@ -476,6 +516,7 @@ void hybridization::insert_antisegment_update(int orbital){
     //std::cout<<cred<<"done accepting insert antisegment."<<cblack<<std::endl;
   }
 }
+
 
 void hybridization::remove_antisegment_update(int orbital){
   nprop[4]++;
@@ -516,6 +557,7 @@ void hybridization::remove_antisegment_update(int orbital){
     //std::cout<<cred<<"done accepting remove antisegment."<<cblack<<std::endl;
   }
 }
+
 
 /********************************************************\
  New spin-flip updates
