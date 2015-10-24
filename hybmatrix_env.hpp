@@ -37,7 +37,7 @@
 //This is the hybridization matrix class responsible for computing determinant ratios and the like. Derived from a general blas matrix class that can handle elementary blas and lapack operations.
 
 //simple matrix that uses BLAS calls for rank one and matrix vector.
-typedef std::map<double,std::size_t> hyb_map_t;
+//typedef std::map<double,std::size_t> hyb_map_t;
 // Leo Fang: a vectorized vesion of the above map for colored operators
 typedef std::vector< std::map<double,std::size_t> > hyb_vector_map_t;
 
@@ -45,12 +45,12 @@ class hybmatrix:public blas_matrix{
 public:
   hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; 
   //Leo Fang: introduce multiple reservoirs
-  n_env_=p["N_ENV"]|1;
-}
+  n_env_=p["N_ENV"]|1;}
+
   hybmatrix(const hybmatrix &rhs) 
-      :blas_matrix(rhs)
-      ,cdagger_index_map_(rhs.cdagger_index_map_)
-      ,c_index_map_(rhs.c_index_map_)
+      :blas_matrix_vector(rhs)
+      ,cdagger_index_vector_map_(rhs.cdagger_index_vector_map_)
+      ,c_index_vector_map_(rhs.c_index_vector_map_)
       ,Q(rhs.Q)
       ,R(rhs.R)
       ,PinvQ(rhs.PinvQ)
@@ -65,9 +65,11 @@ public:
       ,measure_g2w_(rhs.measure_g2w_)
       ,measure_h2w_(rhs.measure_h2w_)
   {}
+
   ~hybmatrix() {
 //    std::cerr << "Deleting hybmatrix\n";
   }
+
   double hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta);
   double hyb_weight_change_remove(const segment &new_segment, int orbital, const hybfun &Delta);
   void insert_segment(const segment &new_segment, int orbital);
@@ -84,14 +86,16 @@ public:
   void consistency_check() const;
 
 private:
+  //Leo: a vector of blas_matrix
+  std::vector<blas_matrix> blas_matrix_vector(n_env_);
 
   //map of start/end times and their corresponding rows and columns in the matrix.
-  hyb_map_t cdagger_index_map_;
-  hyb_map_t c_index_map_;
+  //hyb_map_t cdagger_index_map_;
+  //hyb_map_t c_index_map_;
 
   // Leo Fang: a vectorized vesion of the above map for colored operators
-  hyb_vector_map_t cdagger_index_vector_map_;
-  hyb_vector_map_t c_index_vector_map_;
+  hyb_vector_map_t cdagger_index_vector_map_(n_env_);
+  hyb_vector_map_t c_index_vector_map_(n_env_);
  
   // Leo Fang: number of reservoirs
   int n_env_;

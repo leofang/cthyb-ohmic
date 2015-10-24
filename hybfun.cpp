@@ -62,12 +62,15 @@ for(std::size_t i=0; i<ntime();++i)
 void hybfun::read_hybridization_function(const alps::params &p){
   if(!p.defined("DELTA")) throw(std::invalid_argument(std::string("Parameter DELTA missing, filename for hybridization function not specified.")));
   std::string fname=p["DELTA"].cast<std::string>();
-  if(p.defined("DELTA_IN_HDF5") && p["DELTA_IN_HDF5"].cast<bool>()){//attempt to read from h5 archive
+  if(p.defined("DELTA_IN_HDF5") && p["DELTA_IN_HDF5"].cast<bool>())
+  {//attempt to read from h5 archive
     alps::hdf5::archive ar(fname, alps::hdf5::archive::READ);
-    if(p.defined("DMFT_FRAMEWORK") && p["DMFT_FRAMEWORK"].cast<bool>()){//read in as green_function
+    if(p.defined("DMFT_FRAMEWORK") && p["DMFT_FRAMEWORK"].cast<bool>())
+    {//read in as green_function
       read_hdf5(ar,"/Delta");
     }
-    else{//plain hdf5
+    else
+    {//plain hdf5
       std::vector<double> tmp(ntime());
       for(std::size_t j=0; j<nflavor(); j++){
         std::stringstream path; path<<"/Delta_"<<j;
@@ -78,7 +81,8 @@ void hybfun::read_hybridization_function(const alps::params &p){
       tmp.clear();
     }
   }
-  else{//read from text file
+  else
+  {//read from text file
     std::ifstream infile(fname.c_str());
     if(!infile.good()){
       throw(std::invalid_argument(std::string("could not open hybridization file (text format) ") + p["DELTA"] + " for Delta function"));

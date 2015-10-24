@@ -27,7 +27,7 @@
  *
  *****************************************************************************/
 
-#include "hybmatrix.hpp"
+#include "hybmatrix_env.hpp"
 
 //this was changed with update 51!
 //nomenclature: the c        is at the segment end  , so the time for c        is new_segment->t_end_
@@ -45,16 +45,20 @@
 
 //compute the hybridization weight change when an operator pair is inserted
 double hybmatrix::hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta){
+  //Leo: read the color of new_segment
+  size_t color_ = new_segment.c_start_;
+ 
   Q.resize(size());
   R.resize(size());
   PinvQ.resize(size());
   //column  Delta_i,last
-  for(hyb_map_t::const_iterator it=c_index_map_.begin();it!=c_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=c_index_vector_map_[color_].begin(); it!=c_index_vector_map_[color_].end(); ++it){
     Q[it->second]=Delta.interpolate(it->first-new_segment.t_start_, orbital); //this is the new column Q
   }
   
   //row Delta_last,i
-  for(hyb_map_t::const_iterator it=cdagger_index_map_.begin();it != cdagger_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=cdagger_index_vector_map_[color_].begin(); it != cdagger_index_vector_map_[color_].end(); ++it)
+  {
     R[it->second]=Delta.interpolate(new_segment.t_end_-it->first, orbital);  //this is the new row R
   }
   S=Delta.interpolate(new_segment.t_end_-new_segment.t_start_, orbital);  //this is the entry S

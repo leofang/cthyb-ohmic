@@ -28,7 +28,7 @@
 
 #include <alps/ngs.hpp>
 #include <fstream>
-#include "../green_function.h"
+#include "green_function.h"
 #ifndef HYB_RET_INT_FUN_HPP
 #define HYB_RET_INT_FUN_HPP
 
