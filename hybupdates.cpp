@@ -340,12 +340,14 @@ void hybridization::insert_remove_segment_update(){
   int orbital=(int)(random()*n_orbitals);
 
   //Leo: choose the color in which we do the update
-  //Now only two colors (red and blue) are considered, but it can be easily changed
-  if(random()<0.5){size_t color = 0;} 
-  else            {size_t color = 1;}
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
+  if(n_env == 1) { size_t color = 0; } // Only one color
+  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+          else            { size_t color = 1; } // red = 1 = L  
+  }
 
-  if(random()<0.5){ insert_segment_update(orbital);}
-  else            { remove_segment_update(orbital);}
+  if(random()<0.5){ insert_segment_update(orbital, color); }
+  else            { remove_segment_update(orbital, color); }
 }
 
 
@@ -355,11 +357,13 @@ void hybridization::insert_remove_antisegment_update(){
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red and blue) are considered, but it can be easily changed
-  if(random()<0.5){size_t color = 0;}
-  else            {size_t color = 1;}
+  if(n_env == 1) { size_t color = 0; } // Only one color
+  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+          else            { size_t color = 1; } // red = 1 = L  
+  }
 
-  if(random()<0.5){ insert_antisegment_update(orbital);}
-  else            { remove_antisegment_update(orbital);}
+  if(random()<0.5){ insert_antisegment_update(orbital, color); }
+  else            { remove_antisegment_update(orbital, color); }
 }
 
 
@@ -369,22 +373,21 @@ void hybridization::insert_remove_spin_flip_update(){
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red and blue) are considered, but it can be easily changed
-  if(random()<0.5){size_t color = 0;}
-  else            {size_t color = 1;}
+  if(n_env == 1) { size_t color = 0; } // Only one color
+  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+          else            { size_t color = 1; } // red = 1 = L  
+  }
 
   spin_flip_update(orbital);
 }
 
 
-void hybridization::insert_segment_update(int orbital){
+void hybridization::insert_segment_update(int orbital, size_t color){
   nprop[1]++;
   //std::cout<<clred<<"starting insertion update."<<cblack<<std::endl;
   if(local_config.order(orbital)==0 && local_config.zero_order_orbital_occupied(orbital)) return; //can't insert segment, orbital is fully occuppied.
   double t_start=random()*beta; //start time of a segment
   if(local_config.exists(t_start)){ /*std::cerr<<"rare event, duplicate: "<<t_start<<std::endl; */ return;} //time already exists.
-  
-  //Leo: decide the color of the segment
-  int color=(int)(random()*n_env); 
 
   double t_next_segment_start=local_config.find_next_segment_start_distance(t_start,orbital);
   double t_next_segment_end=local_config.find_next_segment_end_distance(t_start,orbital);
@@ -402,10 +405,8 @@ void hybridization::insert_segment_update(int orbital){
   if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
   
   //Leo: paint the color on the segment
-  //segment new_segment(t_start, t_end, color, color);
-
   //compute local weight of the new segment with t_start and t_end
-  segment new_segment(t_start, t_end);
+  segment new_segment(t_start, t_end, color, color);
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, false);
   
   //compute hybridization weight change
@@ -429,7 +430,7 @@ void hybridization::insert_segment_update(int orbital){
 }
 
 
-void hybridization::remove_segment_update(int orbital){
+void hybridization::remove_segment_update(int orbital, size_t color){
   nprop[2]++;
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
   int k=local_config.order(orbital);

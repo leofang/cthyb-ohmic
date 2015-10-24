@@ -222,12 +222,17 @@ public:
     size_=new_size;
     memory_size_=new_size;
   }
+
+
   void resize(fortran_int_t new_size){
     if(new_size==size_) return;
-    if(new_size<(fortran_int_t)(size_)){ //down is easy
-      if((fortran_int_t)new_size < (fortran_int_t)(memory_size_-30) && (fortran_int_t) new_size > 10){
+    if(new_size<(fortran_int_t)(size_))
+    { //down is easy
+      if((fortran_int_t)new_size < (fortran_int_t)(memory_size_-30) && (fortran_int_t) new_size > 10)
+      {
         double *new_values_=new double[new_size*new_size];
-        for(fortran_int_t i=0;i<new_size;++i){
+        for(fortran_int_t i=0;i<new_size;++i)
+        {
           memcpy(new_values_+i*new_size, values_+i*memory_size_, sizeof(double)*new_size); //for each row: copy the entire row.
         }
         delete[] values_;       //free memory
@@ -237,11 +242,16 @@ public:
       }
       size_=new_size;
       return;
-    } else if(new_size<= memory_size_){ //up is easy as long as we don't have to allocate new memory
+    } 
+    else if(new_size<= memory_size_)
+    { //up is easy as long as we don't have to allocate new memory
       size_=new_size;
-    } else{ //get new memory */
+    } 
+    else
+    { //get new memory */
       double *new_values_=new double[new_size*new_size];
-      for(fortran_int_t i=0;i<size_;++i){
+      for(fortran_int_t i=0;i<size_;++i)
+      {
         memcpy(new_values_+i*new_size, values_+i*memory_size_, sizeof(double)*size_); //for each row: copy the entire row.
       }
       delete[] values_;       //free memory
@@ -250,6 +260,8 @@ public:
       memory_size_=new_size;
     }
   }
+
+
   blas_matrix operator-(const blas_matrix &M2) const{
     blas_matrix Msum(*this);
     for(int i=0;i<size_;++i){

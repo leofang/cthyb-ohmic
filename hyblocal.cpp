@@ -57,6 +57,7 @@ K_(p){
   }
 }
 
+
 /* Leo Fang: for test purpose, print out the segment map */
 void local_configuration::print_time_map() const
 {
@@ -66,6 +67,7 @@ void local_configuration::print_time_map() const
        }
        std::cout << std::endl << std::endl;
 }
+
 
 /* Leo Fang: for test purpose, print out the segment times */
 void local_configuration::print_segments() const{
@@ -101,6 +103,7 @@ std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf
   return os;
 }
 
+
 //compute the segment overlap and segment length, and return the weight
 //this is an O(k n_orbital) procedure in the expansion order and the number or orbitals.
 double local_configuration::local_weight_change(const segment &seg, int orb, bool antisegment) const{
@@ -112,15 +115,20 @@ double local_configuration::local_weight_change(const segment &seg, int orb, boo
   //std::cout<<clmagenta<<"chemical potential weight is: "<<weight<<" mu: "<<mu_[orb]<<" length: "<<length<<cblack<<std::endl;
   
   //the interaction term needs the overlap between this orbital and all the other orbitals
+  //Leo: why make it static? The lifetime of this overlaps vector should not be infinite!
   static std::vector<double> overlaps(n_orbitals_, 0.); for(int i=0;i<n_orbitals_;++i) overlaps[i]=0.;
   for(int i=0;i<n_orbitals_;++i){
     if(i==orb) continue;
     
-    if(zero_order_orbital_occupied_[i]){
+    if(zero_order_orbital_occupied_[i])
+    {
       overlaps[i]=length;
-    }else{
+    }
+    else
+    {
       //find the first segment with time t_start > seg.t_start
-      for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it){
+      for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end(); ++it)
+      {
         overlaps[i]+=segment_overlap(seg, *it);
       }
     }
@@ -130,6 +138,7 @@ double local_configuration::local_weight_change(const segment &seg, int orb, boo
      std::cout<<"weight got an additional factor:"<<std::exp(-sgn*U_(orb,i)*overlaps[i])<<std::endl;
      }*/
   }
+
   //this is the retarded interaction stuff
   if(use_retarded_interaction_){
     bool is_removal=false;
@@ -193,9 +202,9 @@ double local_configuration::segment_overlap(const segment &seg1, const segment &
 double local_configuration::find_next_segment_start_distance(double time, int orbital){
   if(segments_[orbital].size()==0) return beta_; //no segments present
   std::set<segment>::const_iterator it=segments_[orbital].upper_bound(segment(time, 0.));
-  if(it==segments_[orbital].end())
+  if(it==segments_[orbital].end()) //Leo: "time" falls after the last segment
     return (beta_-time+segments_[orbital].begin()->t_start_); //wrap around
-  return it->t_start_-time;
+  return it->t_start_-time; //Leo: "time" falls in-between segments
 }
 
 
@@ -210,8 +219,10 @@ double local_configuration::find_next_segment_end_distance(double time, int orbi
   }
   //first possibility: like start time, the closest end-time is after this segment
   std::set<segment>::const_iterator it=segments_[orbital].upper_bound(segment(time, 0.));
-  if(it==segments_[orbital].end()) distance=(segments_[orbital].begin()->t_end_-time); //wrap around to end time
-  else distance=it->t_end_-time;
+  if(it==segments_[orbital].end()) //Leo: "time" falls after the last segment
+	distance=(segments_[orbital].begin()->t_end_-time); //wrap around to end time
+  else 
+	distance=it->t_end_-time; //Leo: "time" falls in-between segments
   if(distance<0) distance+=beta_;
   //second possibility: the closest end time is part of the previous segment
   if(it==segments_[orbital].begin()) it=segments_[orbital].end(); //wrap around
