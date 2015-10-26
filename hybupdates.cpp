@@ -342,9 +342,11 @@ void hybridization::insert_remove_segment_update(){
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
   if(n_env == 1) { size_t color = 0; } // Only one color
-  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
-          else            { size_t color = 1; } // red = 1 = L  
+  else if(n_env==2)
+  {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+     else            { size_t color = 1; } // red = 1 = L  
   }
+  else {throw std::runtime_error("The input N_ENV>2 is currently not supported.")}
 
   if(random()<0.5){ insert_segment_update(orbital, color); }
   else            { remove_segment_update(orbital, color); }

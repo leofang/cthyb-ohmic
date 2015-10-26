@@ -35,6 +35,7 @@
 //simple matrix that uses BLAS calls for rank one and matrix vector.
 class blas_matrix{
 public:
+  //Leo: constructor with one parameter
   blas_matrix(fortran_int_t size){
     if(size>0)
       values_=new double[size*size];
@@ -42,15 +43,21 @@ public:
     size_=size;
     memory_size_=size;
   }
+
+  //Leo: default constructor
   blas_matrix(){
     values_=0;
     size_=0;
     memory_size_=0;
   }
+
+  //Leo: destructor
   ~blas_matrix(){
     if(values_!=0)
       delete[] values_;
   }
+
+  //Leo: copy constructor
   blas_matrix(const blas_matrix&M){
     size_=M.size_;
     memory_size_=M.memory_size_;
@@ -59,6 +66,7 @@ public:
       memcpy(values_, M.values_, memory_size_*memory_size_*sizeof(double));
     } else values_=0;
   }
+
   inline double &operator()(const fortran_int_t i, const fortran_int_t j){return *(values_+(i*memory_size_+j));}
   inline const double &operator()(const fortran_int_t i, const fortran_int_t j) const {return *(values_+(i*memory_size_+j));}
   //blas_matrix size

@@ -64,6 +64,7 @@ public:
       ,beta_(rhs.beta_)
       ,measure_g2w_(rhs.measure_g2w_)
       ,measure_h2w_(rhs.measure_h2w_)
+      ,n_env_(rhs.n_env_) //Leo: number of reservoirs
   {}
 
   ~hybmatrix() {
