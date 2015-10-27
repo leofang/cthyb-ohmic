@@ -138,30 +138,47 @@ void hybridization::sanity_check(const alps::params &parms){
   //NOTE: these checks are likely not to be complete, passing all checks does not guarantee all parameters to be meaningful!
   
   //first check that all mandatory parameters are defined
-  if(!parms.defined("N_TAU")) throw std::invalid_argument("please specify the parameter N_TAU");
-  if(!parms.defined("BETA")) throw std::invalid_argument("please specify parameter BETA for inverse temperature");
-  if(!parms.defined("N_MEAS")) throw std::invalid_argument("please specify parameter N_MEAS for measurement interval");
-  if(!parms.defined("THERMALIZATION") ||
-     !parms.defined("SWEEPS") ||
-     !parms.defined("N_ORBITALS") ) throw std::invalid_argument("please specify parameters THERMALIZATION, SWEEPS, and N_ORBITALS");
+  if(!parms.defined("N_TAU")) 
+	throw std::invalid_argument("please specify the parameter N_TAU");
+  if(!parms.defined("BETA")) 
+	throw std::invalid_argument("please specify parameter BETA for inverse temperature");
+  if(!parms.defined("N_MEAS")) 
+	throw std::invalid_argument("please specify parameter N_MEAS for measurement interval");
+  if(!parms.defined("THERMALIZATION") || !parms.defined("SWEEPS") || !parms.defined("N_ORBITALS") ) 
+	throw std::invalid_argument("please specify parameters THERMALIZATION, SWEEPS, and N_ORBITALS");
   
   //check paramater that are conditionally required
-  if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");
-  
-  if(parms["MEASURE_legendre"]|false && !parms.defined("N_LEGENDRE")) throw std::invalid_argument("please specify parameter N_LEGENDRE for # of Legendre coefficients to be measured");
-  if(parms["MEASURE_legendre"]|false && !parms.defined("N_MATSUBARA")) throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies");
-  if(parms["MEASURE_nnt"]|false && !parms.defined("N_nn")) throw std::invalid_argument("please specify the parameter N_nn for # of imaginary time points for the density-density correlator");
-  if(parms["MEASURE_nnw"]|false && !parms.defined("N_W")) throw std::invalid_argument("please specify the parameter N_W for # of bosonic frequencies for the density-density correlator");
-  if(parms["MEASURE_g2w"]|false || parms["MEASURE_h2w"]|false ){
-    if(!parms.defined("N_w2") ) throw std::invalid_argument("please specify the parameter N_w2 for # of fermionic Matsubara frequencies for two-particle functions");
-    if(!parms.defined("N_W") ) throw std::invalid_argument("please specify the parameter N_W for # of bosonic Matsubara frequencies for two-particle functions");
-    if((int)parms["N_w2"]%2!=0) throw std::invalid_argument("parameter N_w2 must be even");
+  //Leo: stop simulation if N_ENV is larger than 2 
+  //TODO: remove this restriction in the future!
+  if(parms.defined["N_ENV"] && parms["N_ENV"]>2)
+	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2.");
+  if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) 
+	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");
+  if(parms["MEASURE_legendre"]|false && !parms.defined("N_LEGENDRE")) 
+	throw std::invalid_argument("please specify parameter N_LEGENDRE for # of Legendre coefficients to be measured");
+  if(parms["MEASURE_legendre"]|false && !parms.defined("N_MATSUBARA")) 
+	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies");
+  if(parms["MEASURE_nnt"]|false && !parms.defined("N_nn")) 
+	throw std::invalid_argument("please specify the parameter N_nn for # of imaginary time points for the density-density correlator");
+  if(parms["MEASURE_nnw"]|false && !parms.defined("N_W")) 
+	throw std::invalid_argument("please specify the parameter N_W for # of bosonic frequencies for the density-density correlator");
+  if(parms["MEASURE_g2w"]|false || parms["MEASURE_h2w"]|false )
+  {
+    if(!parms.defined("N_w2") ) 
+	throw std::invalid_argument("please specify the parameter N_w2 for # of fermionic Matsubara frequencies for two-particle functions");
+    if(!parms.defined("N_W") ) 
+	throw std::invalid_argument("please specify the parameter N_W for # of bosonic Matsubara frequencies for two-particle functions");
+    if((int)parms["N_w2"]%2!=0) 
+	throw std::invalid_argument("parameter N_w2 must be even");
   }
-  if(parms["COMPUTE_VERTEX"]|false){
-    if( !(parms["MEASURE_freq"]|false) ) throw std::invalid_argument("frequency measurement is required for computing the vertex, please set MEASURE_freq=1");
-    
-    if(! (parms["MEASURE_g2w"]|false || parms["MEASURE_h2w"]|false ) ) throw std::invalid_argument("at least one two-particle quantity is required for computing the vertex, set MEASURE_g2w=1 or MEASURE_h2w=1");
-    if((int) parms["N_MATSUBARA"] < ((int)parms["N_w2"]/2 + (int)parms["N_W"] - 1) ) throw std::invalid_argument("for computing the vertex, N_MATSUBARA must be at least N_w2/2+N_W-1");
+  if(parms["COMPUTE_VERTEX"]|false)
+  {
+    if( !(parms["MEASURE_freq"]|false) ) 
+	throw std::invalid_argument("frequency measurement is required for computing the vertex, please set MEASURE_freq=1"); 
+    if(! (parms["MEASURE_g2w"]|false || parms["MEASURE_h2w"]|false ) ) 
+	throw std::invalid_argument("at least one two-particle quantity is required for computing the vertex, set MEASURE_g2w=1 or MEASURE_h2w=1");
+    if((int) parms["N_MATSUBARA"] < ((int)parms["N_w2"]/2 + (int)parms["N_W"] - 1) ) 
+	throw std::invalid_argument("for computing the vertex, N_MATSUBARA must be at least N_w2/2+N_W-1");
   }
   VERBOSE = (parms["VERBOSE"]|false);
   

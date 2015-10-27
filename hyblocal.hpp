@@ -73,7 +73,7 @@ public:
   void state_map_segment_insert(state_map &states, const segment &s, int state) const;
   void measure_sector_statistics(std::vector<double> &sector_statistics, double sign) const;
   friend std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
-  
+
   //debug functions
   void check_consistency() const;
   double full_weight() const;
@@ -96,10 +96,10 @@ private:
   double beta_;
   int n_orbitals_;
   bool use_retarded_interaction_;
-  std::vector<std::set<segment> > segments_;
+  std::vector< std::set<segment> >  segments_;
   std::vector<bool > zero_order_orbital_occupied_; //special case for perturbation order zero, where the orbital can either be occupied or empty. True means it is occupied, false is empty.
   std::set<double> times_set_; //this is a map making sure we don't have any times double, which would otherwise confuse the commutators.
-} local_configuration;
+} local_configuration; //Leo: is this line necessary?
 
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
 

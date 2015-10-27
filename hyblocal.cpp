@@ -31,11 +31,8 @@
 #include<algorithm>
 #include<iomanip>
 
-local_configuration::local_configuration(const alps::params &p, int crank):
-crank_(crank),
-U_(p),
-mu_(p),
-K_(p){
+local_configuration::local_configuration(const alps::params &p, int crank): crank_(crank), U_(p), mu_(p), K_(p)
+{
   beta_=p["BETA"];
   n_orbitals_=p["N_ORBITALS"];
 //    std::cerr << "Start ...";
@@ -44,14 +41,16 @@ K_(p){
   zero_order_orbital_occupied_.resize(n_orbitals_,false);
 //    std::cerr << " done\n";
   use_retarded_interaction_=p.defined("RET_INT_K");
-  if(use_retarded_interaction_){
+  if(use_retarded_interaction_)
+  {
     double Kp0=K_.interpolate_deriv(0.0);//K'(0^+)
     U_.apply_shift(-2.*Kp0); //apply static shift caused by the retarded interaction
     mu_.apply_shift(+Kp0);
   }
   
   extern int global_mpi_rank;
-  if(global_mpi_rank==0){
+  if(global_mpi_rank==0)
+  {
     std::cout<<U_<<mu_<<std::endl;
     std::cout<<*this<<std::endl;
   }
@@ -139,36 +138,37 @@ double local_configuration::local_weight_change(const segment &seg, int orb, boo
      }*/
   }
 
+  //Leo: Turn it off for now because I don't understand this part...
   //this is the retarded interaction stuff
-  if(use_retarded_interaction_){
-    bool is_removal=false;
-    double retarded_weight=0;
-    if((seg.t_start_==0) && (seg.t_end_==beta_)){ //not really a segment but a full line
-      retarded_weight=0.;
-    }else{
-      for(int i=0;i<n_orbitals_;++i){
-        for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it){
-          retarded_weight+=sgn*K_.interpolate(seg.t_start_-it->t_start_);
-          retarded_weight-=sgn*K_.interpolate(seg.t_start_-it->t_end_);
-          retarded_weight-=sgn*K_.interpolate(seg.t_end_-it->t_start_);
-          retarded_weight+=sgn*K_.interpolate(seg.t_end_-it->t_end_);
-          //subtract doubly counted contribution if it is equal orbital:
-          if((it->t_start_==seg.t_start_) || (it->t_start_==seg.t_end_)){ //segment remove
-            //            std::cout<<"we have an antisegment remove!"<<std::endl;
-            is_removal=true;
-          }
-        }
-      }
-      //      std::cout<<"taking care of antisegment remove."<<std::endl;
-      if(is_removal){
-        retarded_weight+=K_.interpolate(seg.t_end_-seg.t_start_);
-      }else{
-        retarded_weight-=K_.interpolate(seg.t_end_-seg.t_start_);
-      }
-    }
-    //std::cout<<clblue<<"is_removal is: "<<is_removal<<" (true: "<<true<<")"<<std::endl;
-    weight*=std::exp(retarded_weight);
-  }
+  //if(use_retarded_interaction_){
+  //  bool is_removal=false;
+  //  double retarded_weight=0;
+  //  if((seg.t_start_==0) && (seg.t_end_==beta_)){ //not really a segment but a full line
+  //    retarded_weight=0.;
+  //  }else{
+  //    for(int i=0;i<n_orbitals_;++i){
+  //      for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it){
+  //        retarded_weight+=sgn*K_.interpolate(seg.t_start_-it->t_start_);
+  //        retarded_weight-=sgn*K_.interpolate(seg.t_start_-it->t_end_);
+  //        retarded_weight-=sgn*K_.interpolate(seg.t_end_-it->t_start_);
+  //        retarded_weight+=sgn*K_.interpolate(seg.t_end_-it->t_end_);
+  //        //subtract doubly counted contribution if it is equal orbital:
+  //        if((it->t_start_==seg.t_start_) || (it->t_start_==seg.t_end_)){ //segment remove
+  //          //            std::cout<<"we have an antisegment remove!"<<std::endl;
+  //          is_removal=true;
+  //        }
+  //      }
+  //    }
+  //    //      std::cout<<"taking care of antisegment remove."<<std::endl;
+  //    if(is_removal){
+  //      retarded_weight+=K_.interpolate(seg.t_end_-seg.t_start_);
+  //    }else{
+  //      retarded_weight-=K_.interpolate(seg.t_end_-seg.t_start_);
+  //    }
+  //  }
+  //  //std::cout<<clblue<<"is_removal is: "<<is_removal<<" (true: "<<true<<")"<<std::endl;
+  //  weight*=std::exp(retarded_weight);
+  //}
   return weight;
 }
 
@@ -232,7 +232,8 @@ double local_configuration::find_next_segment_end_distance(double time, int orbi
 }
 
 
-void local_configuration::insert_segment(const segment &new_segment, int orbital){
+void local_configuration::insert_segment(const segment &new_segment, int orbital)
+{
   segments_[orbital].insert(new_segment);
   if(!times_set_.insert(new_segment.t_start_).second){std::stringstream s; s<<crank_; throw std::logic_error("rank "+s.str()+": insert segment start time could not be inserted.");}
   if(!times_set_.insert(new_segment.t_end_).second){std::stringstream s; s<<crank_; std::cout<<*this<<std::endl; std::cout<<"inserted segment: "<<new_segment<<"into orbital: "<<orbital<<std::endl; throw std::logic_error("rank "+s.str()+": insert segment end time could not be inserted.");}

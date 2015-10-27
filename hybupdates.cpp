@@ -38,39 +38,52 @@
 //6: perform a global exchange of two orbitals (2%)
 //see our review for details of these updates
 
-void hybridization::update(){
-
+void hybridization::update()
+{
   //one sweep is composed of N_MEAS Monte Carlo updates and one measurement (the latter only if thermalized)
   sweeps++;
   
   double rates[2] = {(spin_flip)?0.5:0.6,(spin_flip)?0.8:1.0};
 
-  for(std::size_t i=0;i<N_meas;++i){
+  for(std::size_t i=0;i<N_meas;++i)
+  {
     double update_type=random();
-    if (update_type < 0.02 && global_flip){
+    if (update_type < 0.02 && global_flip)
+    {
       global_flip_update();
-    } else if (update_type<0.1) {
+    } 
+    else if (update_type<0.1) 
+    {
       change_zero_order_state_update();
 //    } else if (update_type < 0) {
 //      shift_segment_update();
-    } else if (update_type < rates[0]) {
+    } 
+    else if (update_type < rates[0]) 
+    {
       insert_remove_segment_update();
-    } else if (update_type < rates[1]) {
+    } 
+    else if (update_type < rates[1]) 
+    {
       insert_remove_antisegment_update();
-    } else {
+    } 
+    else 
+    {
       insert_remove_spin_flip_update();
     }
 
-    if(is_thermalized()){
+    if(is_thermalized())
+    {
       measure_order();
-      if(MEASURE_time){
+      if(MEASURE_time)
+      {
         local_config.get_F_prefactor(F_prefactor);//compute segment overlaps in local config
         measure_G(F_prefactor);
       }
     }
 
     /* Leo Fang: for test purpose, print out the segment map */
-    if(sweeps<=debug_number) { 
+    if(sweeps<=debug_number) 
+    { 
 	std::cout << "|---------------------------------------------------------------------------------|\n";
 	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:\n"; local_config.print_segments(); 
 	std::cout << "|---------------------------------------------------------------------------------|\n\n";
@@ -78,7 +91,8 @@ void hybridization::update(){
 
   }//N_meas
 
-  if(VERBOSE && sweeps%output_period==0 && crank==0) {
+  if(VERBOSE && sweeps%output_period==0 && crank==0) 
+  {
     //  if(VERBOSE && crank==0 && boost::chrono::steady_clock::now() - lasttime > delay) {
     //    lasttime = boost::chrono::steady_clock::now();
     int tot_acc=0,cur_prec = std::cout.precision();
@@ -87,7 +101,8 @@ void hybridization::update(){
     std::cout << "  Total acceptance rate = " << std::setprecision(2) << std::fixed;
     std::cout << (((double)tot_acc)/(sweeps*N_meas))*100 << "%" << std::endl;
     std::cout << "  Individual acceptance rates for update " << std::endl;
-    for (int i=0;i<nacc.size();i++) {
+    for (int i=0;i<nacc.size();i++) 
+    {
       std::cout << "     " << update_type[i] << " = ";
       std::cout << std::setprecision(2) << std::fixed << (((double)nacc[i])/(sweeps*N_meas))*100 << "%";
       std::cout << " (proposal rate = ";
@@ -98,24 +113,34 @@ void hybridization::update(){
     std::cout.precision(cur_prec);
   }
 
+  //Leo: check the size of colored matrices for each orbital
+  for(int i=0; i<n_orbitals; i++)
+  { 
+    if( local_config.order(i)==0 ) continue; //Leo: no segment exists, and so does color, in 0-th order
+    if( hyb_config.total_color_matrix_size(i) != local_config.order(i) )
+        std::runtime_error("The total size of colored matrices for orbital " + std::to_string(i) + " is incorrect!");
+  }
+
   //if(sweeps%1000==0) {std::cout <<  sweeps << " sweeps has been done...\n";}
 }
 
 
-void hybridization::change_zero_order_state_update(){
+void hybridization::change_zero_order_state_update()
+{
   //choose the orbital in which we do the update
   nprop[0]++;
   int orbital=(int)(random()*n_orbitals);
   
   //changing the zero order state only makes sense if we are at zero order.
-  // Leo: To do: re-organize the code here. A parenthesis can be added anywhere since the outcome is unaffected
-  // One can also use .exists() to determine whether it's empty or not. 
+  // Leo: Todo: re-organize the code here. A parenthesis can be added anywhere since the outcome is unaffected
   if( (!local_config.order(orbital)) == 0) return;
   
   //propose to change orbital from occuppied to unoccuppied.
-  if(local_config.zero_order_orbital_occupied(orbital)){
+  if(local_config.zero_order_orbital_occupied(orbital))
+  {
     double local_weight_change=1./local_config.local_weight_change(segment(0,beta), orbital, false);
-    if(std::abs(local_weight_change)>random()){
+    if(std::abs(local_weight_change)>random())
+    {
       nacc[0]++;
       local_config.set_zero_order_orbital_occupied(orbital, false);
       if(local_weight_change<0)
@@ -123,10 +148,12 @@ void hybridization::change_zero_order_state_update(){
     }
   }
   //propose to change from unoccuppied to occuppied.
-  else{
+  else
+  {
     double local_weight_change=local_config.local_weight_change(segment(0,beta), orbital, false);
     //std::cout<<cmagenta<<"local weight change is: "<<local_weight_change<<cblack<<std::endl;
-    if(std::abs(local_weight_change)>random()){
+    if(std::abs(local_weight_change)>random())
+    {
       nacc[0]++;
       local_config.set_zero_order_orbital_occupied(orbital, true);
       if(local_weight_change<0)
@@ -335,7 +362,8 @@ void hybridization::shift_segment_update(){
 }
 
 
-void hybridization::insert_remove_segment_update(){
+void hybridization::insert_remove_segment_update()
+{
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
 
@@ -343,25 +371,36 @@ void hybridization::insert_remove_segment_update(){
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
   if(n_env == 1) { size_t color = 0; } // Only one color
   else if(n_env==2)
-  {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+  { 
+     if(random()<0.5){ size_t color = 0; } // blue = 0 = R
      else            { size_t color = 1; } // red = 1 = L  
   }
-  else {throw std::runtime_error("The input N_ENV>2 is currently not supported.")}
+  else 
+  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
+  }
 
   if(random()<0.5){ insert_segment_update(orbital, color); }
   else            { remove_segment_update(orbital, color); }
 }
 
 
-void hybridization::insert_remove_antisegment_update(){
+void hybridization::insert_remove_antisegment_update()
+{
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
 
   //Leo: choose the color in which we do the update
-  //Now only two colors (red and blue) are considered, but it can be easily changed
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
   if(n_env == 1) { size_t color = 0; } // Only one color
-  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
-          else            { size_t color = 1; } // red = 1 = L  
+  else if(n_env==2)
+  { 
+     if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+     else            { size_t color = 1; } // red = 1 = L  
+  }
+  else 
+  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
   }
 
   if(random()<0.5){ insert_antisegment_update(orbital, color); }
@@ -369,22 +408,30 @@ void hybridization::insert_remove_antisegment_update(){
 }
 
 
-void hybridization::insert_remove_spin_flip_update(){
+void hybridization::insert_remove_spin_flip_update()
+{
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
 
   //Leo: choose the color in which we do the update
-  //Now only two colors (red and blue) are considered, but it can be easily changed
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
   if(n_env == 1) { size_t color = 0; } // Only one color
-  else {  if(random()<0.5){ size_t color = 0; } // blue = 0 = R
-          else            { size_t color = 1; } // red = 1 = L  
+  else if(n_env==2)
+  {  
+     if(random()<0.5){ size_t color = 0; } // blue = 0 = R
+     else            { size_t color = 1; } // red = 1 = L  
+  }
+  else 
+  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
   }
 
   spin_flip_update(orbital);
 }
 
 
-void hybridization::insert_segment_update(int orbital, size_t color){
+void hybridization::insert_segment_update(int orbital, size_t color)
+{
   nprop[1]++;
   //std::cout<<clred<<"starting insertion update."<<cblack<<std::endl;
   if(local_config.order(orbital)==0 && local_config.zero_order_orbital_occupied(orbital)) return; //can't insert segment, orbital is fully occuppied.
@@ -412,7 +459,7 @@ void hybridization::insert_segment_update(int orbital, size_t color){
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, false);
   
   //compute hybridization weight change
-  double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_segment, orbital);
+  double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_segment, orbital, color);
   
   //compute the proposal probability ratio
   double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
@@ -423,30 +470,36 @@ void hybridization::insert_segment_update(int orbital, size_t color){
   /*std::cout<<" new segment: "<<new_segment<<std::endl;
    std::cout<<clred<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;*/
   
-  if(std::abs(weight_change)>random()){
+  if(std::abs(weight_change)>random())
+  {
     nacc[1]++;
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
-    hyb_config.insert_segment(new_segment, orbital);
+    hyb_config.insert_segment(new_segment, orbital, color);
   }
 }
 
 
-void hybridization::remove_segment_update(int orbital, size_t color){
+void hybridization::remove_segment_update(int orbital, size_t color)
+{
   nprop[2]++;
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
   int k=local_config.order(orbital);
   
-  if(k==0) return; //no point, this is an empty orbital
+  if(k==0) return; //no point, this is an empty orbital //Leo: it could also be occupied, but it doesn't matter here
   
   int segment_nr=(int)(random()*k);
   
   segment segment_to_remove=local_config.get_segment(segment_nr, orbital);
+
+  //Leo: check if the colors of both ends and the randomly picked color are all the same
+  if(color == segment_to_remove.c_start_ && color == segment_to_remove.c_end_) ; //do nothing
+  else {return;} //cannot remove because of the different colors
   
   double local_weight_change=1./local_config.local_weight_change(segment_to_remove, orbital, false);
   
   //compute hybridization weight change
-  double hybridization_weight_change=1.0/hyb_config.hyb_weight_change_remove(segment_to_remove, orbital);
+  double hybridization_weight_change=1.0/hyb_config.hyb_weight_change_remove(segment_to_remove, orbital, color);
   
   //compute the proposal probability ratio
   double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_remove.t_start_,orbital);
@@ -460,7 +513,8 @@ void hybridization::remove_segment_update(int orbital, size_t color){
    std::cout<<"t_next_segment_start: "<<t_next_segment_start<<std::endl;
    std::cout<<clblue<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
    }*/
-  if(std::abs(weight_change)>random()){
+  if(std::abs(weight_change)>random())
+  {
     nacc[2]++;
     if(weight_change < 0) sign*=-1.;
 //      double fwo = full_weight();
@@ -472,7 +526,8 @@ void hybridization::remove_segment_update(int orbital, size_t color){
 }
 
 
-void hybridization::insert_antisegment_update(int orbital){
+void hybridization::insert_antisegment_update(int orbital, size_t color)
+{
   nprop[3]++;
   if(local_config.order(orbital)==0 && !local_config.zero_order_orbital_occupied(orbital)) return; //can't insert an antisegment, orbital is empty.
   double t_start=random()*beta; //start time of the anti segment
@@ -493,14 +548,14 @@ void hybridization::insert_antisegment_update(int orbital){
   //std::cout<<clgreen<<" antisegment start time: (cdagger): "<<t_start<<" end time (c): "<<t_end<<std::endl;
   
   //compute local weight of the removed segment with t_start and t_end
-  segment new_segment(t_start, t_end);
+  segment new_segment(t_start, t_end, color color);
   //std::cout<<clred<<"antisegment insert."<<std::endl;
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, true);
   //std::cout<<clred<<"antisegment insert done."<<std::endl;
   
-  //compute hybridization weight change
-  segment new_antisegment(t_end,t_start);
-  double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_antisegment, orbital);
+  //compute hybridization weight change //Leo: I don't quite understand...
+  segment new_antisegment(t_end, t_start, color, color);
+  double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_antisegment, orbital, color);
   
   //compute the proposal probability ratio
   double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
@@ -510,18 +565,20 @@ void hybridization::insert_antisegment_update(int orbital){
   
   //std::cout<<clred<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
   
-  if(std::abs(weight_change)>random()){
+  if(std::abs(weight_change)>random())
+  {
     nacc[3]++;
     //std::cout<<cred<<"accepting insert antisegment."<<cblack<<std::endl;
     if(weight_change < 0) sign*=-1.;
     local_config.insert_antisegment(new_antisegment, orbital);
-    hyb_config.insert_antisegment(new_antisegment, orbital);
+    hyb_config.insert_antisegment(new_antisegment, orbital, color);
     //std::cout<<cred<<"done accepting insert antisegment."<<cblack<<std::endl;
   }
 }
 
 
-void hybridization::remove_antisegment_update(int orbital){
+void hybridization::remove_antisegment_update(int orbital, size_t color)
+{
   nprop[4]++;
   int k=local_config.order(orbital);
   
@@ -531,32 +588,41 @@ void hybridization::remove_antisegment_update(int orbital){
   //try to merge segment k and segment k+1
   segment segment_earlier=local_config.get_segment(segment_nr, orbital);
   segment segment_later  =local_config.get_segment(segment_nr==k-1?0:segment_nr+1, orbital);
+
+  //Leo: check if the colors of both ends and the randomly picked color are all the same
+  if(color == segment_earlier.c_end_ && color == segment_later.c_start_) ; //do nothing
+  else {return;} //cannot remove because of the different colors
   
   //std::cout<<clcyan<<"antisegment removal update: "<<cblack<<*this<<std::endl;
   //std::cout<<clcyan<<" antisegment start time: (cdagger) "<<segment_earlier.t_end_<<" end time: (c): "<<segment_later.t_start_<<std::endl;
+
   //compute local weight of the antisegment. note that time direction here has to be forward
+  //Leo: not sure I understand why...
   segment segment_forward(segment_earlier.t_end_, segment_later.t_start_);
   //std::cout<<clgreen<<"antisegment remove."<<std::endl;
   double local_weight_change=1./local_config.local_weight_change(segment_forward, orbital, true);
   //std::cout<<clgreen<<"antisegment remove done."<<std::endl;
   
   //compute hybridization weight change
-  segment antisegment(segment_later.t_start_, segment_earlier.t_end_);
-  double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital);
+  segment antisegment(segment_later.t_start_, segment_earlier.t_end_, color, color);
+  double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital, color);
   
   //compute the proposal probability ratio
-  double t_next_segment_end=local_config.order(orbital)==1?beta:segment_later.t_end_-segment_earlier.t_end_; if(t_next_segment_end<0.) t_next_segment_end+=beta;
+  //Leo: not sure I understand why...
+  double t_next_segment_end=local_config.order(orbital)==1?beta:segment_later.t_end_-segment_earlier.t_end_; 
+  if(t_next_segment_end<0.) t_next_segment_end+=beta;
   double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
   //perform metropolis
   double weight_change=local_weight_change/hybridization_weight_change*permutation_factor;
   //std::cout<<clblue<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
   
-  if(std::abs(weight_change)>random()){
+  if(std::abs(weight_change)>random())
+  {
     nacc[4]++;
     //std::cout<<cred<<"accepting remove antisegment."<<cblack<<std::endl;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_antisegment(antisegment, orbital);
-    hyb_config.remove_antisegment(antisegment, orbital);
+    hyb_config.remove_antisegment(antisegment, orbital, color);
     //std::cout<<cred<<"done accepting remove antisegment."<<cblack<<std::endl;
   }
 }

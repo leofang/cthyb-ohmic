@@ -33,11 +33,13 @@
 #define HYB_FUN_HPP
 
 //container for the hybridization function Delta(\tau) (historically: F(\tau) )
-class hybfun : public green_function<double>{
+class hybfun : public green_function<double>
+{
   public:
-      //constructor
+    //constructor
     hybfun(const alps::params &p);
-    hybfun(const hybfun &rhs):green_function<double>(rhs),beta_(rhs.beta_) {
+    hybfun(const hybfun &rhs):green_function<double>(rhs),beta_(rhs.beta_) 
+    {
   //    operator=(rhs);
   //    for (int nf=0;nf<nflavor();nf++)
   //      for (int nt=0;nt<ntime();nt++)
@@ -45,7 +47,9 @@ class hybfun : public green_function<double>{
   //    std::cerr << rhs.ntime() << " " << ntime() << " " << rhs.nflavor() << " " << nflavor() << std::endl;
       hybridization_function_sanity_check();
     }
-    const hybfun &operator=(const hybfun &rhs) {
+    
+    const hybfun &operator=(const hybfun &rhs) 
+    {
       beta_ = rhs.beta_;
   //    green_function<double>::operator=(rhs);
   //    std::cerr << rhs.ntime() << " " << ntime() << " " << rhs.nflavor() << " " << nflavor() << std::endl;
@@ -56,8 +60,7 @@ class hybfun : public green_function<double>{
       return *this;
     }
   
-  ~hybfun() {
-//    std::cerr << "Deleting hybfunc\n";
+  ~hybfun() {//    std::cerr << "Deleting hybfunc\n"; 
   }
   
   double interpolate(double time, int orbital) const;

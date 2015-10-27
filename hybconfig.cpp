@@ -29,66 +29,120 @@
 #include"hybconfig.hpp"
 
 hybridization_configuration::hybridization_configuration(const alps::params &p):
-  Delta(p),
-  hybmat_((int)(p["N_ORBITALS"]), p)
+  Delta((int)(p["N_ENV"]), p),
+  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p)),
+  n_env_(p["N_ENV"])
 {
 }
 
-void hybridization_configuration::dump() {
-    for (int i=0;i<hybmat_.size();i++)
-        std::cerr << "Weight for orbital " << i << " : " << hybmat_[i].full_weight() << std::endl;
+void hybridization_configuration::dump() 
+{
+    for (int i=0; i<hybmat_.size(); i++) //N_orbital
+    {
+        for (int j=0; j<hybmat_[i].size(); j++) //Leo: N_ENV
+	   std::cerr << "Weight for orbital " << i << " and reservoir " << j << " : " << hybmat_[i][j].full_weight() << std::endl;
+    }
 }
 
-void hybridization_configuration::rebuild() {
-  for (int i=0;i<hybmat_.size();i++)
-    hybmat_[i].rebuild_hyb_matrix(i,Delta);
+void hybridization_configuration::rebuild() 
+{
+  for (int i=0; i<hybmat_.size(); i++) //N_orbital
+  {
+     for (int j=0; j<hybmat_[i].size(); j++) //Leo: N_ENV
+     {
+    	hybmat_[i][j].rebuild_hyb_matrix(i, Delta[j]);
+     }
+  }
 }
 
-void hybridization_configuration::rebuild(int orbital) {
-  hybmat_[orbital].rebuild_hyb_matrix(orbital,Delta);
+void hybridization_configuration::rebuild(int orbital) 
+{
+   for (int j=0; j<hybmat_[orbital].size(); j++) //Leo: N_ENV
+       hybmat_[orbital][j].rebuild_hyb_matrix(orbital, Delta[j]);
 }
 
-void hybridization_configuration::rebuild(std::vector<int> orbital) {
+void hybridization_configuration::rebuild(std::vector<int> orbital) 
+{
   for (int i=0;i<orbital.size();i++)
-    hybmat_[orbital[i]].rebuild_hyb_matrix(orbital[i],Delta);
+  {
+     for (int j=0; j<hybmat_[orbital[i]].size(); j++) //Leo: N_ENV
+        hybmat_[orbital[i]][j].rebuild_hyb_matrix(orbital[i], Delta[j]);
+  }
 }
 
-double hybridization_configuration::hyb_weight_change_insert(const segment &new_segment, int orbital){
-  return hybmat_[orbital].hyb_weight_change_insert(new_segment, orbital, Delta); //hand this off to the determinant matrix
+
+//Leo: since the size of reservoir matrices coupled to the same orbital are correlated (n_L+n_R=n),
+//     there should be a consistency check after each update to gaurantee we're doing it correctly
+int total_color_matrix_size(int orbital)
+{
+   int total_size=0;
+   for (int i=0; i<n_env_; i++)
+   {
+       total_size+=hybmat_[orbital][i].size();
+   }
+   return total_size;
 }
-void hybridization_configuration::insert_segment(const segment &new_segment, int orbital){
+
+
+double hybridization_configuration::hyb_weight_change_insert(const segment &new_segment, int orbital, size_t color)
+{
+//  if(new_segment.c_start_ == new_segment.c_end_) //Leo: the colors of both ends of a (anti-)segment should be the same!
+//  {int color = new_segment.c_start_; }
+//  else 
+//  {throw std::runtime_error("hybridization_configuration: the colors to be inserted are not the same!")}
+
+  return hybmat_[orbital][color].hyb_weight_change_insert(new_segment, orbital, Delta[color]); //hand this off to the determinant matrix
+}
+
+
+void hybridization_configuration::insert_segment(const segment &new_segment, int orbital, size_t color)
+{
   //std::cout<<clmagenta<<"before insert recompute "<<cblack<<std::endl;
   //if(hybmat_[orbital].size()>0) hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
   //std::cout<<clmagenta<<"done before insert recompute "<<cblack<<std::endl;
-  hybmat_[orbital].insert_segment(new_segment, orbital); //hand this off to the determinant matrix
+  hybmat_[orbital][color].insert_segment(new_segment, orbital); //hand this off to the determinant matrix
   //std::cout<<clmagenta<<"after insert recompute "<<cblack<<std::endl;
   //hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
   //std::cout<<clmagenta<<"done after insert recompute "<<cblack<<std::endl;
 }
-double hybridization_configuration::hyb_weight_change_remove(const segment &new_segment, int orbital){
-  return hybmat_[orbital].hyb_weight_change_remove(new_segment, orbital, Delta); //hand this off to the determinant matrix
+
+
+double hybridization_configuration::hyb_weight_change_remove(const segment &new_segment, int orbital, size_t color)
+{
+  return hybmat_[orbital][color].hyb_weight_change_remove(new_segment, orbital, Delta[color]); //hand this off to the determinant matrix
 }
-void hybridization_configuration::remove_segment(const segment &new_segment, int orbital){
+
+
+void hybridization_configuration::remove_segment(const segment &new_segment, int orbital, size_t color)
+{
   //std::cout<<clmagenta<<"before remove recompute "<<cblack<<std::endl;
   //hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
   //std::cout<<clmagenta<<"done before remove recompute "<<cblack<<std::endl;
-  hybmat_[orbital].remove_segment(new_segment, orbital); //hand this off to the determinant matrix
+  hybmat_[orbital][color].remove_segment(new_segment, orbital); //hand this off to the determinant matrix
   //std::cout<<clmagenta<<"after remove recompute "<<cblack<<std::endl;
   //if(hybmat_[orbital].size()>0) hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
   //std::cout<<clmagenta<<"done after remove recompute "<<cblack<<std::endl;
 }
-void hybridization_configuration::remove_antisegment(const segment &new_antisegment, int orbital){
-  hybmat_[orbital].remove_segment(new_antisegment, orbital); //hand this off to the determinant matrix
+
+
+void hybridization_configuration::remove_antisegment(const segment &new_antisegment, int orbital, size_t color)
+{
+  hybmat_[orbital][color].remove_segment(new_antisegment, orbital); //hand this off to the determinant matrix
   //std::cout<<clmagenta<<"after as remove recompute "<<cblack<<std::endl;
-  if(hybmat_[orbital].size()>0) hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
+  if(hybmat_[orbital][color].size()>0) hybmat_[orbital][color].rebuild_hyb_matrix(orbital, Delta[color]);
   //std::cout<<clmagenta<<"done after as remove recompute "<<cblack<<std::endl;
 }
-void hybridization_configuration::insert_antisegment(const segment &new_antisegment, int orbital){
-  hybmat_[orbital].insert_segment(new_antisegment, orbital); //hand this off to the determinant matrix
+
+
+void hybridization_configuration::insert_antisegment(const segment &new_antisegment, int orbital, size_t color)
+{
+  hybmat_[orbital][color].insert_segment(new_antisegment, orbital); //hand this off to the determinant matrix
   //std::cout<<clmagenta<<"after as insert recompute "<<cblack<<std::endl;
   //hybmat_[orbital].rebuild_hyb_matrix(orbital, Delta);
   //std::cout<<clmagenta<<"done after as insert recompute "<<cblack<<std::endl;
 }
+
+
 void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign) const{
   for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
     hybmat_[orbital].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign);

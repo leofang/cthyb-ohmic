@@ -291,19 +291,28 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
     }
   }
 }
-void hybmatrix::consistency_check() const{
-  for(hyb_map_t::const_iterator it1=c_index_map_.begin(); it1!= c_index_map_.end();++it1){
-    for(hyb_map_t::const_iterator it2=c_index_map_.begin(); it2!= c_index_map_.end();++it2){
-      if(it1->first != it2->first && it1->second==it2->second){
+
+
+void hybmatrix::consistency_check() const
+{
+  for(hyb_map_t::const_iterator it1=c_index_map_.begin(); it1!= c_index_map_.end();++it1)
+  {
+    for(hyb_map_t::const_iterator it2=c_index_map_.begin(); it2!= c_index_map_.end();++it2)
+    {
+      if(it1->first != it2->first && it1->second==it2->second)
+      {
         std::cout<<clcyan<<"problem; inconsistent c map."<<cblack<<std::endl;
         std::cout<<*this;
         throw std::logic_error("...");
       }
     }
   }
-  for(hyb_map_t::const_iterator it1=cdagger_index_map_.begin(); it1!= cdagger_index_map_.end();++it1){
-    for(hyb_map_t::const_iterator it2=cdagger_index_map_.begin(); it2!= cdagger_index_map_.end();++it2){
-      if(it1->first != it2->first && it1->second==it2->second){
+  for(hyb_map_t::const_iterator it1=cdagger_index_map_.begin(); it1!= cdagger_index_map_.end();++it1)
+  {
+    for(hyb_map_t::const_iterator it2=cdagger_index_map_.begin(); it2!= cdagger_index_map_.end();++it2)
+    {
+      if(it1->first != it2->first && it1->second==it2->second)
+      {
         std::cout<<clcyan<<"problem; inconsistent c map."<<cblack<<std::endl;
         std::cout<<*this;
         throw std::logic_error("...");

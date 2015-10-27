@@ -39,7 +39,7 @@
 //simple matrix that uses BLAS calls for rank one and matrix vector.
 typedef std::map<double,std::size_t> hyb_map_t;
 // Leo Fang: a vectorized vesion of the above map for colored operators
-typedef std::vector< std::map<double,std::size_t> > hyb_vector_map_t;
+//typedef std::vector< std::map<double,std::size_t> > hyb_vector_map_t;
 
 class hybmatrix:public blas_matrix{
 public:
@@ -90,11 +90,11 @@ private:
   hyb_map_t c_index_map_;
 
   // Leo Fang: a vectorized vesion of the above map for colored operators
-  hyb_vector_map_t cdagger_index_vector_map_;
-  hyb_vector_map_t c_index_vector_map_;
+  //hyb_vector_map_t cdagger_index_vector_map_;
+  //hyb_vector_map_t c_index_vector_map_;
  
   // Leo Fang: number of reservoirs
-  int n_env_;
+  //int n_env_;
    
   //auxiliary column and row vectors for inserting and removing elements.
   std::vector<double> Q;

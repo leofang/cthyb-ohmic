@@ -38,16 +38,28 @@
 class hybridization_configuration{
 public:
   hybridization_configuration(const alps::params &p);
-  hybridization_configuration(const hybridization_configuration &rhs) : Delta(rhs.Delta),hybmat_(rhs.hybmat_) {
-    std::cerr << hybmat_.size() << std::endl;
-    for (int i=0;i<hybmat_.size();i++)
-      hybmat_[i].rebuild_hyb_matrix(i,Delta);
+
+  hybridization_configuration(const hybridization_configuration &rhs) : Delta(rhs.Delta), hybmat_(rhs.hybmat_) 
+  {
+    //std::cerr << hybmat_.size() << std::endl;
+    //Leo: double loops to accommodate multiple reservoirs 
+    for (int i=0; i<hybmat_.size(); i++) //N_Orbital
+    {
+	for(int j=0; j<hybmat_[i].size(); j++) //N_ENV
+  	      hybmat_[i][j].rebuild_hyb_matrix(i, Delta[j]);
+    }
   }
-  const hybridization_configuration &operator=(const hybridization_configuration &rhs) {
+
+  const hybridization_configuration &operator=(const hybridization_configuration &rhs) 
+  {
     hybmat_ = rhs.hybmat_;
     Delta = rhs.Delta;
-    for (int i=0;i<hybmat_.size();i++)
-      hybmat_[i].rebuild_hyb_matrix(i,Delta);
+    //Leo: double loops to accommodate multiple reservoirs 
+    for (int i=0; i<hybmat_.size(); i++) //N_Orbital
+    {
+	for(int j=0; j<hybmat_[i].size(); j++) //N_ENV
+  	      hybmat_[i][j].rebuild_hyb_matrix(i, Delta[j]);
+    }
     return *this;
   }
   
@@ -55,12 +67,18 @@ public:
 //    std::cerr << "Deleting hybconfig\n";
   }
   
-  double hyb_weight_change_insert(const segment &new_segment, int orbital);
-  void insert_segment(const segment &new_segment, int orbital);
-  void insert_antisegment(const segment &new_antisegment, int orbital);
-  double hyb_weight_change_remove(const segment &new_segment, int orbital);
-  void remove_segment(const segment &new_segment, int orbital);
-  void remove_antisegment(const segment &new_antisegment, int orbital);
+  //Leo: although the color of a (anti-)segment is recorded in the segment class,
+  //it seems a bit convenient to just pass it as an additional argument
+  double hyb_weight_change_insert(const segment &new_segment, int orbital, size_t color);
+  void insert_segment(const segment &new_segment, int orbital, size_t color);
+  void insert_antisegment(const segment &new_antisegment, int orbital, size_t color);
+  double hyb_weight_change_remove(const segment &new_segment, int orbital, size_t color);
+  void remove_segment(const segment &new_segment, int orbital, size_t color);
+  void remove_antisegment(const segment &new_antisegment, int orbital, size_t color);
+
+  //Leo: since the size of reservoir matrices coupled to the same orbital are correlated,
+  //     there should be a consistency check after each update to gaurantee we're doing it correctly
+  int total_color_matrix_size(int orbital);
     
   void dump();
   void rebuild();
@@ -74,11 +92,18 @@ public:
   double full_weight() const;
 
   friend std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);
+
 private:
   //the hybridization function Delta
-  hybfun Delta;
-  std::vector<hybmatrix> hybmat_;
+  //Leo: to accomodate multiple reservoirs, this object should be vectorized with dimension N_ENV
+  std::vector<hybfun> Delta;
+  //Leo: this should be a vector of vector for the same reason
+  //The inner vector has dimension N_ENV (new), and the outer vector has dimension N_Orbital (from original code)
+  std::vector< std::vector<hybmatrix> > hybmat_;
+  //Leo: number of reservoirs
+  int n_env_;
 };
+
 std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);
 
 #endif
