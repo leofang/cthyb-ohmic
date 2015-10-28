@@ -29,10 +29,73 @@
 #include"hybconfig.hpp"
 
 hybridization_configuration::hybridization_configuration(const alps::params &p):
-  Delta((int)(p["N_ENV"]), p),
-  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p)),
+//  Delta((int)(p["N_ENV"]), p),
   n_env_(p["N_ENV"])
+  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p)),
 {
+  initialize_Delta(p);
+}
+
+void hybridization_configuration::initialize_Delta(const alps::params &p)
+{
+    // read multiple hybridization files upon request
+    // TODO: replace p["N_ENV"] by n_env_ which is defined in hybridization_configuration
+    if(p.defined("N_ENV") && p["N_ENV"].cast<int>()>1) //N_ENV>=2
+    {
+       // detect if hybridization input files are given
+       for(int i=0; i< p["N_ENV"].cast<int>(); i++)
+       {
+         std::stringstream temp_stream; // stringstream used for the conversion
+         temp_stream << i;              // add the value of i to the characters in the stream
+         std::string temp_filename = "DELTA" + temp_stream.str();
+
+         if(!p.defined(temp_filename))
+              throw  std::runtime_error("Parameter " + temp_filename + \
+              " (filename for hybridization function of environment" + temp_stream.str() + ") is not provided. Abort!");
+       }
+       //prepare parameter set for each environment by pretending other environments do not exist
+       //and call "DELTAi" as "DELTA"
+       for(int i=0; i< p["N_ENV"].cast<int>(); i++)
+       {
+         alps::params temp_params = p; // temp_params is a "buffer"
+         for(int j=0; j< p["N_ENV"].cast<int>(); j++)
+         {
+             std::stringstream temp_stream;
+             temp_stream << j;
+             std::string temp_string = "DELTA" + temp_stream.str();
+             if (j==i) { temp_params["DELTA"] = p[temp_string].cast<std::string>(); }
+             temp_params.erase(temp_string);
+         }
+         temp_params.erase("N_ENV"); //Just in case something is wrong when reading hybridization file...
+         std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
+         std::cout << temp_params << std::endl;
+         //use temp_params to initialize hybfun constructor
+         Delta.push_back(temp_params);
+       }
+       //check the size of Delta
+       if (Delta.size() != p["N_ENV"].cast<int>())
+         throw std::runtime_error("Delta should have size N_ENV but it does not! Abort!")
+    }
+    else if ( (p.defined("N_ENV") && p["N_ENV"].cast<int>()==1) || !p.defined("N_ENV") ) //N_ENV=1
+    {
+        alps::params temp_params = p;
+        if(!p.defined("DELTA") && !p.defined("DELTA0"))
+          throw  std::runtime_error("Parameter DELTA or DELTA0 (filename for hybridization function) is not provided. Abort!");
+        if(!p.defined("DELTA")) // read from DELTA0
+        {
+           temp_params["DELTA"]=temp_params["DELTA0"].cast<std::string>();
+           temp_params.erase("DELTA0");
+           if(p.defined("N_ENV")) { temp_params.erase("N_ENV"); } //Just in case
+        }
+        std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
+        std::cout << temp_params << std::endl;
+        //use temp_params to initialize hybfun constructor
+        Delta.push_back(temp_params);
+    }
+    else //N_ENV is something nonsense
+    {
+        throw  std::invalid_argument("N_ENV is invalid, abort."); //TODO: move this to sanity_check
+    }
 }
 
 void hybridization_configuration::dump() 
@@ -73,7 +136,7 @@ void hybridization_configuration::rebuild(std::vector<int> orbital)
 
 //Leo: since the size of reservoir matrices coupled to the same orbital are correlated (n_L+n_R=n),
 //     there should be a consistency check after each update to gaurantee we're doing it correctly
-int total_color_matrix_size(int orbital)
+int hybridization_configuration::total_color_matrix_size(int orbital)
 {
    int total_size=0;
    for (int i=0; i<n_env_; i++)

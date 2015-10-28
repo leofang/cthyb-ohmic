@@ -79,6 +79,8 @@ public:
   //Leo: since the size of reservoir matrices coupled to the same orbital are correlated,
   //     there should be a consistency check after each update to gaurantee we're doing it correctly
   int total_color_matrix_size(int orbital);
+  //Leo: initialize the Delta vector 
+  void initialize_Delta(const alps::params &p);
     
   void dump();
   void rebuild();

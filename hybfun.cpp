@@ -56,12 +56,15 @@ for(std::size_t i=0; i<ntime();++i)
     }
 }
 
+
 //this routine reads in the hybridization function, either from a text file or from an hdf5 file (for easy passing of binary data).
 //In case of text files the file format is index - hyb_1 - hyb2 - hyb3 - ... in columns that go from time=0 to time=beta. Note that
 //the hybridization function is in imaginary time and always positive between zero and \beta.
 void hybfun::read_hybridization_function(const alps::params &p){
-  if(!p.defined("DELTA")) throw(std::invalid_argument(std::string("Parameter DELTA missing, filename for hybridization function not specified.")));
+  if(!p.defined("DELTA")) 
+      throw(std::invalid_argument(std::string("Parameter DELTA missing, filename for hybridization function not specified.")));
   std::string fname=p["DELTA"].cast<std::string>();
+
   if(p.defined("DELTA_IN_HDF5") && p["DELTA_IN_HDF5"].cast<bool>())
   {//attempt to read from h5 archive
     alps::hdf5::archive ar(fname, alps::hdf5::archive::READ);
@@ -72,7 +75,8 @@ void hybfun::read_hybridization_function(const alps::params &p){
     else
     {//plain hdf5
       std::vector<double> tmp(ntime());
-      for(std::size_t j=0; j<nflavor(); j++){
+      for(std::size_t j=0; j<nflavor(); j++)
+      {
         std::stringstream path; path<<"/Delta_"<<j;
         ar>>alps::make_pvp(path.str(),tmp);
         for(std::size_t i=0; i<ntime(); i++)
@@ -84,18 +88,23 @@ void hybfun::read_hybridization_function(const alps::params &p){
   else
   {//read from text file
     std::ifstream infile(fname.c_str());
-    if(!infile.good()){
+    if(!infile.good())
+    {
       throw(std::invalid_argument(std::string("could not open hybridization file (text format) ") + p["DELTA"] + " for Delta function"));
     }
-    for (std::size_t i=0; i<ntime(); i++) {
-      if(!infile.good()){
+    for (std::size_t i=0; i<ntime(); i++) 
+    {
+      if(!infile.good())
+      {
         throw(std::invalid_argument(std::string("could not read hybridization file (text format) ") + p["DELTA"] + ". probably wrong number of lines"));
       }
       double dummy;
       infile >> dummy;
       //std::cout<<i<<" "<<ntime()<<" "<<"dummy: "<<dummy<<std::endl;
-      for (std::size_t j=0; j<nflavor(); j++){
-        if(!infile.good()){
+      for (std::size_t j=0; j<nflavor(); j++)
+      {
+        if(!infile.good())
+        {
           throw(std::invalid_argument(std::string("could not read hybridization file (text format) ") + p["DELTA"] + ". probably wrong number of columns"));
         }
         double delta;
