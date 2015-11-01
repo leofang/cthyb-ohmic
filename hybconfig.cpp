@@ -30,12 +30,14 @@
 
 hybridization_configuration::hybridization_configuration(const alps::params &p):
 //  Delta((int)(p["N_ENV"]), p),
-  n_env_(p["N_ENV"])
-  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p)),
+  n_env_((int)p["N_ENV"]),
+  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p))
 {
   initialize_Delta(p);
 }
 
+
+// initialize Delta from files
 void hybridization_configuration::initialize_Delta(const alps::params &p)
 {
     // read multiple hybridization files upon request
@@ -98,6 +100,7 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
     }
 }
 
+
 void hybridization_configuration::dump() 
 {
     for (int i=0; i<hybmat_.size(); i++) //N_orbital
@@ -106,6 +109,7 @@ void hybridization_configuration::dump()
 	   std::cerr << "Weight for orbital " << i << " and reservoir " << j << " : " << hybmat_[i][j].full_weight() << std::endl;
     }
 }
+
 
 void hybridization_configuration::rebuild() 
 {
@@ -118,11 +122,13 @@ void hybridization_configuration::rebuild()
   }
 }
 
+
 void hybridization_configuration::rebuild(int orbital) 
 {
    for (int j=0; j<hybmat_[orbital].size(); j++) //Leo: N_ENV
        hybmat_[orbital][j].rebuild_hyb_matrix(orbital, Delta[j]);
 }
+
 
 void hybridization_configuration::rebuild(std::vector<int> orbital) 
 {

@@ -60,7 +60,8 @@ for(std::size_t i=0; i<ntime();++i)
 //this routine reads in the hybridization function, either from a text file or from an hdf5 file (for easy passing of binary data).
 //In case of text files the file format is index - hyb_1 - hyb2 - hyb3 - ... in columns that go from time=0 to time=beta. Note that
 //the hybridization function is in imaginary time and always positive between zero and \beta.
-void hybfun::read_hybridization_function(const alps::params &p){
+void hybfun::read_hybridization_function(const alps::params &p)
+{
   if(!p.defined("DELTA")) 
       throw(std::invalid_argument(std::string("Parameter DELTA missing, filename for hybridization function not specified.")));
   std::string fname=p["DELTA"].cast<std::string>();
@@ -115,31 +116,45 @@ void hybfun::read_hybridization_function(const alps::params &p){
   }
 }
 
-std::ostream &operator<<(std::ostream &os, const hybfun &hyb){
+
+std::ostream &operator<<(std::ostream &os, const hybfun &hyb)
+{
   os<<"the hybridization function is: "<<std::endl;
-  for(int i=0;i<10;++i){ std::cout<<i<<" "; for(std::size_t j=0;j<hyb.nflavor();++j){ std::cout<<hyb(i,j)<<" ";} std::cout<<std::endl; }
+  for(int i=0; i<10; ++i)
+  { 
+	std::cout<<i<<" "; 
+	for(std::size_t j=0; j<hyb.nflavor(); ++j) { std::cout<<hyb(i,j)<<" "; } 
+	std::cout<<std::endl; 
+  }
   os<<"... *** etc *** ...\n";
-  os<<hyb.ntime()-1<<" "; for(std::size_t j=0;j<hyb.nflavor();++j){ std::cout<<hyb(hyb.ntime()-1,j)<<" ";} std::cout<<std::endl;
+  os<< hyb.ntime()-1 <<" "; 
+  for(std::size_t j=0; j<hyb.nflavor(); ++j) { std::cout<<hyb(hyb.ntime()-1,j)<<" "; } 
+  std::cout<<std::endl;
   return os;
 }
 
-//linear interpolation of the hybridization function. 
-double hybfun::interpolate(double time, int orbital) const{
 
+//linear interpolation of the hybridization function. 
+double hybfun::interpolate(double time, int orbital) const
+{
   ///TODO: do a spline here, write a better/faster interpolation routine.
   double sign=1;
-  if (time<0) {
+  if (time<0) 
+  {
     time += beta_;
     sign=-1;
   }
 
   //this is the overall flip of Delta (in comparison to F)
+  //Leo: so if time>0, Delta(time)<0; if time<0, Delta(time)>0
   sign*=-1;
   //the code takes Delta as input, but internally works with F(tau)=-Delta(beta-tau)
+  //Leo: the "time" below is always positive regardless of the sign of the input argument "time"
   time=beta_-time;
 
   double n = time/beta_*(ntime()-1);
   int n_lower = (int)n; // interpolate linearly between n_lower and n_lower+1
 
+  //Leo: return F(tau)
   return sign*(operator()(n_lower,orbital) + (n-n_lower)*(operator()(n_lower+1,orbital)-operator()(n_lower,orbital)));
 }

@@ -116,9 +116,11 @@ void hybridization::update()
   //Leo: check the size of colored matrices for each orbital
   for(int i=0; i<n_orbitals; i++)
   { 
+    std::stringstream temp_stream; // stringstream used for the conversion
+    temp_stream << i;              // add the value of i to the characters in the stream
     if( local_config.order(i)==0 ) continue; //Leo: no segment exists, and so does color, in 0-th order
     if( hyb_config.total_color_matrix_size(i) != local_config.order(i) )
-        std::runtime_error("The total size of colored matrices for orbital " + std::to_string(i) + " is incorrect!");
+        std::runtime_error("The total size of colored matrices for orbital " + temp_stream.str() + " is incorrect!");
   }
 
   //if(sweeps%1000==0) {std::cout <<  sweeps << " sweeps has been done...\n";}

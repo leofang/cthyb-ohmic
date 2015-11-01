@@ -42,19 +42,24 @@
 //in general the matrix is not ordered (that would be inefficient), but permutation_sign keeps track of the shift of rows
 //and columns.
 
+//Leo: c_dagger & c in the code mean the impurity operator, not bath operator!
+
 
 //compute the hybridization weight change when an operator pair is inserted
-double hybmatrix::hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta){
+double hybmatrix::hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta)
+{
   Q.resize(size());
   R.resize(size());
   PinvQ.resize(size());
   //column  Delta_i,last
-  for(hyb_map_t::const_iterator it=c_index_map_.begin();it!=c_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=c_index_map_.begin();it!=c_index_map_.end();++it)
+  {
     Q[it->second]=Delta.interpolate(it->first-new_segment.t_start_, orbital); //this is the new column Q
   }
   
   //row Delta_last,i
-  for(hyb_map_t::const_iterator it=cdagger_index_map_.begin();it != cdagger_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=cdagger_index_map_.begin();it != cdagger_index_map_.end();++it)
+  {
     R[it->second]=Delta.interpolate(new_segment.t_end_-it->first, orbital);  //this is the new row R
   }
   S=Delta.interpolate(new_segment.t_end_-new_segment.t_start_, orbital);  //this is the entry S
@@ -62,22 +67,24 @@ double hybmatrix::hyb_weight_change_insert(const segment &new_segment, int orbit
   
   S_tilde_inv=S;
   fortran_int_t s=size();
-  if(s>0){
+  if(s>0)
+  {
     right_multiply(Q, PinvQ); //dgemv
     fortran_int_t inc=1;
     S_tilde_inv-=FORTRAN_ID(ddot)(&s, &(R[0]),&inc,&(PinvQ[0]),&inc);
   }
+
   //a -1 from the anticommutator from the wraparound segment
-  if(new_segment.t_end_<new_segment.t_start_){
-    weight_ratio_=-S_tilde_inv;
-  }else{
-    weight_ratio_=S_tilde_inv;
-  }
+  if(new_segment.t_end_<new_segment.t_start_) { weight_ratio_=-S_tilde_inv; }
+  else { weight_ratio_=S_tilde_inv; }
+
   return weight_ratio_;
 }
 
+
 //actually insert an operator pair and change the configuration
-void hybmatrix::insert_segment(const segment &new_segment, int orbital){
+void hybmatrix::insert_segment(const segment &new_segment, int orbital)
+{
   //std::cout<<clred<<"upon entering insert segment: "<<*this<<cblack<<std::endl;
   //consistency_check();
   //enlarge the M-matrix by one
@@ -87,16 +94,17 @@ void hybmatrix::insert_segment(const segment &new_segment, int orbital){
   //last element
   operator()(last, last)=1./S_tilde_inv;
   
-   fortran_int_t sm1=size()-1;
-  if(sm1>0){ //this is exactly the content of the loops above, in dger/dgemv blas calls.
-    char trans='T', notrans='N';
-    double alpha=-1./S_tilde_inv, beta=0.;
-    fortran_int_t inc=1;
-    fortran_int_t ms=memory_size();
-    FORTRAN_ID(dgemv)(&  trans, &sm1, &sm1, &alpha, &(operator()(0,0)), &ms, &(Q[0]), &inc, &beta, &(operator()(0,last)), &ms);
-    FORTRAN_ID(dgemv)(&notrans, &sm1, &sm1, &alpha, &(operator()(0,0)), &ms, &(R[0]), &inc, &beta, &(operator()(last,0)), &inc);
-    alpha=S_tilde_inv;
-    FORTRAN_ID(dger)(&sm1, &sm1, &alpha,&(operator()(last,0)), &inc, &(operator()(0,last)), &ms, &(operator()(0,0)), &ms);
+  fortran_int_t sm1=size()-1;
+  if(sm1>0)
+  { //this is exactly the content of the loops above, in dger/dgemv blas calls.
+   char trans='T', notrans='N';
+   double alpha=-1./S_tilde_inv, beta=0.;
+   fortran_int_t inc=1;
+   fortran_int_t ms=memory_size();
+   FORTRAN_ID(dgemv)(&  trans, &sm1, &sm1, &alpha, &(operator()(0,0)), &ms, &(Q[0]), &inc, &beta, &(operator()(0,last)), &ms);
+   FORTRAN_ID(dgemv)(&notrans, &sm1, &sm1, &alpha, &(operator()(0,0)), &ms, &(R[0]), &inc, &beta, &(operator()(last,0)), &inc);
+   alpha=S_tilde_inv;
+   FORTRAN_ID(dger)(&sm1, &sm1, &alpha,&(operator()(last,0)), &inc, &(operator()(0,last)), &ms, &(operator()(0,0)), &ms);
   }
   
   // add the new segment times:
@@ -104,15 +112,15 @@ void hybmatrix::insert_segment(const segment &new_segment, int orbital){
   c_index_map_      .insert(std::make_pair(new_segment.t_end_  , last));
   
   //keep track of the wraparound sign
-  if(new_segment.t_start_>new_segment.t_end_){
-    permutation_sign_*=-1.;
-  }
+  if(new_segment.t_start_>new_segment.t_end_) { permutation_sign_*=-1.; }
   //std::cout<<clred<<*this<<cblack<<std::endl;
-  //consistency_check();
-  
+  //consistency_check();  
 }
+
+
 //compute the hybridization weight change when an operator pair is removed
-double hybmatrix::hyb_weight_change_remove(const segment &new_segment, int orbital, const hybfun &Delta){
+double hybmatrix::hyb_weight_change_remove(const segment &new_segment, int orbital, const hybfun &Delta)
+{
   //std::cout<<clgreen<<"proposing to remove the segment: "<<new_segment<<cblack<<std::endl;
   int k1=cdagger_index_map_[new_segment.t_start_];
   int k2=c_index_map_[new_segment.t_end_];
@@ -121,17 +129,17 @@ double hybmatrix::hyb_weight_change_remove(const segment &new_segment, int orbit
   weight_ratio_=1./S_tilde;
   
   // take care of sign changes due to wraparound segments
-  if(new_segment.t_start_>new_segment.t_end_){
-    weight_ratio_ *=-1;
-  }
+  if(new_segment.t_start_>new_segment.t_end_) { weight_ratio_ *=-1; }
   
   //std::cout<<"returning removal weight ratio: "<<weight_ratio_<<" S_tilde is: "<<S_tilde<<std::endl;
   //std::cout<<S_tilde<<" weight ratio: "<<weight_ratio_<<std::endl;
   return weight_ratio_;
 }
 
+
 //actually remove an operator pair and change the configuration
-void hybmatrix::remove_segment(const segment &new_segment, int orbital){
+void hybmatrix::remove_segment(const segment &new_segment, int orbital)
+{
   //std::cout<<clblue<<"upon entering remove segment: "<<*this<<cblack<<std::endl;
   //consistency_check();
   
@@ -143,11 +151,13 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital){
   
   //swap row and column of thisrow and the last row. Det picks up a minus sign for each interchange.
   double row_column_sign=1.;
-  if(thisrow != last){
+  if(thisrow != last)
+  {
     swap_row(thisrow, last);
     row_column_sign*=-1.;
   }
-  if(thiscolumn != last){
+  if(thiscolumn != last)
+  {
     swap_column(thiscolumn, last);
     row_column_sign*=-1.;
   }
@@ -163,22 +173,25 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital){
    }
    }*/
   fortran_int_t sm1=size()-1;
-  if(sm1>0){ //this is exactly the content of the loops above, in dger/dgemv blas calls.
+  if(sm1>0)
+  { //this is exactly the content of the loops above, in dger/dgemv blas calls.
     double alpha=-1./operator()(last,last);
     fortran_int_t inc=1;
     fortran_int_t ms=memory_size();
     FORTRAN_ID(dger)(&sm1, &sm1, &alpha,&(operator()(last,0)), &inc, &(operator()(0,last)), &ms, &(operator()(0,0)), &ms);
   }
   
-  
   //adjust index of operator that pointed to last, let it point to thisrow instead
-  for(hyb_map_t::iterator it=c_index_map_.begin();it!=c_index_map_.end();++it){
-    if(it->second==last){ it->second=thiscolumn;  break; }
+  for(hyb_map_t::iterator it=c_index_map_.begin();it!=c_index_map_.end();++it)
+  {
+    if(it->second==last) { it->second=thiscolumn; break; }
   }
-  for(hyb_map_t::iterator it=cdagger_index_map_.begin();it!=cdagger_index_map_.end();++it){
-    if(it->second==last){ it->second=thisrow;  break; }
+  for(hyb_map_t::iterator it=cdagger_index_map_.begin();it!=cdagger_index_map_.end();++it)
+  {
+    if(it->second==last) { it->second=thisrow; break; }
   }
-  if(new_segment.t_start_>new_segment.t_end_){
+  if(new_segment.t_start_>new_segment.t_end_)
+  {
     permutation_sign_*=-1.;
     //std::cout<<"additional permutation sign flip: t_start: "<<new_segment.t_start_<<" t_end: "<<new_segment.t_end_<<std::endl;
   }
@@ -196,60 +209,85 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital){
    std::cout<<clred<<"incremental determinant: "<<determinant_<<" actual determinant: "<<determinant()<<" prev determinant: "<<determinant_old_<<cblack<<std::endl;
    determinant_old_=determinant_;*/
 }
-std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat){
+
+
+std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
+{
   os<<"hyb matrix size: "<<hyb_mat.size()<<" permutation sign: "<<hyb_mat.permutation_sign_<<std::endl;
   os<<"c map: ";
-  for(hyb_map_t::const_iterator it=hyb_mat.c_index_map_.begin(); it!=hyb_mat.c_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=hyb_mat.c_index_map_.begin(); it!=hyb_mat.c_index_map_.end(); ++it)
+  {
     os<<"( "<<it->first<<" , "<<it->second<<" ) ";
   }
   os<<std::endl;
   os<<"cdagger map: ";
-  for(hyb_map_t::const_iterator it=hyb_mat.cdagger_index_map_.begin(); it!=hyb_mat.cdagger_index_map_.end();++it){
+  for(hyb_map_t::const_iterator it=hyb_mat.cdagger_index_map_.begin(); it!=hyb_mat.cdagger_index_map_.end(); ++it)
+  {
     os<<"( "<<it->first<<" , "<<it->second<<" ) ";
   }
   std::cout<<std::endl;
   return os;
 }
-void hybmatrix::rebuild_hyb_matrix(int orbital, const hybfun &Delta){
+
+
+void hybmatrix::rebuild_hyb_matrix(int orbital, const hybfun &Delta)
+{
   blas_matrix bup(*this);
   //build the matrix inverse:
-  for(hyb_map_t::const_iterator it_start=c_index_map_.begin();it_start != c_index_map_.end();++it_start){
-    for(hyb_map_t::const_iterator it_end=cdagger_index_map_.begin();it_end != cdagger_index_map_.end();++it_end){
+  for(hyb_map_t::const_iterator it_start=c_index_map_.begin(); it_start != c_index_map_.end(); ++it_start)
+  {
+    for(hyb_map_t::const_iterator it_end=cdagger_index_map_.begin(); it_end != cdagger_index_map_.end(); ++it_end)
+    {
       operator()(it_start->second,it_end->second)=Delta.interpolate(it_start->first-it_end->first, orbital);
     }
   }
   //...then invert it.
   invert();
 }
-void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta){
+
+
+void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
+{
   if(size()<2) return;
   //std::cout<<"on entry rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
   //std::cout<<*this<<std::endl;
   //std::cout<<clblue<<*(blas_matrix*)this<<cblack<<std::endl;
+
   //order the times properly
   int k=0;
   hyb_map_t::iterator it_bup;
-  for(hyb_map_t::iterator it_end=cdagger_index_map_.begin();it_end != cdagger_index_map_.end();){
+  for(hyb_map_t::iterator it_end=cdagger_index_map_.begin(); it_end != cdagger_index_map_.end();)
+  {
     it_bup=it_end++;
     std::pair<double,int> new_entry=*it_bup;
     new_entry.second=k++;
     cdagger_index_map_.erase(it_bup);
     cdagger_index_map_.insert(new_entry);
   }
+
   k=0;
-  for(hyb_map_t::iterator it_start=c_index_map_.begin();it_start != c_index_map_.end();){
+  for(hyb_map_t::iterator it_start=c_index_map_.begin(); it_start != c_index_map_.end();)
+  {
     it_bup=it_start++;
     std::pair<double,int> new_entry=*it_bup;
     new_entry.second=((it_bup==c_index_map_.begin()) && (it_bup->first<cdagger_index_map_.begin()->first))?c_index_map_.size()-1:k++;
     c_index_map_.erase(it_bup);
     c_index_map_.insert(new_entry);
-  }  //if we have an overlapping segment we need a permutation sign of -1, otherwise it is 1 in the ordered case.
-  if(size()==0){
+  }
+  
+  //if we have an overlapping segment we need a permutation sign of -1, otherwise it is 1 in the ordered case.
+  if(size()==0)
+  {
     permutation_sign_=1.;
-  }else{
-    if(c_index_map_.begin()->first<cdagger_index_map_.begin()->first){
+  }
+  else
+  {
+    if(c_index_map_.begin()->first<cdagger_index_map_.begin()->first)
+    {
       permutation_sign_=-1.;
-    }else{
+    }
+    else
+    {
       permutation_sign_=1.;
     }
   }
@@ -259,11 +297,17 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta){
   //std::cout<<clred<<*(blas_matrix*)this<<cblack<<std::endl;
   //std::cout<<"on exit rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
 }
-double hybmatrix::full_weight() const{
+
+
+double hybmatrix::full_weight() const
+{
   //std::cout<<clcyan<<"det: "<<determinant()<<" ps: "<<permutation_sign_<<cblack<<std::endl;
   return determinant()*permutation_sign_;
 }
-void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign) const{
+
+
+void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign) const
+{
   double N_div_beta=(G.size()-1)/beta_;
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
   static std::vector<double> c_times(size()); c_times.resize(size());

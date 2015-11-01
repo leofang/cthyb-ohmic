@@ -45,7 +45,7 @@ class hybmatrix:public blas_matrix{
 public:
   hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; 
   //Leo Fang: introduce multiple reservoirs
-  n_env_=p["N_ENV"]|1;
+  //n_env_=p["N_ENV"]|1;
 }
   hybmatrix(const hybmatrix &rhs) 
       :blas_matrix(rhs)
