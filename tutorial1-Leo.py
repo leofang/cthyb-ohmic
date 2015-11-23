@@ -58,9 +58,9 @@ import numpy as np
 
 # Specify solver parameters as a dictionary
 parms={
-'SWEEPS'              : 50,
-'MAX_TIME'            : 0.5,
-'THERMALIZATION'      : 10,
+'SWEEPS'              : 5000,
+'MAX_TIME'            : 60,
+'THERMALIZATION'      : 100,
 'SEED'                : 7,
 'N_MEAS'              : 50,
 'N_HISTOGRAM_ORDERS'  : 50,

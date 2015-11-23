@@ -111,7 +111,7 @@ if(LAPACK_FOUND)
 #  target_link_libraries(dmft dmft_qmc_impl  ${DMFT_QMC_SOLVERS} ${ALPS_LIBRARIES})
 #  target_link_libraries(hirschfye dmft_qmc_impl ${ALPS_LIBRARIES})
 
-  target_link_libraries(hybridization ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ALPS_LIBRARIES})
+  target_link_libraries(cthyb_ohmic ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ALPS_LIBRARIES})
 #  target_link_libraries(hybridization dmft_qmc_impl ${ALPS_LIBRARIES})
 #  target_link_libraries(interaction dmft_qmc_impl)
 
