@@ -96,14 +96,14 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);
 
 private:
+  //Leo: number of reservoirs
+  int n_env_;
   //the hybridization function Delta
   //Leo: to accomodate multiple reservoirs, this object should be vectorized with dimension N_ENV
   std::vector<hybfun> Delta;
   //Leo: this should be a vector of vector for the same reason
   //The inner vector has dimension N_ENV (new), and the outer vector has dimension N_Orbital (from original code)
   std::vector< std::vector<hybmatrix> > hybmat_;
-  //Leo: number of reservoirs
-  int n_env_;
 };
 
 std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);

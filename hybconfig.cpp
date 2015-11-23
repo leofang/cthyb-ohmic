@@ -76,7 +76,7 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
        }
        //check the size of Delta
        if (Delta.size() != p["N_ENV"].cast<int>())
-         throw std::runtime_error("Delta should have size N_ENV but it does not! Abort!")
+         throw std::runtime_error("Delta should have size N_ENV but it does not! Abort!");
     }
     else if ( (p.defined("N_ENV") && p["N_ENV"].cast<int>()==1) || !p.defined("N_ENV") ) //N_ENV=1
     {
