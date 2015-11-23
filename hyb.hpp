@@ -108,7 +108,7 @@ private:
   void remove_segment_update(int orbital, size_t color);
   void insert_antisegment_update(int orbital, size_t color);
   void remove_antisegment_update(int orbital, size_t color);
-  void spin_flip_update(int orbital);
+  void spin_flip_update(int orbital, size_t color);
   
   //programming and debug functions
   double full_weight() const;
@@ -121,8 +121,11 @@ private:
   std::size_t n_orbitals;
   double sign;
 
-  //Leo Fang: number of reservoirs
+  //Leo: number of reservoirs
   std::size_t n_env;
+  //Leo: need to define a (almost) globally visible varible 
+  size_t color;
+  bool color_updated;
 
   //physics parameters
   double beta;

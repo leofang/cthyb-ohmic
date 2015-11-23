@@ -212,37 +212,77 @@ void hybridization_configuration::insert_antisegment(const segment &new_antisegm
 }
 
 
-void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign) const{
-  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
-    hybmat_[orbital].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign);
+void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign) const
+{
+  for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
+  {
+	for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+	{
+	  hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign);
+	}
   }
 }
-void hybridization_configuration::measure_Gw(std::vector<std::vector<double> > &Gwr, std::vector<std::vector<double> > &Gwi, std::vector<std::vector<double> > &Fwr, std::vector<std::vector<double> > &Fwi, const std::vector<std::map<double,double> > &F_prefactor, double sign) const{
-  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
-    hybmat_[orbital].measure_Gw(Gwr[orbital], Gwi[orbital], Fwr[orbital], Fwi[orbital], F_prefactor[orbital], sign);
+
+
+void hybridization_configuration::measure_Gw(std::vector<std::vector<double> > &Gwr, std::vector<std::vector<double> > &Gwi, std::vector<std::vector<double> > &Fwr, std::vector<std::vector<double> > &Fwi, const std::vector<std::map<double,double> > &F_prefactor, double sign) const
+{
+  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital)
+  { //Leo: not sure if color here works...
+    for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+    {
+       hybmat_[orbital][color].measure_Gw(Gwr[orbital], Gwi[orbital], Fwr[orbital], Fwi[orbital], F_prefactor[orbital], sign);
+    }
   }
 }
-void hybridization_configuration::measure_G2w(std::vector<std::vector<std::complex<double> > >&G2w, std::vector<std::vector<std::complex<double> > > &F2w, int N_w2, int N_w_aux, const std::vector<std::map<double,double> > &F_prefactor) const{
-  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
-    hybmat_[orbital].measure_G2w(G2w[orbital], F2w[orbital], N_w2, N_w_aux, F_prefactor[orbital]);
+
+
+void hybridization_configuration::measure_G2w(std::vector<std::vector<std::complex<double> > >&G2w, std::vector<std::vector<std::complex<double> > > &F2w, int N_w2, int N_w_aux, const std::vector<std::map<double,double> > &F_prefactor) const
+{
+  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital)
+  {
+    for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+    {
+       hybmat_[orbital][color].measure_G2w(G2w[orbital], F2w[orbital], N_w2, N_w_aux, F_prefactor[orbital]);
+    }
   }
 }
-void hybridization_configuration::measure_Gl(std::vector<std::vector<double> > &Gl, std::vector<std::vector<double> > &Fl, const std::vector<std::map<double,double> > &F_prefactor, double sign) const{
-  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
-    hybmat_[orbital].measure_Gl(Gl[orbital], Fl[orbital], F_prefactor[orbital], sign);
+
+
+void hybridization_configuration::measure_Gl(std::vector<std::vector<double> > &Gl, std::vector<std::vector<double> > &Fl, const std::vector<std::map<double,double> > &F_prefactor, double sign) const
+{
+  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital)
+  {
+     for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+     {
+        hybmat_[orbital][color].measure_Gl(Gl[orbital], Fl[orbital], F_prefactor[orbital], sign);
+     }
   }
 }
-double hybridization_configuration::full_weight() const{
+
+
+double hybridization_configuration::full_weight() const
+{
   double weight=1.;
-  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital){
-    weight*=hybmat_[orbital].full_weight();
+  for(std::size_t orbital=0;orbital<hybmat_.size();++orbital)
+  {
+    for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+    {
+       weight*=hybmat_[orbital][color].full_weight();
+    }
   }
   return weight;
 }
-std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config){
-  for(std::size_t i=0;i<hyb_config.hybmat_.size();++i){
-    os<<cblue<<"------- "<<"orbital: "<<i<<" ------"<<cblack<<std::endl;
-    os<<hyb_config.hybmat_[i]<<std::endl;
+
+
+std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config)
+{
+  for(std::size_t i=0;i<hyb_config.hybmat_.size();++i)
+  {
+    for(size_t j=0; j<hyb_config.hybmat_[i].size(); j++) //Leo: not sure if j=color here works...
+    {
+        os<<cblue<<"------- "<<"orbital: "<<i<< ", color: " << j << " ------"<<cblack<<std::endl;
+        os<<hyb_config.hybmat_[i][j]<<std::endl;
+    }
   }
   return os;
 }

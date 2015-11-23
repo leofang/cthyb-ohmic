@@ -81,7 +81,8 @@ if(LAPACK_FOUND)
        hyblocal.cpp
        hybint.cpp
        hybfun.cpp
-       hybretintfun.cpp
+#Leo: disable retarded interaction
+#       hybretintfun.cpp
        hybmatrix.cpp
        hybmatrix_ft.cpp
        hybconfig.cpp
@@ -104,7 +105,7 @@ if(LAPACK_FOUND)
 #  add_executable(dmft main.C selfconsistency.C)
 #  add_executable(hirschfye solver_main.C hirschfyesim.C)
 
-  add_executable(hybridization hybmain.cpp ${DMFT_QMC_HYBRIDIZATION_SOURCE})
+  add_executable(cthyb_ohmic hybmain.cpp ${DMFT_QMC_HYBRIDIZATION_SOURCE})
 #  add_executable(interaction interaction_expansion2/main.cpp ${DMFT_QMC_INTERACTION_EXPANSION2_SOURCE})
 
 #  target_link_libraries(dmft dmft_qmc_impl  ${DMFT_QMC_SOLVERS} ${ALPS_LIBRARIES})

@@ -31,7 +31,8 @@
 
 #include<alps/ngs/params.hpp>
 #include"hybint.hpp"
-#include"hybretintfun.hpp"
+//Leo: disable retarded interaction
+//#include"hybretintfun.hpp"
 #include"hybsegment.hpp"
 #include<set>
 #include<vector>
@@ -69,7 +70,8 @@ public:
   void get_density_vectors(std::vector<std::vector<double> > &n_vector) const;
   double density(int i, double tau) const;
   double mu(int orbital) {return mu_[orbital];}
-  double interaction_density_integral(std::set<segment>::const_iterator &it) const;
+  //Leo: disable retarded interaction
+//  double interaction_density_integral(std::set<segment>::const_iterator &it) const;
   void state_map_segment_insert(state_map &states, const segment &s, int state) const;
   void measure_sector_statistics(std::vector<double> &sector_statistics, double sign) const;
   friend std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
@@ -88,14 +90,16 @@ private:
   int crank_;
   interaction_matrix U_;
   chemical_potential mu_;
-  ret_int_fun K_;
+  //Leo: disable retarded interaction
+//  ret_int_fun K_;
   
   // Leo Fang: number of reservoirs
   int n_env_;   
 
   double beta_;
   int n_orbitals_;
-  bool use_retarded_interaction_;
+  //Leo: disable retarded interaction
+//  bool use_retarded_interaction_;
   std::vector< std::set<segment> >  segments_;
   std::vector<bool > zero_order_orbital_occupied_; //special case for perturbation order zero, where the orbital can either be occupied or empty. True means it is occupied, false is empty.
   std::set<double> times_set_; //this is a map making sure we don't have any times double, which would otherwise confuse the commutators.

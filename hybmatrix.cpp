@@ -311,19 +311,24 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
   double N_div_beta=(G.size()-1)/beta_;
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
   static std::vector<double> c_times(size()); c_times.resize(size());
-  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) {
+  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) 
+  {
     c_times[it->second] = it->first;
   }
-  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) {
+  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) 
+  {
     cdagger_times[it->second] = it->first;
   }
   //we measure G(tau-tau'):=-<T c(tau) c^dagger(tau')>
-  for (int i = 0; i < size(); i++) {
+  for (int i = 0; i < size(); i++) 
+  {
     double f_pref=(F_prefactor.find(c_times[i]))->second;
-    for (int j = 0; j < size(); j++) {
+    for (int j = 0; j < size(); j++) 
+    {
       double argument = c_times[i] - cdagger_times[j];
       double bubble_sign = sign;
-      if (argument < 0) {
+      if (argument < 0) 
+      {
         bubble_sign *=-1.;
         argument += beta_;
       }

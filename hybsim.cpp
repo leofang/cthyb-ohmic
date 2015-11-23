@@ -201,7 +201,8 @@ void hybridization::show_info(const alps::params &parms, int crank){
     if(parms["MEASURE_nnw"]|false) std::cout << "measuring nnw" << std::endl;
     if(parms["MEASURE_sector_statistics"]|false) std::cout << "measuring sector statistics" << std::endl;
     if(parms["COMPUTE_VERTEX"]|false) std::cout << "vertex will be computed" << std::endl;
-    if(parms.defined("RET_INT_K")) std::cout << "using retarded interaction" << std::endl;
+    //Leo: disable retarded interaction
+//    if(parms.defined("RET_INT_K")) std::cout << "using retarded interaction" << std::endl;
     if(parms.defined("U_MATRIX")) std::cout << "reading U matrix from file " << parms["U_MATRIX"] << std::endl;
     if(parms.defined("MU_VECTOR")) std::cout << "reading MU vector from file " << parms["MU_VECTOR"] << std::endl;
     std::cout << "Simulation scheduled to run " << parms["MAX_TIME"] << " seconds" << std::endl << std::endl;

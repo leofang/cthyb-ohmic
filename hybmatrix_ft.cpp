@@ -29,34 +29,41 @@
 
 #include "hybmatrix.hpp"
 
-void hybmatrix::measure_Gw(std::vector<double> &Gwr, std::vector<double> &Gwi , std::vector<double> &Fwr, std::vector<double> &Fwi , const std::map<double,double> &F_prefactor, double sign) const{
+void hybmatrix::measure_Gw(std::vector<double> &Gwr, std::vector<double> &Gwi , std::vector<double> &Fwr, std::vector<double> &Fwi , const std::map<double,double> &F_prefactor, double sign) const
+{
+  //Leo: don't know why it needs to be static...
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
   static std::vector<double> c_times(size()); c_times.resize(size());
   static std::vector<std::complex<double> > cdagger_exp(size()); cdagger_exp.resize(size());
   static std::vector<std::complex<double> > c_exp(size()); c_exp.resize(size());
 
   //create map of creator and annihilator times
-  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) {
+  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) 
+  {
     c_times[it->second] = it->first;
   }
-  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) {
+  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) 
+  {
     cdagger_times[it->second] = it->first;
   }
 
-  for(int i=0;i<size();++i){ c_exp      [i]=std::exp(std::complex<double>(0,  M_PI*c_times      [i]/beta_)); }
-  for(int i=0;i<size();++i){ cdagger_exp[i]=std::exp(std::complex<double>(0, -M_PI*cdagger_times[i]/beta_)); }
+  for(int i=0;i<size();++i) { c_exp      [i]=std::exp(std::complex<double>(0,  M_PI*c_times      [i]/beta_)); }
+  for(int i=0;i<size();++i) { cdagger_exp[i]=std::exp(std::complex<double>(0, -M_PI*cdagger_times[i]/beta_)); }
   //measures the Fourier transform of G(tau-tau'):=-<T c(tau) c^dagger(tau')>
-  for (int i = 0; i < size(); i++) {
+  for (int i = 0; i < size(); i++) 
+  {
     //note: strictly F_prefactor should be evaluated for cdagger_times for F(tau)
     //here we evaluate it instead for the annihilator times
     //this works only as long as F is diagonal (i.e. for diagonal hybridization)
     //see comments on get_F_prefactor in hyblocal.cpp
     double f_pref=(F_prefactor.find(c_times[i]))->second;
-    for (int j = 0; j < size(); j++) {
+    for (int j = 0; j < size(); j++) 
+    {
       std::complex<double> M_ji = operator() (j, i) * sign;
       std::complex<double> exp=c_exp[i]*cdagger_exp[j];
       std::complex<double> dexp=exp*exp;
-      for(std::size_t wn=0; wn<Gwr.size(); wn++){
+      for(std::size_t wn=0; wn<Gwr.size(); wn++)
+      {
         //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
         std::complex<double> meas = -M_ji*exp/beta_;
         Gwr[wn] += meas.real();
