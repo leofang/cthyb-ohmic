@@ -35,7 +35,8 @@
 
 void evaluate_basics(const alps::results_type<hybridization>::type &results,
                      const alps::parameters_type<hybridization>::type &parms,
-                     alps::hdf5::archive &solver_output){
+                     alps::hdf5::archive &solver_output)
+{
 
   std::size_t n_orbitals=parms["N_ORBITALS"];
   std::size_t N_meas=parms["N_MEAS"];
@@ -43,18 +44,20 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
 
   boost::uint64_t sweeps = results["Sign"].count()+(boost::uint64_t)parms["THERMALIZATION"];
 
-  if(parms["TEXT_OUTPUT"]|false){
+  if(parms["TEXT_OUTPUT"]|false)
+  {
     std::ofstream sim_file("simulation.dat");
     sim_file << "simulation details:" << std::endl;
     sim_file << "average sign: " << results["Sign"].mean<double>() << std::endl;
     sim_file << "total number of Monte Carlo updates: " << sweeps*(int)parms["N_MEAS"] << std::endl;
     sim_file << "total number of Monte Carlo measurements: " << results["Sign"].count() << std::endl;
     if(parms["MEASURE_time"]|true)
-      sim_file << "total number of imaginary time measurements: " << results["Sign"].count()*N_meas << std::endl;
+       sim_file << "total number of imaginary time measurements: " << results["Sign"].count()*N_meas << std::endl;
     sim_file << "number thermalization sweeps: " << parms["THERMALIZATION"] << std::endl;
     sim_file << "inverse temperature: " << beta << std::endl;
     sim_file << "perturbation order:" << std::endl;
-    for(std::size_t i=0;i<n_orbitals;++i){//replace Green function endpoints by corresponding densities
+    for(std::size_t i=0;i<n_orbitals;++i)
+    {//replace Green function endpoints by corresponding densities
       std::stringstream order_name; order_name<<"order_"<<i;
       double order=results[order_name.str()].mean<double>();
       sim_file << "orbital " << i << ": " << order << std::endl;
@@ -66,7 +69,8 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
       sim_file << "  Total acceptance rate = " << std::setprecision(2) << std::fixed;
       sim_file << (((double)tot_acc)/(sweep_count*N_meas))*100 << "%" << std::endl;
       sim_file << "  Individual acceptance rate for update " << std::endl;
-      for (int i=0;i<nacc.size();i++) {
+      for (int i=0;i<nacc.size();i++) 
+      {
           sim_file << "     " << update_type[i] << " = ";
           sim_file << std::setprecision(2) << std::fixed << (((double)nacc[i])/(sweep_count*N_meas))*100 << "%";
           sim_file << " (proposal rate = ";
@@ -77,12 +81,15 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
     sim_file.close();
 
     std::ofstream obs_file("observables.dat");//equal-time correlators
-    for(std::size_t i=0;i<n_orbitals;++i){//replace Green function endpoints by corresponding densities
+    for(std::size_t i=0;i<n_orbitals;++i)
+    {//replace Green function endpoints by corresponding densities
       std::stringstream density_name; density_name<<"density_"<<i;
       double density=results[density_name.str()].mean<double>();
       obs_file << "n" << i << "=" << density << ";" << std::endl;
-      if(parms["MEASURE_nn"]|false){
-        for(std::size_t j=0;j<i;++j){
+      if(parms["MEASURE_nn"]|false)
+      {
+        for(std::size_t j=0;j<i;++j)
+        {
           std::stringstream nn_name; nn_name<<"nn_"<<i<<"_"<<j;
           double nn=results[nn_name.str()].mean<double>();
           obs_file << "n" << i << "n" << j << "=" << nn << ";" << std::endl;
@@ -94,13 +101,16 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
     std::ofstream order_file("orders.dat");
     std::vector<std::vector<double> > order_histogram(n_orbitals);
     std::vector<std::vector<double> > order_histogram_err(n_orbitals);
-    for(std::size_t j=0;j<n_orbitals;++j){
+    for(std::size_t j=0;j<n_orbitals;++j)
+    {
       std::stringstream order_name; order_name<<"order_histogram_"<<j;
       order_histogram[j]=results[order_name.str()].mean<std::vector<double> >();
       order_histogram_err[j]=results[order_name.str()].error<std::vector<double> >();
     }
-    for(std::size_t j=0;j<n_orbitals;++j){
-      for(std::size_t k=0;k<order_histogram[0].size();++k){
+    for(std::size_t j=0;j<n_orbitals;++j)
+    {
+      for(std::size_t k=0;k<order_histogram[0].size();++k)
+      {
         order_file<<k;
         order_file<<" "<<order_histogram[j][k]<<" "<<order_histogram_err[j][k]<<std::endl;
       }
@@ -114,7 +124,8 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
 
 void evaluate_time(const alps::results_type<hybridization>::type &results,
                    const alps::parameters_type<hybridization>::type &parms,
-                   alps::hdf5::archive &solver_output){
+                   alps::hdf5::archive &solver_output)
+{
 
   if(!(parms["MEASURE_time"]|true)) return;
   std::size_t N_t = parms["N_TAU"];
@@ -126,12 +137,14 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
   //Imaginary time Green function
   itime_green_function_t G_tau(N_t+1, n_sites, n_orbitals);
   itime_green_function_t F_tau(N_t+1, n_sites, n_orbitals);
-  for(std::size_t i=0;i<n_orbitals;++i){
+  for(std::size_t i=0;i<n_orbitals;++i)
+  {
     std::stringstream g_name; g_name<<"g_"<<i;
     std::stringstream f_name; f_name<<"f_"<<i;
     std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
     std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
-    for(std::size_t t=0;t<N_t+1;++t){
+    for(std::size_t t=0;t<N_t+1;++t)
+    {
       G_tau(t,0,0,i)=G[t];
       F_tau(t,0,0,i)=F[t];
     }
@@ -141,7 +154,8 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
     F_tau(N_t,0,0,i)*=2.; //have half the size
   }
 
-  for(std::size_t i=0;i<n_orbitals;++i){//replace Green function endpoints by corresponding densities
+  for(std::size_t i=0;i<n_orbitals;++i)
+  {//replace Green function endpoints by corresponding densities
     std::stringstream density_name; density_name<<"density_"<<i;
     double density=results[density_name.str()].mean<double>();
     G_tau(0,0,0,i)  =-1.*(1-density);
@@ -153,7 +167,8 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
   F_tau.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau");
 
   // ERROR
-  for(std::size_t i=0; i<n_orbitals; i++){
+  for(std::size_t i=0; i<n_orbitals; i++)
+  {
      std::stringstream density_name; density_name<<"density_"<<i;
      double density_err=results[density_name.str()].error<double>();
      std::vector<double> err(N_t+1);
@@ -171,7 +186,8 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
   }
     
   //COVARIANCE
-  for(std::size_t i=0; i<n_orbitals; i++){
+  for(std::size_t i=0; i<n_orbitals; i++)
+  {
     boost::numeric::ublas::matrix<double> cov(N_t+1, N_t+1);
     std::stringstream g_name; g_name<<"g_"<<i;
     if (accurate)
@@ -202,20 +218,25 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
     solver_output<<alps::make_pvp(data_path.str(), data);
   }
 
-  if(parms["TEXT_OUTPUT"]|0){
+  if(parms["TEXT_OUTPUT"]|0)
+  {
     std::ofstream G_file("Gt.dat");
-    for(std::size_t t=0;t<=N_t;++t){
+    for(std::size_t t=0;t<=N_t;++t)
+    {
       G_file<<beta*t/N_t;
-      for(std::size_t j=0;j<n_orbitals;++j){
+      for(std::size_t j=0;j<n_orbitals;++j)
+      {
         G_file<<" "<<G_tau(t,0,0,j);
       }
       G_file<<std::endl;
     }
     G_file.close();
      std::ofstream F_file("Ft.dat");
-    for(std::size_t t=0;t<=N_t;++t){
+    for(std::size_t t=0;t<=N_t;++t)
+    {
       F_file<<beta*t/N_t;
-      for(std::size_t j=0;j<n_orbitals;++j){
+      for(std::size_t j=0;j<n_orbitals;++j)
+      {
         F_file<<" "<<F_tau(t,0,0,j);
       }
       F_file<<std::endl;

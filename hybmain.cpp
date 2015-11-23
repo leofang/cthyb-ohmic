@@ -138,7 +138,8 @@ int main(int argc, char** argv)
 
 void master_final_tasks(const alps::results_type<hybridization>::type &results,
                         const alps::parameters_type<hybridization>::type &parms,
-                        const std::string &output_name){
+                        const std::string &output_name)
+{
   //do some post processing: collect Green functions and write
   //them into hdf5 files; calls compute vertex at the very end
   std::cout << "final task starts...\n";
@@ -146,13 +147,13 @@ void master_final_tasks(const alps::results_type<hybridization>::type &results,
   alps::hdf5::archive solver_output(output_name, "a");
 //
   evaluate_basics(results,parms,solver_output);
-//  evaluate_time(results,parms,solver_output);
-//  evaluate_freq(results,parms,solver_output);
-//  evaluate_legendre(results,parms,solver_output);
-//  evaluate_nnt(results,parms,solver_output);
-//  evaluate_nnw(results,parms,solver_output);
-//  evaluate_sector_statistics(results,parms,solver_output);
-//  evaluate_2p(results, parms, solver_output);
+  evaluate_time(results,parms,solver_output);
+  evaluate_freq(results,parms,solver_output);
+  evaluate_legendre(results,parms,solver_output);
+  evaluate_nnt(results,parms,solver_output);
+  evaluate_nnw(results,parms,solver_output);
+  evaluate_sector_statistics(results,parms,solver_output);
+  evaluate_2p(results, parms, solver_output);
 }
 
 //#ifdef BUILD_PYTHON_MODULE
