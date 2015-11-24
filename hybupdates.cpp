@@ -51,11 +51,14 @@ void hybridization::update()
     //Leo: we don't know the update type at this point, so set color_updated = false
     color_updated = false;
 
-    if (update_type < 0.02 && global_flip)
-    {
-      global_flip_update();
-    } 
-    else if (update_type<0.1) 
+    //Leo: Disable global_flip_update because it's too painful to modify it;
+    //     besides, this update is removed in the GitHub version (don't know why).
+//    if (update_type < 0.02 && global_flip)
+//    {
+//      global_flip_update();
+//    } 
+//    else if (update_type<0.1) 
+    if (update_type<0.1)
     {
       change_zero_order_state_update();
 //    } else if (update_type < 0) {
@@ -252,114 +255,116 @@ void hybridization::change_zero_order_state_update()
 // Perform a complete swap of segments between two orbitals
 // THIS IS TOTALLY EXPERIMENTAL
 // Not (yet) optimized
-void hybridization::global_flip_update()
-{
-  nprop[6]++;
-  // Pick orbital 1
-  int orbital1=(int)(random()*n_orbitals);
-  // Pick orbital 2 from the rest
-  int orbital2=(int)(random()*(n_orbitals-1));
-  orbital2 = (orbital2<orbital1)?orbital2:1+orbital2;
-  
-  // These are the actual orders for each of the orbitals
-  int k1 = local_config.order(orbital1),k2=local_config.order(orbital2);
-  // At present we do nothing if one is empty (can be relaxed, I think)
-  if (k1==0 || k2==0) {
-//    std::cerr << "k1 = " << k1 << " and k2 = " << k2 << std::endl;
-    return;
-  }
-  std::vector<int> orbitals(2);
-  orbitals[0] = orbital1;
-  orbitals[1] = orbital2;
-  //std::cerr << "On entry:" << std::endl;
-  //hyb_config.dump();
-//  std::cerr << "Orbitals picked are " << orbital1 << " and " << orbital2 << std::endl;
-  // We need to store the segments for the swap
-  // This is quite clumsy. However, I did not succeed in generating an
-  // intermediate copy of hyb_config. I tried to implement a copy constructor,
-  // but this clashed in a seg-fault when trying to delete it
-  std::vector<segment> seg1(k1),seg2(k2);
-  // I brutally compute the change in hybridization configuration by simply
-  // deleting successivley all segments from orbital 1 and then inserting the
-  // ones from orbital 2; likewise for orbital 2.
-  // The local weight change I compute from the local energy, taking into account
-  // the mu-part only (this is the meaning of the bool in local_energy call;
-  // should be fine for Coulomb only as the segments do not really change, but
-  // may cause trouble when Hund is present or for dynamic Coulomb.
-  double total_hyb_weight_change = 1.0,d_e=0.0;
-  for (int k=0;k<k1;k++) {
-    seg1[k] = local_config.get_segment(k,orbital1);
-    d_e -= local_config.local_energy(seg1[k],orbital1);//,true);
-  }
-  for (int k=0;k<k2;k++) {
-    seg2[k] = local_config.get_segment(k,orbital2);
-    d_e -= local_config.local_energy(seg2[k],orbital2);//,true);
-  }
-  for (int k=0;k<k1;k++) {
-    total_hyb_weight_change /= hyb_config.hyb_weight_change_remove(seg1[k],orbital1);
-    hyb_config.remove_segment(seg1[k],orbital1);
-    local_config.remove_segment(seg1[k],orbital1);
-  }
-  for (int k=0;k<k2;k++) {
-    total_hyb_weight_change *= hyb_config.hyb_weight_change_insert(seg2[k],orbital1);
-    hyb_config.insert_segment(seg2[k],orbital1);
-    local_config.remove_segment(seg2[k],orbital2);
-  }
-  for (int k=0;k<k2;k++) {
-    total_hyb_weight_change /= hyb_config.hyb_weight_change_remove(seg2[k],orbital2);
-    hyb_config.remove_segment(seg2[k],orbital2);
-    local_config.insert_segment(seg2[k],orbital1);
-  }
-  for (int k=0;k<k1;k++) {
-    total_hyb_weight_change *= hyb_config.hyb_weight_change_insert(seg1[k],orbital2);
-    hyb_config.insert_segment(seg1[k],orbital2);
-    local_config.insert_segment(seg1[k],orbital2);
-  }
-  for (int k=0;k<k2;k++) d_e += local_config.local_energy(seg2[k],orbital1);
-  for (int k=0;k<k1;k++) d_e += local_config.local_energy(seg1[k],orbital2);
-
-  // This is the total weight change due to the swap. If all orbitals are
-  // equivalent (and the expansion order is the same) this should be one.
-  double weight_change = exp(d_e)*total_hyb_weight_change;
-  // Since the total expansion order does not change, there should be no
-  // permutation factor appearing here
-  // std::cerr << "In between: de = " << d_e << ", total hyb weight change = "<< total_hyb_weight_change << ", MC weight change = " << weight_change << std::endl;
-//  hyb_config.dump();
-  hyb_config.rebuild(orbitals);
-
-  // MC move
-  if(std::abs(weight_change)>random()){
-    nacc[6]++;
-    if(weight_change < 0) sign*=-1.;
-    // Accepted. Since we already changed the configuration, we have nothing to do
-  } else {
-    // Rejected. We have to restore the old configuration
-    for (int k=0;k<k2;k++) {
-      hyb_config.remove_segment(seg2[k],orbital1);
-      local_config.remove_segment(seg2[k],orbital1);
-    }
-    for (int k=0;k<k1;k++) {
-      hyb_config.remove_segment(seg1[k],orbital2);
-      local_config.remove_segment(seg1[k],orbital2);
-    }
-    for (int k=0;k<k1;k++) {
-      hyb_config.insert_segment(seg1[k],orbital1);
-      local_config.insert_segment(seg1[k],orbital1);
-    }
-    for (int k=0;k<k2;k++) {
-      hyb_config.insert_segment(seg2[k],orbital2);
-      local_config.insert_segment(seg2[k],orbital2);
-    }
-//    hyb_config.dump();
-    hyb_config.rebuild(orbitals);
-  }
-  local_config.check_consistency();
-  //std::cerr << "On exit:" << std::endl;
-  //Full weight  = " << hyb_config.full_weight() << std::endl;
-  //hyb_config.dump();
-//  exit(-1);
-// Done.
-}
+    //Leo: Disable global_flip_update because it's too painful to modify it;
+    //     besides, this update is removed in the GitHub version (don't know why).
+//void hybridization::global_flip_update()
+//{
+//  nprop[6]++;
+//  // Pick orbital 1
+//  int orbital1=(int)(random()*n_orbitals);
+//  // Pick orbital 2 from the rest
+//  int orbital2=(int)(random()*(n_orbitals-1));
+//  orbital2 = (orbital2<orbital1)?orbital2:1+orbital2;
+//  
+//  // These are the actual orders for each of the orbitals
+//  int k1 = local_config.order(orbital1),k2=local_config.order(orbital2);
+//  // At present we do nothing if one is empty (can be relaxed, I think)
+//  if (k1==0 || k2==0) {
+////    std::cerr << "k1 = " << k1 << " and k2 = " << k2 << std::endl;
+//    return;
+//  }
+//  std::vector<int> orbitals(2);
+//  orbitals[0] = orbital1;
+//  orbitals[1] = orbital2;
+//  //std::cerr << "On entry:" << std::endl;
+//  //hyb_config.dump();
+////  std::cerr << "Orbitals picked are " << orbital1 << " and " << orbital2 << std::endl;
+//  // We need to store the segments for the swap
+//  // This is quite clumsy. However, I did not succeed in generating an
+//  // intermediate copy of hyb_config. I tried to implement a copy constructor,
+//  // but this clashed in a seg-fault when trying to delete it
+//  std::vector<segment> seg1(k1),seg2(k2);
+//  // I brutally compute the change in hybridization configuration by simply
+//  // deleting successivley all segments from orbital 1 and then inserting the
+//  // ones from orbital 2; likewise for orbital 2.
+//  // The local weight change I compute from the local energy, taking into account
+//  // the mu-part only (this is the meaning of the bool in local_energy call;
+//  // should be fine for Coulomb only as the segments do not really change, but
+//  // may cause trouble when Hund is present or for dynamic Coulomb.
+//  double total_hyb_weight_change = 1.0,d_e=0.0;
+//  for (int k=0;k<k1;k++) {
+//    seg1[k] = local_config.get_segment(k,orbital1);
+//    d_e -= local_config.local_energy(seg1[k],orbital1);//,true);
+//  }
+//  for (int k=0;k<k2;k++) {
+//    seg2[k] = local_config.get_segment(k,orbital2);
+//    d_e -= local_config.local_energy(seg2[k],orbital2);//,true);
+//  }
+//  for (int k=0;k<k1;k++) {
+//    total_hyb_weight_change /= hyb_config.hyb_weight_change_remove(seg1[k],orbital1);
+//    hyb_config.remove_segment(seg1[k],orbital1);
+//    local_config.remove_segment(seg1[k],orbital1);
+//  }
+//  for (int k=0;k<k2;k++) {
+//    total_hyb_weight_change *= hyb_config.hyb_weight_change_insert(seg2[k],orbital1);
+//    hyb_config.insert_segment(seg2[k],orbital1);
+//    local_config.remove_segment(seg2[k],orbital2);
+//  }
+//  for (int k=0;k<k2;k++) {
+//    total_hyb_weight_change /= hyb_config.hyb_weight_change_remove(seg2[k],orbital2);
+//    hyb_config.remove_segment(seg2[k],orbital2);
+//    local_config.insert_segment(seg2[k],orbital1);
+//  }
+//  for (int k=0;k<k1;k++) {
+//    total_hyb_weight_change *= hyb_config.hyb_weight_change_insert(seg1[k],orbital2);
+//    hyb_config.insert_segment(seg1[k],orbital2);
+//    local_config.insert_segment(seg1[k],orbital2);
+//  }
+//  for (int k=0;k<k2;k++) d_e += local_config.local_energy(seg2[k],orbital1);
+//  for (int k=0;k<k1;k++) d_e += local_config.local_energy(seg1[k],orbital2);
+//
+//  // This is the total weight change due to the swap. If all orbitals are
+//  // equivalent (and the expansion order is the same) this should be one.
+//  double weight_change = exp(d_e)*total_hyb_weight_change;
+//  // Since the total expansion order does not change, there should be no
+//  // permutation factor appearing here
+//  // std::cerr << "In between: de = " << d_e << ", total hyb weight change = "<< total_hyb_weight_change << ", MC weight change = " << weight_change << std::endl;
+////  hyb_config.dump();
+//  hyb_config.rebuild(orbitals);
+//
+//  // MC move
+//  if(std::abs(weight_change)>random()){
+//    nacc[6]++;
+//    if(weight_change < 0) sign*=-1.;
+//    // Accepted. Since we already changed the configuration, we have nothing to do
+//  } else {
+//    // Rejected. We have to restore the old configuration
+//    for (int k=0;k<k2;k++) {
+//      hyb_config.remove_segment(seg2[k],orbital1);
+//      local_config.remove_segment(seg2[k],orbital1);
+//    }
+//    for (int k=0;k<k1;k++) {
+//      hyb_config.remove_segment(seg1[k],orbital2);
+//      local_config.remove_segment(seg1[k],orbital2);
+//    }
+//    for (int k=0;k<k1;k++) {
+//      hyb_config.insert_segment(seg1[k],orbital1);
+//      local_config.insert_segment(seg1[k],orbital1);
+//    }
+//    for (int k=0;k<k2;k++) {
+//      hyb_config.insert_segment(seg2[k],orbital2);
+//      local_config.insert_segment(seg2[k],orbital2);
+//    }
+////    hyb_config.dump();
+//    hyb_config.rebuild(orbitals);
+//  }
+//  local_config.check_consistency();
+//  //std::cerr << "On exit:" << std::endl;
+//  //Full weight  = " << hyb_config.full_weight() << std::endl;
+//  //hyb_config.dump();
+////  exit(-1);
+//// Done.
+//}
 
 
 void hybridization::shift_segment_update(){
@@ -371,18 +376,19 @@ void hybridization::insert_remove_segment_update()
 {
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
-
+   
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  if(n_env == 1) { size_t color_temp = 0; } // Only one color
+  size_t color_temp;
+  if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   { 
-     if(random()<0.5){ size_t color_temp = 0; } // blue = 0 = R
-     else            { size_t color_temp = 1; } // red = 1 = L  
+     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+     else            { color_temp = 1; } // red = 1 = L  
   }
   else 
   {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
   }
 
   if(random()<0.5){ insert_segment_update(orbital, color_temp); }
@@ -397,15 +403,16 @@ void hybridization::insert_remove_antisegment_update()
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  if(n_env == 1) { size_t color_temp = 0; } // Only one color
+  size_t color_temp;
+  if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   { 
-     if(random()<0.5){ size_t color_temp = 0; } // blue = 0 = R
-     else            { size_t color_temp = 1; } // red = 1 = L  
+     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+     else            { color_temp = 1; } // red = 1 = L  
   }
   else 
   {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
   }
 
   if(random()<0.5){ insert_antisegment_update(orbital, color_temp); }
@@ -420,15 +427,16 @@ void hybridization::insert_remove_spin_flip_update()
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  if(n_env == 1) { size_t color_temp = 0; } // Only one color
+  size_t color_temp;
+  if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   {  
-     if(random()<0.5){ size_t color_temp = 0; } // blue = 0 = R
-     else            { size_t color_temp = 1; } // red = 1 = L  
+     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+     else            { color_temp = 1; } // red = 1 = L  
   }
   else 
   {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.")
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
   }
 
   spin_flip_update(orbital, color_temp);
@@ -527,7 +535,7 @@ void hybridization::remove_segment_update(int orbital, size_t color_temp)
     if(weight_change < 0) sign*=-1.;
 //      double fwo = full_weight();
     local_config.remove_segment(segment_to_remove, orbital);
-    hyb_config.remove_segment(segment_to_remove, orbital);
+    hyb_config.remove_segment(segment_to_remove, orbital, color_temp);
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     color_updated = true;
@@ -703,7 +711,7 @@ void hybridization::spin_flip_update(int orbital, size_t color_temp)
   double weight_change_1=hybridization_weight_change_1;
   if (weight_change_1<0) sign*=-1;
   local_config.remove_segment(segment_to_flip, orbital);
-  hyb_config.remove_segment(segment_to_flip, orbital);
+  hyb_config.remove_segment(segment_to_flip, orbital, color_temp);
   //double full_weight_removed=full_weight();
   segment new_segment(t_start, t_end, color_temp, color_temp);
   de += local_config.local_energy(new_segment,other_orbital);
