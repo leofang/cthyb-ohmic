@@ -30,9 +30,14 @@
 
 hybridization_configuration::hybridization_configuration(const alps::params &p):
 //  Delta((int)(p["N_ENV"]), p),
-  n_env_((int)p["N_ENV"]),
-  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>((int)(p["N_ENV"]), p))
+  n_env_(p.defined("N_ENV")?(int)p["N_ENV"]:1),
+  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p))
 {
+  //n_env_ = (int)p["N_ENV"]|1;
+  std::cout << "Debug output: hybridization_configuration is initializing..." << std::endl;
+  std::cout << "N_ENV = " << n_env_ << std::endl;
+  //hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p));
+  std::cout << "Initialize Delta..." << std::endl << std::endl;
   initialize_Delta(p);
 }
 
@@ -40,12 +45,13 @@ hybridization_configuration::hybridization_configuration(const alps::params &p):
 // initialize Delta from files
 void hybridization_configuration::initialize_Delta(const alps::params &p)
 {
+//    std::cout << "n_env_ = " << n_env_ << std::endl;
+//    std::cout << "Initialize Delta..." << std::endl;
     // read multiple hybridization files upon request
-    // TODO: replace p["N_ENV"] by n_env_ which is defined in hybridization_configuration
-    if(p.defined("N_ENV") && p["N_ENV"].cast<int>()>1) //N_ENV>=2
+    if(p.defined("N_ENV") && n_env_>1) //N_ENV>=2
     {
        // detect if hybridization input files are given
-       for(int i=0; i< p["N_ENV"].cast<int>(); i++)
+       for(int i=0; i< n_env_; i++)
        {
          std::stringstream temp_stream; // stringstream used for the conversion
          temp_stream << i;              // add the value of i to the characters in the stream
@@ -57,10 +63,10 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
        }
        //prepare parameter set for each environment by pretending other environments do not exist
        //and call "DELTAi" as "DELTA"
-       for(int i=0; i< p["N_ENV"].cast<int>(); i++)
+       for(int i=0; i< n_env_; i++)
        {
          alps::params temp_params = p; // temp_params is a "buffer"
-         for(int j=0; j< p["N_ENV"].cast<int>(); j++)
+         for(int j=0; j< n_env_; j++)
          {
              std::stringstream temp_stream;
              temp_stream << j;
@@ -75,10 +81,10 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
          Delta.push_back(temp_params);
        }
        //check the size of Delta
-       if (Delta.size() != p["N_ENV"].cast<int>())
+       if (Delta.size() != n_env_)
          throw std::runtime_error("Delta should have size N_ENV but it does not! Abort!");
     }
-    else if ( (p.defined("N_ENV") && p["N_ENV"].cast<int>()==1) || !p.defined("N_ENV") ) //N_ENV=1
+    else if ( (p.defined("N_ENV") && n_env_==1) || !p.defined("N_ENV") ) //N_ENV=1
     {
         alps::params temp_params = p;
         if(!p.defined("DELTA") && !p.defined("DELTA0"))
