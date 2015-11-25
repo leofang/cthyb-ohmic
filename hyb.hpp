@@ -104,11 +104,11 @@ private:
 
   //details of update routines
   //Leo: dependence on color is added, if in trouble just remove it...
-  void insert_segment_update(int orbital, size_t color);
-  void remove_segment_update(int orbital, size_t color);
-  void insert_antisegment_update(int orbital, size_t color);
-  void remove_antisegment_update(int orbital, size_t color);
-  void spin_flip_update(int orbital, size_t color);
+  void insert_segment_update(int orbital, std::size_t color);
+  void remove_segment_update(int orbital, std::size_t color);
+  void insert_antisegment_update(int orbital, std::size_t color);
+  void remove_antisegment_update(int orbital, std::size_t color);
+  void spin_flip_update(int orbital, std::size_t color);
   
   //programming and debug functions
   double full_weight() const;
@@ -124,7 +124,7 @@ private:
   //Leo: number of reservoirs
   std::size_t n_env;
   //Leo: need to define a (almost) globally visible varible 
-  size_t color;
+  std::size_t color;
   bool color_updated;
 
   //physics parameters

@@ -90,9 +90,10 @@ void hybridization::update()
     /* Leo Fang: for test purpose, print out the segment map */
     if(sweeps<=debug_number) 
     { 
-	std::cout << "|---------------------------------------------------------------------------------|\n";
-	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:\n"; local_config.print_segments(); 
-	std::cout << "|---------------------------------------------------------------------------------|\n\n";
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments(); 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+        std::cout << std::endl;
     }
 
   }//N_meas
@@ -379,7 +380,7 @@ void hybridization::insert_remove_segment_update()
    
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  size_t color_temp;
+  std::size_t color_temp;
   if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   { 
@@ -403,7 +404,7 @@ void hybridization::insert_remove_antisegment_update()
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  size_t color_temp;
+  std::size_t color_temp;
   if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   { 
@@ -427,7 +428,7 @@ void hybridization::insert_remove_spin_flip_update()
 
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  size_t color_temp;
+  std::size_t color_temp;
   if(n_env == 1) { color_temp = 0; } // Only one color
   else if(n_env==2)
   {  
@@ -443,7 +444,7 @@ void hybridization::insert_remove_spin_flip_update()
 }
 
 
-void hybridization::insert_segment_update(int orbital, size_t color_temp)
+void hybridization::insert_segment_update(int orbital, std::size_t color_temp)
 {
   nprop[1]++;
   //std::cout<<clred<<"starting insertion update."<<cblack<<std::endl;
@@ -496,7 +497,7 @@ void hybridization::insert_segment_update(int orbital, size_t color_temp)
 }
 
 
-void hybridization::remove_segment_update(int orbital, size_t color_temp)
+void hybridization::remove_segment_update(int orbital, std::size_t color_temp)
 {
   nprop[2]++;
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
@@ -507,6 +508,10 @@ void hybridization::remove_segment_update(int orbital, size_t color_temp)
   int segment_nr=(int)(random()*k);
   
   segment segment_to_remove=local_config.get_segment(segment_nr, orbital);
+
+  //Leo: for debug purpose, print the colors of the chosen segment
+  std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
+            << "c_end=" << segment_to_remove.c_end_ << std::endl;
 
   //Leo: check if the colors of both ends and the randomly picked color are all the same
   if(color_temp == segment_to_remove.c_start_ && color_temp == segment_to_remove.c_end_) ; //do nothing
@@ -545,7 +550,7 @@ void hybridization::remove_segment_update(int orbital, size_t color_temp)
 }
 
 
-void hybridization::insert_antisegment_update(int orbital, size_t color_temp)
+void hybridization::insert_antisegment_update(int orbital, std::size_t color_temp)
 {
   nprop[3]++;
   if(local_config.order(orbital)==0 && !local_config.zero_order_orbital_occupied(orbital)) return; //can't insert an antisegment, orbital is empty.
@@ -567,6 +572,7 @@ void hybridization::insert_antisegment_update(int orbital, size_t color_temp)
   //std::cout<<clgreen<<" antisegment start time: (cdagger): "<<t_start<<" end time (c): "<<t_end<<std::endl;
   
   //compute local weight of the removed segment with t_start and t_end
+  //Leo: need to check!
   segment new_segment(t_start, t_end, color_temp, color_temp);
   //std::cout<<clred<<"antisegment insert."<<std::endl;
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, true);
@@ -599,7 +605,7 @@ void hybridization::insert_antisegment_update(int orbital, size_t color_temp)
 }
 
 
-void hybridization::remove_antisegment_update(int orbital, size_t color_temp)
+void hybridization::remove_antisegment_update(int orbital, std::size_t color_temp)
 {
   nprop[4]++;
   int k=local_config.order(orbital);
@@ -610,6 +616,10 @@ void hybridization::remove_antisegment_update(int orbital, size_t color_temp)
   //try to merge segment k and segment k+1
   segment segment_earlier=local_config.get_segment(segment_nr, orbital);
   segment segment_later  =local_config.get_segment(segment_nr==k-1?0:segment_nr+1, orbital);
+
+  //Leo: for debug purpose, print the colors of the chosen segment
+  std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
+            << "c_end=" << segment_later.c_start_ << std::endl;
 
   //Leo: check if the colors of both ends and the randomly picked color are all the same
   if(color_temp == segment_earlier.c_end_ && color_temp == segment_later.c_start_) ; //do nothing
@@ -626,6 +636,7 @@ void hybridization::remove_antisegment_update(int orbital, size_t color_temp)
   //std::cout<<clgreen<<"antisegment remove done."<<std::endl;
   
   //compute hybridization weight change
+  //Leo: need to check!
   segment antisegment(segment_later.t_start_, segment_earlier.t_end_, color_temp, color_temp);
   double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital, color_temp);
   
@@ -657,7 +668,7 @@ void hybridization::remove_antisegment_update(int orbital, size_t color_temp)
  New spin-flip updates
  Idea: take remove_segment_update and insert_segment_update and combine them so one segment is removed from on orbital (spin up or down) and inserted on the corresponding other_orbital (spin down or up), if the other_orbital is not filled.
  \********************************************************/
-void hybridization::spin_flip_update(int orbital, size_t color_temp)
+void hybridization::spin_flip_update(int orbital, std::size_t color_temp)
 {  
   nprop[5]++;
   

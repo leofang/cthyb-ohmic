@@ -130,6 +130,10 @@ hyb_config(parms)
      MPI_Comm_size(MPI_COMM_WORLD, &csize);
   }
 #endif
+   
+  //Leo: for debug purpose
+  std::cout << "N_ENV: " << n_env << std::endl;
+
   std::cout<<"process " << crank << " of total: "<<csize<<" starting simulation"<<std::endl;
 }
 

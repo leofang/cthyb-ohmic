@@ -61,29 +61,31 @@ local_configuration::local_configuration(const alps::params &p, int crank): cran
 
 
 /* Leo Fang: for test purpose, print out the segment map */
-void local_configuration::print_time_map() const
+//void local_configuration::print_time_map() const
+//{
+//       for(std::set<double>::const_iterator it=times_set_.begin(); it!=times_set_.end(); it++)
+//       {
+//           std::cout << *it << ", ";
+//       }
+//       std::cout << std::endl << std::endl;
+//}
+
+
+/* Leo Fang: for test purpose, print out the segment times and colors */
+void local_configuration::print_segments() const
 {
-       for(std::set<double>::const_iterator it=times_set_.begin(); it!=times_set_.end(); it++)
-       {
-           std::cout << *it << ", ";
-       }
-       std::cout << std::endl << std::endl;
-}
-
-
-/* Leo Fang: for test purpose, print out the segment times */
-void local_configuration::print_segments() const{
 	for (int i=0; i<n_orbitals_; i++)
         {
-		std::cout << "Orbital " << i << ": ";
-	    if(zero_order_orbital_occupied_[i])
-	    {	std::cout << "fully occupied\n\n" ; }
+	    std::cout << "Orbital " << i << ": ";
+	    if(zero_order_orbital_occupied_[i]) { std::cout << "fully occupied" << std::endl << std::endl; }
 	    else
 	    {
-                for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it){
-			std::cout << "(" << it->t_start_ << "," << it->t_end_ << ") "; 
+                for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it)
+		{
+			std::cout << "(" << it->c_start_ << ", " << it->t_start_ << "; "\
+		                  << it->c_end_ << ", " << it->t_end_ << ")" << std::endl; 
 		}
-		std::cout << "\n\n";
+		std::cout << std::endl << std::endl;
 	    }
 	}
 }
@@ -288,8 +290,11 @@ void local_configuration::insert_antisegment(const segment &new_antisegment, int
     std::set<segment>::iterator it=segments_[orbital].upper_bound(new_antisegment);
     if(it==segments_[orbital].begin()) it=segments_[orbital].end(); //wrap around
     it--;
-    segment new_later_segment(new_antisegment.t_start_, it->t_end_);
-    segment new_earlier_segment(it->t_start_, new_antisegment.t_end_);
+    
+    //Leo: this two lines are modified because when spliting a segment we need to paint the colors!
+    segment new_later_segment(new_antisegment.t_start_, it->t_end_, new_antisegment.c_start_, it->c_end_);
+    segment new_earlier_segment(it->t_start_, new_antisegment.t_end_, it->c_start_, new_antisegment.c_end_);
+
     segments_[orbital].erase(it);
     segments_[orbital].insert(new_later_segment);
     segments_[orbital].insert(new_earlier_segment);
@@ -325,8 +330,12 @@ void local_configuration::remove_antisegment(const segment &new_antisegment, int
     std::set<segment>::iterator it_earlier=it_later;
     if(it_earlier==segments_[orbital].begin()) it_earlier=segments_[orbital].end(); //wrap around
     it_earlier--;
-    segment new_segment=*it_earlier;
-    new_segment.t_end_=it_later->t_end_;
+
+    //Leo: this two lines are modified because when merging two segments we need to take care of the colors!
+    segment new_segment(it_earlier->t_start_, it_later->t_end_, it_earlier->c_start_, it_later->c_end_);
+//    segment new_segment=*it_earlier;
+//    new_segment.t_end_=it_later->t_end_;
+
     segments_[orbital].erase(it_later);
     segments_[orbital].erase(it_earlier);
     segments_[orbital].insert(new_segment);

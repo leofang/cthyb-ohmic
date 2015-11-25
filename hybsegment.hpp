@@ -34,14 +34,14 @@
 struct segment
 {
   segment(){};
-  segment(double t_start, double t_end){t_start_=t_start; t_end_=t_end;}
   double t_start_, t_end_;
+  std::size_t c_start_, c_end_; 
+  segment(double t_start, double t_end){t_start_=t_start; t_end_=t_end;}
 
   /* Leo Fang: label the "color" of c^\dagger and c operators;
      for now let blue = 0 = R (right) and red = 1 = L (left). */
-  segment(double t_start, double t_end, size_t c_start, size_t c_end)
-  {t_start_=t_start; t_end_=t_end; c_start_=c_start; c_end_=c_end;}
-  size_t c_start_, c_end_; 
+  segment(double t_start, double t_end, std::size_t c_start, std::size_t c_end)
+  { t_start_=t_start; t_end_=t_end; c_start_=c_start; c_end_=c_end; }
   
   bool operator<(const segment &t2)const { return t_start_<t2.t_start_; }
   bool operator<(const double &t2) const { return t_start_<t2; }
