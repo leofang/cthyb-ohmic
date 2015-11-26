@@ -71,13 +71,15 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
     {
 //      double total_color_updates=0.;
 //      for(int i=0; i<n_env; i++)  total_color_updates += updated_colors[i];
-      sim_file << std::endl << "The system has " << n_env << " colors. Among the accepted updates," << std::endl;
+      sim_file << std::endl << "The system has " << n_env << " color(s). Among the "\
+		            << results["Sign"].count() << " performed measurements," << std::endl;
       for(int i=0; i<n_env; i++) 
       {
           std::stringstream color_name; color_name<<"color_"<<i;
           double color=results[color_name.str()].mean<double>();
           sim_file << std::setprecision(2) << std::fixed << color*100. << "\% are in color " << i << std::endl; 
       }
+      sim_file << "(The rest are either rejected moves, or moves that do not involve color changes.)" << std::endl;
     }
 
     {

@@ -59,9 +59,9 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
 
          if(!p.defined(temp_filename))
               throw  std::runtime_error("Parameter " + temp_filename + \
-              " (filename for hybridization function of environment" + temp_stream.str() + ") is not provided. Abort!");
+              " (filename for hybridization function of color " + temp_stream.str() + ") is not provided. Abort!");
        }
-       //prepare parameter set for each environment by pretending other environments do not exist
+       //prepare parameter set for each color by pretending other colors do not exist
        //and call "DELTAi" as "DELTA"
        for(int i=0; i< n_env_; i++)
        {
@@ -75,8 +75,12 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
              temp_params.erase(temp_string);
          }
          temp_params.erase("N_ENV"); //Just in case something is wrong when reading hybridization file...
-         std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
-         std::cout << temp_params << std::endl;
+         
+	 //Leo: depreciated
+         //std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
+         //std::cout << temp_params << std::endl;
+         std::cout << "reading the delta file " << temp_params["DELTA"].cast<std::string>() << " ..." << std::endl;
+
          //use temp_params to initialize hybfun constructor
          Delta.push_back(temp_params);
        }
@@ -95,8 +99,12 @@ void hybridization_configuration::initialize_Delta(const alps::params &p)
            temp_params.erase("DELTA0");
            if(p.defined("N_ENV")) { temp_params.erase("N_ENV"); } //Just in case
         }
-        std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
-        std::cout << temp_params << std::endl;
+ 
+        //Leo: depreciated
+        //std::cout << "the parameter set has " << temp_params.size() << " parameters." << std::endl;
+        //std::cout << temp_params << std::endl;
+        std::cout << "reading the delta file " << temp_params["DELTA"].cast<std::string>() << " ..." << std::endl;
+
         //use temp_params to initialize hybfun constructor
         Delta.push_back(temp_params);
     }

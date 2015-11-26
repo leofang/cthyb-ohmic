@@ -122,6 +122,7 @@ void hybridization::update()
   }
 
   //Leo: check the size of colored matrices for each orbital
+  //TODO: It seems the code works fine, so move this part to hybmeasurement to reduce the frequency of checking
   for(int i=0; i<n_orbitals; i++)
   { 
     std::stringstream temp_stream; // stringstream used for the conversion
@@ -378,23 +379,9 @@ void hybridization::insert_remove_segment_update()
 {
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
-   
-  //Leo: choose the color in which we do the update
-  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  std::size_t color_temp;
-  if(n_env == 1) { color_temp = 0; } // Only one color
-  else if(n_env==2)
-  { 
-     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
-     else            { color_temp = 1; } // red = 1 = L  
-  }
-  else 
-  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
-  }
 
-  if(random()<0.5){ insert_segment_update(orbital, color_temp); }
-  else            { remove_segment_update(orbital, color_temp); }
+  if(random()<0.5){ insert_segment_update(orbital); }
+  else            { remove_segment_update(orbital); }
 }
 
 
@@ -403,22 +390,8 @@ void hybridization::insert_remove_antisegment_update()
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
 
-  //Leo: choose the color in which we do the update
-  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  std::size_t color_temp;
-  if(n_env == 1) { color_temp = 0; } // Only one color
-  else if(n_env==2)
-  { 
-     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
-     else            { color_temp = 1; } // red = 1 = L  
-  }
-  else 
-  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
-  }
-
-  if(random()<0.5){ insert_antisegment_update(orbital, color_temp); }
-  else            { remove_antisegment_update(orbital, color_temp); }
+  if(random()<0.5){ insert_antisegment_update(orbital); }
+  else            { remove_antisegment_update(orbital); }
 }
 
 
@@ -427,25 +400,11 @@ void hybridization::insert_remove_spin_flip_update()
   //choose the orbital in which we do the update
   int orbital=(int)(random()*n_orbitals);
 
-  //Leo: choose the color in which we do the update
-  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  std::size_t color_temp;
-  if(n_env == 1) { color_temp = 0; } // Only one color
-  else if(n_env==2)
-  {  
-     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
-     else            { color_temp = 1; } // red = 1 = L  
-  }
-  else 
-  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
-  }
-
-  spin_flip_update(orbital, color_temp);
+  spin_flip_update(orbital);
 }
 
 
-void hybridization::insert_segment_update(int orbital, std::size_t color_temp)
+void hybridization::insert_segment_update(int orbital)
 {
   nprop[1]++;
   //std::cout<<clred<<"starting insertion update."<<cblack<<std::endl;
@@ -468,6 +427,20 @@ void hybridization::insert_segment_update(int orbital, std::size_t color_temp)
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
   if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
   
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
+  std::size_t color_temp;
+  if(n_env == 1) { color_temp = 0; } // Only one color
+  else if(n_env==2)
+  { 
+     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+     else            { color_temp = 1; } // red = 1 = L  
+  }
+  else 
+  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
+  }
+
   //Leo: paint the color on the segment
   //compute local weight of the new segment with t_start and t_end
   segment new_segment(t_start, t_end, color_temp, color_temp);
@@ -500,7 +473,7 @@ void hybridization::insert_segment_update(int orbital, std::size_t color_temp)
 }
 
 
-void hybridization::remove_segment_update(int orbital, std::size_t color_temp)
+void hybridization::remove_segment_update(int orbital)
 {
   nprop[2]++;
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
@@ -516,8 +489,9 @@ void hybridization::remove_segment_update(int orbital, std::size_t color_temp)
   std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
             << "c_end=" << segment_to_remove.c_end_ << std::endl;
 
+  std::size_t color_temp = segment_to_remove.c_start_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_to_remove.c_start_ && color_temp == segment_to_remove.c_end_) ; //do nothing
+  if(color_temp == segment_to_remove.c_end_) ; //do nothing
   else {return;} //cannot remove because of the different colors
   
   double local_weight_change=1./local_config.local_weight_change(segment_to_remove, orbital, false);
@@ -554,7 +528,7 @@ void hybridization::remove_segment_update(int orbital, std::size_t color_temp)
 }
 
 
-void hybridization::insert_antisegment_update(int orbital, std::size_t color_temp)
+void hybridization::insert_antisegment_update(int orbital)
 {
   nprop[3]++;
   if(local_config.order(orbital)==0 && !local_config.zero_order_orbital_occupied(orbital)) return; //can't insert an antisegment, orbital is empty.
@@ -575,6 +549,20 @@ void hybridization::insert_antisegment_update(int orbital, std::size_t color_tem
   //std::cout<<clgreen<<"antisegment insertion update: "<<std::endl<<cblack<<*this<<std::endl;
   //std::cout<<clgreen<<" antisegment start time: (cdagger): "<<t_start<<" end time (c): "<<t_end<<std::endl;
   
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
+  std::size_t color_temp;
+  if(n_env == 1) { color_temp = 0; } // Only one color
+  else if(n_env==2)
+  { 
+     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+     else            { color_temp = 1; } // red = 1 = L  
+  }
+  else 
+  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
+  }
+
   //compute local weight of the removed segment with t_start and t_end
   //Leo: need to check!
   segment new_segment(t_start, t_end, color_temp, color_temp);
@@ -610,7 +598,7 @@ void hybridization::insert_antisegment_update(int orbital, std::size_t color_tem
 }
 
 
-void hybridization::remove_antisegment_update(int orbital, std::size_t color_temp)
+void hybridization::remove_antisegment_update(int orbital)
 {
   nprop[4]++;
   int k=local_config.order(orbital);
@@ -625,9 +613,10 @@ void hybridization::remove_antisegment_update(int orbital, std::size_t color_tem
   //Leo: for debug purpose, print the colors of the chosen segment
   std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
             << "c_end=" << segment_later.c_start_ << std::endl;
-
+  
+  std::size_t color_temp = segment_earlier.c_end_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_earlier.c_end_ && color_temp == segment_later.c_start_) ; //do nothing
+  if(color_temp == segment_later.c_start_) ; //do nothing
   else {return;} //cannot remove because of the different colors
   
   //std::cout<<clcyan<<"antisegment removal update: "<<cblack<<*this<<std::endl;
@@ -674,7 +663,7 @@ void hybridization::remove_antisegment_update(int orbital, std::size_t color_tem
  New spin-flip updates
  Idea: take remove_segment_update and insert_segment_update and combine them so one segment is removed from on orbital (spin up or down) and inserted on the corresponding other_orbital (spin down or up), if the other_orbital is not filled.
  \********************************************************/
-void hybridization::spin_flip_update(int orbital, std::size_t color_temp)
+void hybridization::spin_flip_update(int orbital)
 {  
   nprop[5]++;
   
@@ -689,9 +678,10 @@ void hybridization::spin_flip_update(int orbital, std::size_t color_temp)
   if (local_config.zero_order_orbital_occupied(other_orbital)) return;
   int segment_nr=(int)(random()*k);
   segment segment_to_flip=local_config.get_segment(segment_nr, orbital);
-  
+ 
+  std::size_t color_temp = segment_to_flip.c_start_; 
   //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_to_flip.c_start_ && color_temp == segment_to_flip.c_end_) ; //do nothing
+  if(color_temp == segment_to_flip.c_end_) ; //do nothing
   else {return;} //cannot flip because of the different colors
   
   if (local_config.has_overlap(segment_to_flip,other_orbital)) return;

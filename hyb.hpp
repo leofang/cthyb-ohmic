@@ -105,12 +105,11 @@ private:
   void insert_remove_spin_flip_update();
 
   //details of update routines
-  //Leo: dependence on color is added, if in trouble just remove it...
-  void insert_segment_update(int orbital, std::size_t color);
-  void remove_segment_update(int orbital, std::size_t color);
-  void insert_antisegment_update(int orbital, std::size_t color);
-  void remove_antisegment_update(int orbital, std::size_t color);
-  void spin_flip_update(int orbital, std::size_t color);
+  void insert_segment_update(int orbital);
+  void remove_segment_update(int orbital);
+  void insert_antisegment_update(int orbital);
+  void remove_antisegment_update(int orbital);
+  void spin_flip_update(int orbital);
   
   //programming and debug functions
   double full_weight() const;

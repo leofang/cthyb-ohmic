@@ -158,7 +158,7 @@ void hybridization::sanity_check(const alps::params &parms)
   //Leo: stop simulation if N_ENV is larger than 2 
   //TODO: remove this restriction in the future!
   if(parms.defined("N_ENV") && parms["N_ENV"].cast<int>()>2)
-	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2.");
+	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2. Abort.");
   if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) 
 	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");
   if(parms["MEASURE_legendre"]|false && !parms.defined("N_LEGENDRE")) 
