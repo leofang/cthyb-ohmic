@@ -75,6 +75,7 @@ private:
   void create_measurements();
   //measure_* functions perform the actual measurements
   void measure_order();
+  void measure_color(); //Leo: for color measurement
   void measure_G(std::vector<std::map<double,double> > &F_prefactor);
   void measure_Gw(std::vector<std::map<double,double> > &F_prefactor);
   void measure_Gl(std::vector<std::map<double,double> > &F_prefactor);
@@ -86,6 +87,7 @@ private:
 
   //accumulate_* functions pipe the result into ALPS observables and clear measurment vectors
   void accumulate_order();
+  void accumulate_color(); //Leo: for color measurement
   void accumulate_G();
   void accumulate_Gw();
   void accumulate_Gl();
@@ -125,7 +127,6 @@ private:
   std::size_t n_env;
   //Leo: need to define a (almost) globally visible varible 
   std::size_t color;
-  bool color_updated;
 
   //physics parameters
   double beta;
@@ -165,6 +166,7 @@ private:
   std::vector<std::string> f_names;
   std::vector<std::string> density_names;
   std::vector<std::string> order_names;
+  std::vector<std::string> color_names; //Leo: for color-related measurement 
   std::vector<std::string> order_histogram_names;
   std::vector<std::string> gwr_names, gwi_names, fwr_names, fwi_names;
   std::vector<std::string> gl_names, fl_names;
@@ -176,6 +178,7 @@ private:
   std::vector<std::vector<double> >order_histogram;
   std::vector<double>orders;
   std::vector<double>order_histogram_total;
+  std::vector<double> updated_colors; //Leo: for color-related measurement 
   std::vector<std::vector<double> >G;
   std::vector<std::vector<double> >F;
   std::vector<double>densities;

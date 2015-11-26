@@ -49,7 +49,7 @@ void hybridization::update()
   {
     double update_type=random();
     //Leo: we don't know the update type at this point, so set color_updated = false
-    color_updated = false;
+    //color_updated = false;
 
     //Leo: Disable global_flip_update because it's too painful to modify it;
     //     besides, this update is removed in the GitHub version (don't know why).
@@ -80,6 +80,7 @@ void hybridization::update()
     if(is_thermalized())
     {
       measure_order();
+      //measure_color(); //Leo: for color measurement; TODO: color is measured when accepted, so this is unnecessary!
       if(MEASURE_time)
       {
         local_config.get_F_prefactor(F_prefactor);//compute segment overlaps in local config
@@ -490,9 +491,11 @@ void hybridization::insert_segment_update(int orbital, std::size_t color_temp)
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
     hyb_config.insert_segment(new_segment, orbital, color_temp);
+    
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
-    color_updated = true;
+    updated_colors[color]++;
+    //color_updated = true;
   }
 }
 
@@ -543,7 +546,8 @@ void hybridization::remove_segment_update(int orbital, std::size_t color_temp)
     hyb_config.remove_segment(segment_to_remove, orbital, color_temp);
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
-    color_updated = true;
+    updated_colors[color]++;
+    //color_updated = true;
 //      double fwa = full_weight();
 //      std::cout << clgreen<<"weight change removal: "<<fwa<<" control: "<<fwo*std::abs(weight_change)<<std::endl;
   }
@@ -599,7 +603,8 @@ void hybridization::insert_antisegment_update(int orbital, std::size_t color_tem
     hyb_config.insert_antisegment(new_antisegment, orbital, color_temp);
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
-    color_updated = true;
+    updated_colors[color]++;
+    //color_updated = true;
     //std::cout<<cred<<"done accepting insert antisegment."<<cblack<<std::endl;
   }
 }
@@ -658,7 +663,8 @@ void hybridization::remove_antisegment_update(int orbital, std::size_t color_tem
     hyb_config.remove_antisegment(antisegment, orbital, color_temp);
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
-    color_updated = true;
+    updated_colors[color]++;
+    //color_updated = true;
     //std::cout<<cred<<"done accepting remove antisegment."<<cblack<<std::endl;
   }
 }
@@ -740,7 +746,8 @@ void hybridization::spin_flip_update(int orbital, std::size_t color_temp)
     hyb_config.insert_segment(new_segment, other_orbital, color_temp);
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
-    color_updated = true;
+    updated_colors[color]++;
+    //color_updated = true;
   } 
   else 
   { //Not accepted, thus restore old configuration

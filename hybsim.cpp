@@ -105,10 +105,14 @@ hyb_config(parms)
 
   debug_number = parms["DEBUGGER"]|5; /* Leo Fang: number for debug purpose */
   
+  //Leo: for debug purpose
+  std::cout << "N_ENV: " << n_env << std::endl;
+
   //create measurement objects
   create_measurements();
   
-  if(crank==0){
+  if(crank==0)
+  {
     std::cout<<"Hybridization Expansion Simulation CT-HYB"<<std::endl;
     std::cout<<"Part of the ALPS DMFT Project"<<std::endl;
     std::cout<<"Usage requires citation of the ALPS CT-HYB paper and the ALPS paper"<<std::endl;
@@ -130,14 +134,13 @@ hyb_config(parms)
      MPI_Comm_size(MPI_COMM_WORLD, &csize);
   }
 #endif
-   
-  //Leo: for debug purpose
-  std::cout << "N_ENV: " << n_env << std::endl;
 
   std::cout<<"process " << crank << " of total: "<<csize<<" starting simulation"<<std::endl;
 }
 
-void hybridization::sanity_check(const alps::params &parms){
+
+void hybridization::sanity_check(const alps::params &parms)
+{
   //check whether the input parameters make sense before computing
   //NOTE: these checks are likely not to be complete, passing all checks does not guarantee all parameters to be meaningful!
   

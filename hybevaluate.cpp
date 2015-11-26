@@ -42,6 +42,9 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
   std::size_t N_meas=parms["N_MEAS"];
   double beta=parms["BETA"];
 
+  //Leo: number of environments
+  std::size_t n_env = parms["N_ENV"]|1;
+
   boost::uint64_t sweeps = results["Sign"].count()+(boost::uint64_t)parms["THERMALIZATION"];
 
   if(parms["TEXT_OUTPUT"]|false)
@@ -62,6 +65,21 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
       double order=results[order_name.str()].mean<double>();
       sim_file << "orbital " << i << ": " << order << std::endl;
     }
+
+    //Leo: output the ratio of updated colors among the accepted updates
+    //if(n_env > 1)
+    {
+//      double total_color_updates=0.;
+//      for(int i=0; i<n_env; i++)  total_color_updates += updated_colors[i];
+      sim_file << std::endl << "The system has " << n_env << " colors. Among the accepted updates," << std::endl;
+      for(int i=0; i<n_env; i++) 
+      {
+          std::stringstream color_name; color_name<<"color_"<<i;
+          double color=results[color_name.str()].mean<double>();
+          sim_file << std::setprecision(2) << std::fixed << color*100. << "\% are in color " << i << std::endl; 
+      }
+    }
+
     {
       int tot_acc=0,cur_prec = sim_file.precision();
       for (int i=0;i<nacc.size();i++) tot_acc += nacc[i];

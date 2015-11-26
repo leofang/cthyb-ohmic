@@ -50,7 +50,7 @@ void hybridization::create_measurements()
   measurements<< vec_obs_t("order_histogram_total",NUM_BINS_CONSTRUCTOR_ARG);
   measurements<< vec_obs_t("sector_statistics",NUM_BINS_CONSTRUCTOR_ARG);
   measurements<< obs_t("Sign",NUM_BINS_CONSTRUCTOR_ARG);
-  
+ 
   g2wr_names.resize(n_orbitals); 
   g2wi_names.resize(n_orbitals);
   h2wr_names.resize(n_orbitals); 
@@ -81,6 +81,13 @@ void hybridization::create_measurements()
   nnt.resize(n_orbitals);
   nnw_re.resize(n_orbitals);
   nn.resize(n_orbitals);
+
+  //Leo: for recording the updated colors
+  for(int i=0; i<n_env; i++)
+  {
+    std::stringstream color_name; color_name<<"color_"<<i; color_names.push_back(color_name.str());
+    measurements << obs_t(color_name.str(),NUM_BINS_CONSTRUCTOR_ARG);
+  }
 
   //additional measurements, per orbital
   for(std::size_t i=0; i<n_orbitals; ++i)
@@ -187,6 +194,7 @@ void hybridization::create_measurements()
   order_histogram.resize(n_orbitals, std::vector<double> (N_hist_orders, 0.));
   orders.resize(n_orbitals, 0.);
   order_histogram_total.resize(N_hist_orders, 0.);
+  updated_colors.resize(n_env, 0.); //Leo: for color measurements
   densities.resize(n_orbitals, 0.);
   sector_statistics.resize(1<<n_orbitals, 0.);
 
@@ -219,6 +227,7 @@ void hybridization::measure()
   if(!is_thermalized()) return;
 
   accumulate_order();
+  accumulate_color(); //Leo: for color measurement
 
   accumulate_G();
 
@@ -251,6 +260,20 @@ void hybridization::measure()
 }
 
 
+void hybridization::measure_color() {//Leo: color is measured when successfully updated...
+}
+
+
+void hybridization::accumulate_color()
+{
+  for(std::size_t i=0; i<n_env; ++i)
+  {
+    measurements[color_names[i]] << (updated_colors[i]/N_meas);
+    updated_colors[i]=0.;
+  }
+}
+
+
 void hybridization::measure_order()
 {
   //compute the order and store it in the vectors for the histograms
@@ -267,6 +290,7 @@ void hybridization::measure_order()
     }
   }
 }
+
 
 void hybridization::accumulate_order()
 {
