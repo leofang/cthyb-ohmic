@@ -76,7 +76,7 @@ void local_configuration::print_segments() const
 {
 	for (int i=0; i<n_orbitals_; i++)
         {
-	    std::cout << "Orbital " << i << ": ";
+	    std::cout << "Orbital " << i << ":" << std::endl;
 	    if(zero_order_orbital_occupied_[i]) { std::cout << "fully occupied" << std::endl << std::endl; }
 	    else
 	    {
@@ -85,7 +85,7 @@ void local_configuration::print_segments() const
 			std::cout << "(" << it->c_start_ << ", " << it->t_start_ << "; "\
 		                  << it->c_end_ << ", " << it->t_end_ << ")" << std::endl; 
 		}
-		std::cout << std::endl << std::endl;
+		std::cout << std::endl;
 	    }
 	}
 }

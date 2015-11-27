@@ -96,6 +96,15 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
           sim_file << " (proposal rate = ";
           sim_file << std::setprecision(2) << std::fixed << (((double)nprop[i])/(sweep_count*N_meas))*100 << "%)" << std::endl;
       }
+
+      //Leo: a global color count (include the thermalization sweeps!)
+      sim_file << std::endl;
+      sim_file << "  Total acceptance rate for each color:" << std::endl;
+      for (int i=0; i<n_env; i++)
+      {
+          sim_file << "     " << std::setprecision(2) << std::fixed << (((double)ncolor[i])/(sweep_count*N_meas))*100\
+		   << "\% in color " << i << std::endl;
+      }
       sim_file << "|-----------------------------------------------------------------|" << std::endl;
     }
     sim_file.close();

@@ -65,6 +65,7 @@ hyb_config(parms)
   n_orbitals = parms["N_ORBITALS"];                                                //number of orbitals
   sign = 1.;                                                                       //fermionic sign. plus or minus one.
   n_env = parms["N_ENV"]|1;							   //Leo Fang: number of reservoirs
+  ncolor.assign(n_env, 0.);          						   //Leo: to count the number of color updates
 
   //initializing physics parameters
   beta = parms["BETA"];                                                            //inverse temperature
