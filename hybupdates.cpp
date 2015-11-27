@@ -89,7 +89,7 @@ void hybridization::update()
     }
 
     /* Leo Fang: for test purpose, print out the segment map */
-    if(sweeps<=debug_number) 
+    if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments(); 
@@ -487,8 +487,11 @@ void hybridization::remove_segment_update(int orbital)
   segment segment_to_remove=local_config.get_segment(segment_nr, orbital);
 
   //Leo: for debug purpose, print the colors of the chosen segment
-  std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
-            << "c_end=" << segment_to_remove.c_end_ << std::endl;
+  if(VERY_VERBOSE)
+  {
+      std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
+                << "c_end=" << segment_to_remove.c_end_ << std::endl;
+  }
 
   std::size_t color_temp = segment_to_remove.c_start_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
@@ -614,8 +617,11 @@ void hybridization::remove_antisegment_update(int orbital)
   segment segment_later  =local_config.get_segment(segment_nr==k-1?0:segment_nr+1, orbital);
 
   //Leo: for debug purpose, print the colors of the chosen segment
-  std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
-            << "c_end=" << segment_later.c_start_ << std::endl;
+  if(VERY_VERBOSE)
+  {
+     std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
+               << "c_end=" << segment_later.c_start_ << std::endl;
+  }
   
   std::size_t color_temp = segment_earlier.c_end_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same

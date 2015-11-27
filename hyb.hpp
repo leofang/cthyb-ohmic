@@ -63,6 +63,7 @@ public:
 
 private:
   bool VERBOSE;
+  bool VERY_VERBOSE; //Leo: for debug purpose
   int crank;
   int csize;
   int output_period;

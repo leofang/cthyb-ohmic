@@ -156,10 +156,15 @@ void hybridization::sanity_check(const alps::params &parms)
 	throw std::invalid_argument("please specify parameters THERMALIZATION, SWEEPS, and N_ORBITALS");
   
   //check paramater that are conditionally required
+
   //Leo: stop simulation if N_ENV is larger than 2 
   //TODO: remove this restriction in the future!
   if(parms.defined("N_ENV") && parms["N_ENV"].cast<int>()>2)
 	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2. Abort.");
+  //Leo: I'm surprised that this check was omitted...
+  if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))
+        throw std::invalid_argument("The system has only one orbital, so SPINFLIP=1 is invalid. Abort.");
+
   if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) 
 	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");
   if(parms["MEASURE_legendre"]|false && !parms.defined("N_LEGENDRE")) 
@@ -189,6 +194,7 @@ void hybridization::sanity_check(const alps::params &parms)
 	throw std::invalid_argument("for computing the vertex, N_MATSUBARA must be at least N_w2/2+N_W-1");
   }
   VERBOSE = (parms["VERBOSE"]|false);
+  VERY_VERBOSE = (parms["VERY_VERBOSE"]|false); //Leo: for debug purpose
   
   return;
 }
