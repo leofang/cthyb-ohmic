@@ -40,7 +40,7 @@ hybridization_configuration::hybridization_configuration(const alps::params &p):
      std::cout << "N_ENV = " << n_env_ << std::endl;
   }
   //hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p));
-  std::cout << "Initialize Delta..." << std::endl << std::endl;
+  std::cout << "Initialize Delta for " << n_env_ << " color(s)..." << std::endl << std::endl;
   initialize_Delta(p);
 }
 

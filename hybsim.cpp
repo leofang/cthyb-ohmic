@@ -64,7 +64,7 @@ hyb_config(parms)
   total_sweeps = parms["SWEEPS"];                                                  //Sweeps to be done in total
   n_orbitals = parms["N_ORBITALS"];                                                //number of orbitals
   sign = 1.;                                                                       //fermionic sign. plus or minus one.
-  n_env = parms["N_ENV"]|1;							   //Leo Fang: number of reservoirs
+  n_env = parms["N_ENV"]|1;							   //Leo: number of reservoirs
   ncolor.assign(n_env, 0.);          						   //Leo: to count the number of color updates
 
   //initializing physics parameters
@@ -107,7 +107,7 @@ hyb_config(parms)
   debug_number = parms["DEBUGGER"]|5; /* Leo Fang: number for debug purpose */
   
   //Leo: for debug purpose
-  std::cout << "N_ENV: " << n_env << std::endl;
+  if(VERY_VERBOSE) std::cout << "N_ENV: " << n_env << std::endl << std::endl;
 
   //create measurement objects
   create_measurements();
