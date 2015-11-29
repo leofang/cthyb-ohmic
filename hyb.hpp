@@ -39,11 +39,11 @@
 
 #ifdef HYB_SIM_MAIN
 boost::uint64_t sweep_count;
-std::vector<boost::uint64_t> nacc,nprop, ncolor;
+std::vector<boost::uint64_t> nacc,nprop, ncolor, ncolor_diff;
 std::vector<std::string> update_type;
 #else
 extern boost::uint64_t sweep_count;
-extern std::vector<boost::uint64_t> nacc,nprop, ncolor;
+extern std::vector<boost::uint64_t> nacc,nprop, ncolor, ncolor_diff;
 extern std::vector<std::string> update_type;
 #endif
 

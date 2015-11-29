@@ -469,6 +469,7 @@ void hybridization::insert_segment_update(int orbital)
     color = color_temp;
     updated_colors[color]++;
     ncolor[color]++;
+    ncolor_diff[color]++;  //Leo: + for insertion, - for removal 
     //color_updated = true;
   }
 }
@@ -526,6 +527,7 @@ void hybridization::remove_segment_update(int orbital)
     color = color_temp;
     updated_colors[color]++;
     ncolor[color]++;
+    ncolor_diff[color]--;  //Leo: + for insertion, - for removal 
     //color_updated = true;
 //      double fwa = full_weight();
 //      std::cout << clgreen<<"weight change removal: "<<fwa<<" control: "<<fwo*std::abs(weight_change)<<std::endl;
@@ -598,6 +600,7 @@ void hybridization::insert_antisegment_update(int orbital)
     color = color_temp;
     updated_colors[color]++;
     ncolor[color]++;
+    ncolor_diff[color]++;  //Leo: + for insertion, - for removal 
     //color_updated = true;
     //std::cout<<cred<<"done accepting insert antisegment."<<cblack<<std::endl;
   }
@@ -663,6 +666,7 @@ void hybridization::remove_antisegment_update(int orbital)
     color = color_temp;
     updated_colors[color]++;
     ncolor[color]++;
+    ncolor_diff[color]--;  //Leo: + for insertion, - for removal 
     //color_updated = true;
     //std::cout<<cred<<"done accepting remove antisegment."<<cblack<<std::endl;
   }
@@ -748,6 +752,7 @@ void hybridization::spin_flip_update(int orbital)
     color = color_temp;
     updated_colors[color]++;
     ncolor[color]++;
+    //Leo: do nothing to ncolor_diff because the total number of colored segments is not changed.
     //color_updated = true;
   } 
   else 

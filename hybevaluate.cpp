@@ -103,8 +103,10 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
       for (int i=0; i<n_env; i++)
       {
           sim_file << "     " << std::setprecision(2) << std::fixed << (((double)ncolor[i])/(sweep_count*N_meas))*100\
-		   << "\% in color " << i << std::endl;
+		   << "\% in color " << i << " (imbalance: " << ((double)ncolor_diff[i])/((double)ncolor[i])*100\
+                   << "%)"<< std::endl;
       }
+      
       sim_file << "|-----------------------------------------------------------------|" << std::endl;
     }
     sim_file.close();

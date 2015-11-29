@@ -59,13 +59,14 @@ hyb_config(parms)
   update_type.push_back("swap segment        ");
   update_type.push_back("global flip         ");
   
-  sweeps=0;                                                                        //Sweeps currently done
-  thermalization_sweeps = parms["THERMALIZATION"];                                 //Sweeps to be done for thermalization
-  total_sweeps = parms["SWEEPS"];                                                  //Sweeps to be done in total
-  n_orbitals = parms["N_ORBITALS"];                                                //number of orbitals
-  sign = 1.;                                                                       //fermionic sign. plus or minus one.
-  n_env = parms["N_ENV"]|1;							   //Leo: number of reservoirs
-  ncolor.assign(n_env, 0.);          						   //Leo: to count the number of color updates
+  sweeps=0;                                                              //Sweeps currently done
+  thermalization_sweeps = parms["THERMALIZATION"];                       //Sweeps to be done for thermalization
+  total_sweeps = parms["SWEEPS"];                                        //Sweeps to be done in total
+  n_orbitals = parms["N_ORBITALS"];                                      //number of orbitals
+  sign = 1.;                                                             //fermionic sign. plus or minus one.
+  n_env = parms["N_ENV"]|1;					         //Leo: number of reservoirs
+  ncolor.assign(n_env, 0.);          				         //Leo: to count the number of color updates
+  ncolor_diff.assign(n_env, 0.);          			         //Leo: difference between colored insert and remove
 
   //initializing physics parameters
   beta = parms["BETA"];                                                            //inverse temperature
