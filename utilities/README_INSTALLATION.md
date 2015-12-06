@@ -79,7 +79,7 @@ Known issues:
    boost.mpi"). Change "boost.mpi" to "mpi" would fix it. 
 
 3. For newer compilers [this bug](https://svn.boost.org/trac/boost/ticket/8973) may arise. 
-   If so, just fix the source code by following the instruction.
+   If so, just fix the source code by following [the instruction](https://svn.boost.org/trac/boost/changeset/84950).
 
 
 Useful links:
