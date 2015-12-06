@@ -299,7 +299,7 @@ public:
   void invert(){
     std::vector<double> B(size_*size_, 0.);
     std::vector<fortran_int_t> ipiv(size_,0);
-    fortran_int_t info;
+    fortran_int_t info=0;
     for(fortran_int_t i=0;i<size_;++i) B[i*size_+i]=1.;
     FORTRAN_ID(dgesv)(&size_, &size_, values_, &memory_size_, &(ipiv[0]), &(B[0]), &size_, &info);
     if(info){ throw(std::logic_error("in dgesv: info was not zero.")); }
