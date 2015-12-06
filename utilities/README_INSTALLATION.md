@@ -23,7 +23,7 @@ Install the ALPS library:
 4. Create a build folder for HDF5 (eg. ~/hdf5_build/), and go to the folder.
 
 5. Point the key "CMAKE_INSTALL_PREFIX" in the script "cmake_input_hdf5.sh" to 
-   ~/alps_boost_src/hdf5/ so that the HDF5 library will be installed there.
+   ~/alps/ so that the HDF5 library will be installed in the ALPS directory.
    Also modify the last line of the script (path to the HDF5 source).
 
 6. Execute the script "cmake_input_hdf5.sh" in the HDF5 build folder
@@ -37,8 +37,8 @@ Install the ALPS library:
 
 10. Repeat step 7.
 
-11. Done. Now one can check that in ~/alps/lib/ there are two major static 
-    libraries: libalps.a and libboost.a.
+11. Done. Now one can check that in ~/alps/lib/ there are three major static 
+    libraries: libalps.a, libboost.a, and libhdf5.a.
 
 12. Set the environment variable ALPS_HOME to where ALPS is installed so that
     cthyb_ohmic can find it. For example: "export ALPS_HOME=~/alps/"
@@ -77,6 +77,9 @@ Known issues:
 
 2. The mpi.py script may not work (on some machines it complains "cannot find 
    boost.mpi"). Change "boost.mpi" to "mpi" would fix it. 
+
+3. For newer compilers [this bug](https://svn.boost.org/trac/boost/ticket/8973) may arise. 
+   If so, just fix the source code by following the instruction.
 
 
 Useful links:
