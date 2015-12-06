@@ -26,31 +26,31 @@ Install the ALPS library:
    ~/alps_boost_src/hdf5/ so that the HDF5 library will be installed there.
    Also modify the last line of the script (path to the HDF5 source).
 
-6. Execute the script "cmake_input_hdf5" in the HDF5 build folder
+6. Execute the script "cmake_input_hdf5.sh" in the HDF5 build folder
 
 7. "make" and then "make install"
 
 8. Create a build folder for ALPS (eg. ~/alps_build/), and go to the folder.
 
 9. Modify the script "cmake_input.sh" accordingly (let's install it to ~/alps/) 
-   and execute it in the ALPS build forder.
+   and execute it with argument "static" in the ALPS build forder.
 
 10. Repeat step 7.
 
 11. Done. Now one can check that in ~/alps/lib/ there are two major static 
     libraries: libalps.a and libboost.a.
 
+12. Set the environment variable ALPS_HOME to where ALPS is installed so that
+    cthyb_ohmic can find it. For example: "export ALPS_HOME=~/alps/"
+
 
 Install the cthyb_ohmic application:
 
 1. Download its source code, extract it to ~/cthyb/, and go to this folder
 
-2. Add a line to CMakeLists.txt before the "find_package" line so that cmake 
-   can find the ALPS library: set(ALPS_ROOT_DIR "~/alps")
+2. Type cmake ./ and then make 
 
-3. Type cmake ./ and then make 
-
-4. Done, an executable "cthyb_ohmic" is placed in the same folder.
+3. Done, an executable "cthyb_ohmic" is placed in the same folder.
 
 
 Note:
