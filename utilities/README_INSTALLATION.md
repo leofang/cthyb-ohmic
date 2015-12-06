@@ -6,7 +6,7 @@ g++ v4.4.7; HDF5 1.8.12; ALPS v.2.2.b3 (with Boost 1.54);
 test machine: lqcd28 & nano06 (other machines may also work if Jimmy does not 
 mess up the installed packages...)
 
-Last updated: Dec. 4, 2015
+Last updated: Dec. 6, 2015
 
 
 Install the ALPS library:
@@ -15,14 +15,14 @@ Install the ALPS library:
    There will be two subfolders (alps and boost) in this directory.
 
 2. If you are building the library on nano machines (nano06~09), skip the HDF5
-   part and go to step because a static version of HDF5 is installed on these
+   part and go to step 8 because a static version of HDF5 is installed on these
    machines.
 
 3. Download HDF5 and extract the files to a source folder, say ~/hdf5_src/.
 
 4. Create a build folder for HDF5 (eg. ~/hdf5_build/), and go to the folder.
 
-5. Point the key "CMAKE_INSTALL_PREFIX" in the script "cmake_input_hdf5" to 
+5. Point the key "CMAKE_INSTALL_PREFIX" in the script "cmake_input_hdf5.sh" to 
    ~/alps_boost_src/hdf5/ so that the HDF5 library will be installed there.
    Also modify the last line of the script (path to the HDF5 source).
 
@@ -32,7 +32,7 @@ Install the ALPS library:
 
 8. Create a build folder for ALPS (eg. ~/alps_build/), and go to the folder.
 
-9. Modify the script "cmake_input" accordingly (let's install it to ~/alps/) 
+9. Modify the script "cmake_input.sh" accordingly (let's install it to ~/alps/) 
    and execute it in the ALPS build forder.
 
 10. Repeat step 7.
@@ -66,6 +66,17 @@ Note:
    linked to system libraries (such as libstdc++.so). This is the best we
    can do because most of these libraries do not have a static version.
 
+3. To install on workstations over which you have some control (such as 
+   running package managers like pkcon), use the script "cmake_input_grads-bd.sh"
+   instead of "cmake_input.sh".
+
+
+Known issues:
+
+1. The source code of alps/hybridization has a bug, see https://github.com/ALPSCore/alps-cthyb/issues/4.
+
+2. The mpi.py script may not work (on some machines it complains "cannot find 
+   boost.mpi"). Change "boost.mpi" to "mpi" would fix it. 
 
 
 Useful links:
