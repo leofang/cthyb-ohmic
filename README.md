@@ -1,6 +1,7 @@
 # cthyb-ohmic
 
 The program `cthyb_ohmic` aims to two goals:
+
 1. Couple the impurity to at least two different resovoirs simultanously, so that problems such as
    a single quantum dot coupled to multiple metallic leads can be handled straightforwardly.
 2. Introduce an ohmic environment to model the dissipation.
