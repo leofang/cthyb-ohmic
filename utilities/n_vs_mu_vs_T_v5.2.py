@@ -246,13 +246,14 @@ if goal == 2:
              a.append(plt.errorbar(np.array(MuValues)/parms['t'], np.array(values[i][orb]), errors[i][orb], \
                       label=r"orbital %i, $\beta t$=%.3f"%(orb, parms['t']/Tvalues[i])))
        plt.xlim(np.array([Mu_min, Mu_max])/parms['t'])
-       #plt.ylim([0.4, 0.6])
-       plt.legend(loc='lower right', prop={'size':10})
-       #plt.legend(loc=2,prop={'size':6})
-   
-   #    theory = (0.5+arctan(MuValues)/pi)
-   #    a.append(plt.plot(np.array(MuValues), theory, 'k-', linewidth=2.0, label="theory (T=0)"))
+ 
+       theory=[]
+       for mu in MuValues:
+          # Note that in this expression the bandwidth is set to be 1.
+          theory.append((pi*(V[0]**2-1)+V[0]**2*arctan(mu/sqrt(4-mu**2))+(V[0]**2-2)*arctan((-V[0]**2+2)*mu/V[0]**2/sqrt(4-mu**2)))/(2*pi*(V[0]**2-1)))
+       a.append(plt.plot(np.array(MuValues)/parms['t'], np.array(theory), 'k-', linewidth=2.0, label="theory (T=0)"))
        
+       plt.legend(loc='lower right', prop={'size':10})
        plt.savefig('n_vs_mu_vs_T_' + output_dir + '.pdf')
        #plt.show()
    
