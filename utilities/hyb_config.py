@@ -1,21 +1,21 @@
 import numpy as np
-from numpy import sqrt, exp, log
+from numpy import sqrt, exp, log, pi
 
 ############## specify the job to be done ############
-goal = 1 # 1: generate input files; 2: analyze the output
-DOS  = 2 # 1: constant hybridization; 2: semicircular DOS
+goal = 2 # 1: generate input files; 2: analyze the output
+DOS  = 3 # 1: constant hybridization; 2: semicircular DOS; 3: flat DOS
 
 
 ################# physical parameters ################
 W        = 1.0 # bandwidth
-V        = np.array([0.255, 0.255])*W # coupling strength to colors 0 and 1
+V        = np.array([0.4, 0.4])*W # coupling strength to colors 0 and 1
 N_ORBITALS = 2
 
-# on-site interaction (for chi_vs_T_vs_U.py)
-Uvalues  = [0., 2.5]
+## on-site interaction (for chi_vs_T_vs_U.py)
+Uvalues  = [0., 0.105, 0.21, 0.42, 0.84, 2.5]
 
 # on-site interaction (for others)
-#U = 0
+#U = 0.0
 
 # temperature (for k_vs_T_vs_mu.py)
 #Tvalues = []
@@ -27,8 +27,8 @@ Uvalues  = [0., 2.5]
 #Tvalues  = W/np.array([100.0]) # the values here are dimensionless (=beta*t)
 
 # temperature (for chi_vs_T_vs_U.py)
-N_T  = 20    # number of temperature points
-Tmin = 0.006 # minimum temperature
+N_T  = 25    # number of temperature points
+Tmin = 0.002 # minimum temperature
 Tmax = 100.0 # maximum temperature
 Tdiv = exp(log(Tmax/Tmin)/N_T)
 T=Tmax
@@ -42,18 +42,20 @@ for i in range(N_T+1):
 #Mu_min   = U/2-1.0*W
 #Mu_max   = U/2+1.0*W
 
-# chemical potential (for test)
+# chemical potential (for k_vs_T_vs_mu.py)
 #MuValues = np.array([0.0, 0.5])*W
 
+# chemical potential (for test purpose)
+#MuValues = [U/2.0]
 
 ############## cthyb solver parameters ###############
 THERMALIZATION = 2000
 SWEEPS = 1000000000
-MAX_TIME = 600
+MAX_TIME = 3600
 SEED = 88
 N_MEAS = 250
 N_TAU = 3000    # number of tau-points; must be large enough for the lowest temperature (set to at least 5*BETA*U)
-N_MATSUBARA = 480
+N_MATSUBARA = int(N_TAU/(2*pi))
 SPINFLIP = 1
 N_HISTOGRAM_ORDERS = 150 # number of histogram orders to be measured
 DEBUGGER = 10000
@@ -66,7 +68,7 @@ MEASURE_nnw = 1
 ################### condor parameters ################
 OnlyUseNanoMachines = False
 executable = "/home/yf30/cthyb-ohmic-color/cthyb_ohmic"
-#executable = "/home/yf30/alps/bin/hybridization"
-output_dir = "output_chi2"
-
+#output_dir = "cthyb_Ekin_U_%.3f"%U
+#output_dir = "cthyb_flat_DOS_n_U_0.000_V_0.4"
+output_dir = "cthyb_flat_DOS_chi_long_V_0.4"
 
