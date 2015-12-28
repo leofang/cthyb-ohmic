@@ -131,7 +131,7 @@ for T in Tvalues:
             if len(delta) != N_TAU+1:
         	    sys.exit("Wrong array size! Abort!")
     
-        for i in range(N_ENV if N_ENV in locals() else 1):
+        for i in range(N_ENV if "N_ENV" in locals() else 1):
            ar=archive('DELTA' + str(i) + ".h5", 'w')
            for m in range(N_ORBITALS):
               ar['/Delta_%i'%m]=np.array(delta)*V[i]**2 # need to conver delta to a numpy array!
@@ -163,7 +163,7 @@ for T in Tvalues:
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
                    'DELTA0'             : "DELTA0.h5",                    
-                   'DELTA1'		    : "DELTA1.h5",
+                   'DELTA1'		: "DELTA1.h5",
                    'DELTA_IN_HDF5'      : 1,                               
                    # physical parameters
                    'U'                  : U,                               
@@ -196,7 +196,7 @@ for T in Tvalues:
               #shutil.copyfile(output_path + parms['BASENAME']+'.in.h5', output_path + parms['BASENAME']+'.out.h5')
          
               # copy hybridization function to the path
-              for i in range(N_ENV if N_ENV in locals() else 1):
+              for i in range(N_ENV if "N_ENV" in locals() else 1):
                  shutil.copyfile('DELTA' + str(i) + ".h5", output_path + 'DELTA' + str(i) + ".h5")
         
               # condor submit file
@@ -232,7 +232,7 @@ for T in Tvalues:
 
 if goal == 1:
     f.close()
-    for i in range(N_ENV if N_ENV in locals() else 1):
+    for i in range(N_ENV if "N_ENV" in locals() else 1):
        os.remove('DELTA' + str(i) + '.h5')
 
 #g.close()
