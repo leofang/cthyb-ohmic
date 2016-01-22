@@ -76,10 +76,14 @@ void local_configuration::print_segments() const
 {
 	for (int i=0; i<n_orbitals_; i++)
         {
-	    std::cout << "Orbital " << i << ":" << std::endl;
-	    if(zero_order_orbital_occupied_[i]) { std::cout << "fully occupied" << std::endl << std::endl; }
+	    std::cout << "Orbital " << i << ":";
+	    if(order(i)==0 && zero_order_orbital_occupied(i))
+            { 
+                std::cout << " fully occupied" << std::endl << std::endl; 
+            }
 	    else
 	    {
+                std::cout << std::endl;
                 for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it)
 		{
 			std::cout << "(" << it->c_start_ << ", " << it->t_start_ << "; "\

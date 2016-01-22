@@ -61,7 +61,7 @@ N_MATSUBARA = int(N_TAU/(2*pi))
 SPINFLIP = 0
 N_HISTOGRAM_ORDERS = 150 # number of histogram orders to be measured
 DEBUGGER = 10000
-VERY_VERBOSE = 0
+VERY_VERBOSE = 1
 MEASURE_time = 0
 MEASURE_nnw = 0
 
@@ -71,6 +71,7 @@ OnlyUseNanoMachines = False
 executable = "/home/yf30/cthyb-ohmic-color/cthyb_ohmic"
 #output_dir = "cthyb_Ekin_U_%.3f"%U
 #output_dir = "cthyb_semicircular_chi_long_V_0.255"
-output_dir = "%iorb_%ilead"%(N_ORBITALS, N_ENV)
+#output_dir = "%iorb_%ilead"%(N_ORBITALS, N_ENV)
+output_dir = "very_verbose"
 #output_dir = "cthyb_flat_spinless_n_V_0.255"
 

@@ -88,14 +88,14 @@ void hybridization::update()
       }
     }
 
-    /* Leo Fang: for test purpose, print out the segment map */
-    if(VERY_VERBOSE && sweeps<=debug_number) 
-    { 
-	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments(); 
-	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-        std::cout << std::endl;
-    }
+//    /* Leo Fang: for test purpose, print out the segment map */
+//    if(VERY_VERBOSE && sweeps<=debug_number) 
+//    { 
+//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments(); 
+//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//        std::cout << std::endl;
+//    }
 
   }//N_meas
 
@@ -471,6 +471,16 @@ void hybridization::insert_segment_update(int orbital)
     ncolor[color]++;
     ncolor_diff[color]++;  //Leo: + for insertion, - for removal 
     //color_updated = true;
+
+    /* Leo Fang: for test purpose, print out the segment map */
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
+        std::cout << "Accepted move: insert segment" << std::endl; local_config.print_segments();
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+        std::cout << std::endl;
+    }
   }
 }
 
@@ -487,12 +497,12 @@ void hybridization::remove_segment_update(int orbital)
   
   segment segment_to_remove=local_config.get_segment(segment_nr, orbital);
 
-  //Leo: for debug purpose, print the colors of the chosen segment
-  if(VERY_VERBOSE)
-  {
-      std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
-                << "c_end=" << segment_to_remove.c_end_ << std::endl;
-  }
+//  //Leo: for debug purpose, print the colors of the chosen segment
+//  if(VERY_VERBOSE)
+//  {
+//      std::cout << "remove_segment_update: c_start=" <<segment_to_remove.c_start_<<", "\
+//                << "c_end=" << segment_to_remove.c_end_ << std::endl;
+//  }
 
   std::size_t color_temp = segment_to_remove.c_start_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
@@ -531,6 +541,16 @@ void hybridization::remove_segment_update(int orbital)
     //color_updated = true;
 //      double fwa = full_weight();
 //      std::cout << clgreen<<"weight change removal: "<<fwa<<" control: "<<fwo*std::abs(weight_change)<<std::endl;
+
+    /* Leo Fang: for test purpose, print out the segment map */
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
+        std::cout << "Accepted move: remove segment" << std::endl; local_config.print_segments(); 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+        std::cout << std::endl;
+    }
   }
 }
 
@@ -603,6 +623,16 @@ void hybridization::insert_antisegment_update(int orbital)
     ncolor_diff[color]++;  //Leo: + for insertion, - for removal 
     //color_updated = true;
     //std::cout<<cred<<"done accepting insert antisegment."<<cblack<<std::endl;
+
+    /* Leo Fang: for test purpose, print out the segment map */
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
+        std::cout << "Accepted move: insert antisegment" << std::endl; local_config.print_segments();
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+        std::cout << std::endl;
+    }
   }
 }
 
@@ -619,12 +649,12 @@ void hybridization::remove_antisegment_update(int orbital)
   segment segment_earlier=local_config.get_segment(segment_nr, orbital);
   segment segment_later  =local_config.get_segment(segment_nr==k-1?0:segment_nr+1, orbital);
 
-  //Leo: for debug purpose, print the colors of the chosen segment
-  if(VERY_VERBOSE)
-  {
-     std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
-               << "c_end=" << segment_later.c_start_ << std::endl;
-  }
+//  //Leo: for debug purpose, print the colors of the chosen segment
+//  if(VERY_VERBOSE)
+//  {
+//     std::cout << "remove_antisegment_update: c_start=" << segment_earlier.c_end_ <<", "\
+//               << "c_end=" << segment_later.c_start_ << std::endl;
+//  }
   
   std::size_t color_temp = segment_earlier.c_end_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
@@ -669,6 +699,16 @@ void hybridization::remove_antisegment_update(int orbital)
     ncolor_diff[color]--;  //Leo: + for insertion, - for removal 
     //color_updated = true;
     //std::cout<<cred<<"done accepting remove antisegment."<<cblack<<std::endl;
+
+    /* Leo Fang: for test purpose, print out the segment map */
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+//	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
+        std::cout << "Accepted move: remove antisegment" << std::endl; local_config.print_segments(); 
+	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
+        std::cout << std::endl;
+    }
   }
 }
 
