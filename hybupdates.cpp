@@ -481,6 +481,9 @@ void hybridization::insert_segment_update(int orbital)
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert segment" << std::endl; local_config.print_segments();
+        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
+        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -551,6 +554,9 @@ void hybridization::remove_segment_update(int orbital)
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove segment" << std::endl; local_config.print_segments(); 
+        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
+        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -636,6 +642,9 @@ void hybridization::insert_antisegment_update(int orbital)
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert antisegment" << std::endl; local_config.print_segments();
+        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
+        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -712,6 +721,9 @@ void hybridization::remove_antisegment_update(int orbital)
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove antisegment" << std::endl; local_config.print_segments(); 
+        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
+        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
