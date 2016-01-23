@@ -425,7 +425,10 @@ void hybridization::insert_segment_update(int orbital)
   double t_end=t_start+t_len;
   if(t_end >= beta) t_end-=beta;
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
-  if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
+
+  //Leo: this line seems buggy (and doesn't exist in the GitHub version) because it may
+  //     prevent a wrapping segment from being inserted.
+  //if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;} //time already exists.
   
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
@@ -571,7 +574,10 @@ void hybridization::insert_antisegment_update(int orbital)
   double t_end=t_start+t_len; //((t_len<0.1*beta)?t_len:0.1*beta); //random()*t_next_segment_end;
   if(t_end >= beta) t_end-=beta;
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
-  if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;  } //time already exists.
+
+  //Leo: this line seems buggy (and doesn't exist in the GitHub version) because it may
+  //     prevent a wrapping antisegment from being inserted.
+//  if(t_end<=t_start || t_end<=0.0){ /*std::cerr<<"rare event, zero length segment: "<<t_start<<" "<<t_end<<std::endl; */return;  } //time already exists.
   
   //std::cout<<clgreen<<"antisegment insertion update: "<<std::endl<<cblack<<*this<<std::endl;
   //std::cout<<clgreen<<" antisegment start time: (cdagger): "<<t_start<<" end time (c): "<<t_end<<std::endl;
