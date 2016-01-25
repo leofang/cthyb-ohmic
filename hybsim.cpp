@@ -237,10 +237,17 @@ std::ostream &operator<<(std::ostream &os, const hybridization &hyb){
   os<<cred<<"-----------------------------------------------------------------------------------"<<cblack<<std::endl;
   return os;
 }
-std::ostream &operator<<(std::ostream &os, const segment &s){
-  os<<"( "<<s.t_start_<<" , "<<s.t_end_<<" ) ";
+
+
+std::ostream &operator<<(std::ostream &os, const segment &s)
+{
+  //Leo: the colors of the end points are also printed out.
+  os << "(" << s.c_start_ << ", " << s.t_start_ << "; " << s.c_end_ << ", " << s.t_end_ << ")";
+  //os<<"( "<<s.t_start_<<" , "<<s.t_end_<<" ) ";
   return os;
 }
+
+
 double hybridization::fraction_completed()const{
   if(!is_thermalized()) return 0.;
   double work_fraction= (sweeps-thermalization_sweeps)/(double)total_sweeps;

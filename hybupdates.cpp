@@ -445,15 +445,21 @@ void hybridization::insert_segment_update(int orbital)
   }
 
   //Leo: paint the color on the segment
-  //compute local weight of the new segment with t_start and t_end
   segment new_segment(t_start, t_end, color_temp, color_temp);
+
+  //Leo: compute the number of segments and antisegments of the new configuration
+  std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_segment(new_segment, orbital);
+
+  //compute local weight of the new segment with t_start and t_end
   double local_weight_change=local_config.local_weight_change(new_segment, orbital, false);
   
   //compute hybridization weight change
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_segment, orbital, color_temp);
   
   //compute the proposal probability ratio
-  double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
+  //Leo: the old algorithm must be modified when n_env>1
+  //double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
+  double permutation_factor=beta*t_next_segment_start/(n_segments_temp[color_temp]);
   
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor;
@@ -467,6 +473,7 @@ void hybridization::insert_segment_update(int orbital)
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
     hyb_config.insert_segment(new_segment, orbital, color_temp);
+    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
@@ -484,6 +491,10 @@ void hybridization::insert_segment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "the number configuration    = (";
+        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+            std::cout << *it; 
+        std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -514,7 +525,12 @@ void hybridization::remove_segment_update(int orbital)
   //Leo: check if the colors of both ends and the randomly picked color are all the same
   if(color_temp == segment_to_remove.c_end_) ; //do nothing
   else {return;} //cannot remove because of the different colors
-  
+ 
+  //Leo: get the current number of segments and antisegments
+  std::vector<int> n_segments = local_config.get_n_segments(orbital); 
+  //Leo: compute the number of segments and antisegments of the new configuration
+  std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_segment(segment_to_remove, orbital);
+ 
   double local_weight_change=1./local_config.local_weight_change(segment_to_remove, orbital, false);
   
   //compute hybridization weight change
@@ -522,7 +538,9 @@ void hybridization::remove_segment_update(int orbital)
   
   //compute the proposal probability ratio
   double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_remove.t_start_,orbital);
-  double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_start);
+  //Leo: the old algorithm must be modified when n_env>1
+  //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_start);
+  double permutation_factor=n_segments[color_temp]/(beta*t_next_segment_start);
   
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor;
@@ -539,6 +557,8 @@ void hybridization::remove_segment_update(int orbital)
 //      double fwo = full_weight();
     local_config.remove_segment(segment_to_remove, orbital);
     hyb_config.remove_segment(segment_to_remove, orbital, color_temp);
+    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -557,6 +577,10 @@ void hybridization::remove_segment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "the number configuration    = (";
+        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+            std::cout << *it; 
+        std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -613,8 +637,13 @@ void hybridization::insert_antisegment_update(int orbital)
   segment new_antisegment(t_end, t_start, color_temp, color_temp);
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_antisegment, orbital, color_temp);
   
+  //Leo: compute the number of segments and antisegments of the new configuration
+  std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_antisegment(new_antisegment, orbital);
+
   //compute the proposal probability ratio
-  double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
+  //Leo: the old algorithm must be modified when n_env>1
+  //double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
+  double permutation_factor=beta*t_next_segment_end/(n_segments_temp[color_temp+n_env]);
   
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor;
@@ -628,6 +657,8 @@ void hybridization::insert_antisegment_update(int orbital)
     if(weight_change < 0) sign*=-1.;
     local_config.insert_antisegment(new_antisegment, orbital);
     hyb_config.insert_antisegment(new_antisegment, orbital, color_temp);
+    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -645,6 +676,10 @@ void hybridization::insert_antisegment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "the number configuration    = (";
+        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+            std::cout << *it; 
+        std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }
@@ -681,7 +716,7 @@ void hybridization::remove_antisegment_update(int orbital)
 
   //compute local weight of the antisegment. note that time direction here has to be forward
   //Leo: not sure I understand why...
-  segment segment_forward(segment_earlier.t_end_, segment_later.t_start_);
+  segment segment_forward(segment_earlier.t_end_, segment_later.t_start_, color_temp, color_temp);
   //std::cout<<clgreen<<"antisegment remove."<<std::endl;
   double local_weight_change=1./local_config.local_weight_change(segment_forward, orbital, true);
   //std::cout<<clgreen<<"antisegment remove done."<<std::endl;
@@ -690,12 +725,21 @@ void hybridization::remove_antisegment_update(int orbital)
   //Leo: need to check!
   segment antisegment(segment_later.t_start_, segment_earlier.t_end_, color_temp, color_temp);
   double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital, color_temp);
+
+  //Leo: get the current number of segments and antisegments
+  std::vector<int> n_segments = local_config.get_n_segments(orbital); 
+  //Leo: compute the number of segments and antisegments of the new configuration
+  //Note that using segment_forward makes life easier...  
+  std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_antisegment(segment_forward, orbital);
   
   //compute the proposal probability ratio
   //Leo: not sure I understand why...
   double t_next_segment_end=local_config.order(orbital)==1?beta:segment_later.t_end_-segment_earlier.t_end_; 
   if(t_next_segment_end<0.) t_next_segment_end+=beta;
-  double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
+  //Leo: the old algorithm must be modified when n_env>1
+  //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
+  double permutation_factor=n_segments[color_temp+n_env]/(beta*t_next_segment_end);
+
   //perform metropolis
   double weight_change=local_weight_change/hybridization_weight_change*permutation_factor;
   //std::cout<<clblue<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
@@ -707,6 +751,8 @@ void hybridization::remove_antisegment_update(int orbital)
     if(weight_change < 0) sign*=-1.;
     local_config.remove_antisegment(antisegment, orbital);
     hyb_config.remove_antisegment(antisegment, orbital, color_temp);
+    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -724,6 +770,13 @@ void hybridization::remove_antisegment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "the number configuration    = (";
+        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+        {
+            std::cout << *it; 
+            if(*it<0)  throw std::logic_error("number of segments is negative!"); 
+        }
+        std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
     }

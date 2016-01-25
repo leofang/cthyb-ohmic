@@ -40,6 +40,9 @@ local_configuration::local_configuration(const alps::params &p, int crank): cran
   n_env_=p["N_ENV"]|1;   //Leo Fang: number of reservoirs
   segments_.resize(n_orbitals_);
   zero_order_orbital_occupied_.resize(n_orbitals_,false);
+
+  n_segments_.resize(n_orbitals_, std::vector<int> (2*n_env_, 0));
+
 //    std::cerr << " done\n";
 
   //Leo: disable retarded interaction
@@ -896,3 +899,189 @@ void local_configuration::measure_sector_statistics(std::vector<double> &sector_
 double local_configuration::full_weight() const{
   return 1.;
 }
+
+
+//Leo: get the number of segments and antisegments after inserting an antisegment
+std::vector<int> local_configuration::get_new_n_segments_insert_antisegment(const segment &new_antisegment, int orbital)
+{
+  std::vector<int> n_segments_temp = get_n_segments(orbital); //old numbers
+  int color = new_antisegment.c_start_;
+  
+  if(order(orbital)==0) //special case: 0-th order orbital
+  {
+      n_segments_temp[color]+=1; n_segments_temp[color+n_env_]+=1; 
+      return n_segments_temp;
+  }
+  else  //general case
+  {
+    std::set<segment>::iterator it=segments_[orbital].upper_bound(new_antisegment);
+    if(it==segments_[orbital].begin()) it=segments_[orbital].end(); //wrap around
+    it--;
+
+    std::cout << std::endl;
+    std::cout << "new_antisegment = " << new_antisegment << std::endl;
+    std::cout << "it = " << *it << std::endl;
+    std::cout << std::endl;
+
+    n_segments_temp[color+n_env_]+=1; //add one antisegment
+    if(it->c_start_ == it->c_end_) 
+        n_segments_temp[it->c_start_]-=1; //break one segment
+    if(color==it->c_start_) 
+       n_segments_temp[color]+=1; //add the left segment 
+    if(color==it->c_end_) 
+       n_segments_temp[color]+=1; //add the right segment
+    return n_segments_temp; 
+  }  
+}
+
+
+//Leo: get the number of segments and antisegments after inserting an segment
+std::vector<int> local_configuration::get_new_n_segments_insert_segment(const segment &new_segment, int orbital)
+{
+  std::vector<int> n_segments_temp = get_n_segments(orbital); //old numbers
+  int color = new_segment.c_start_;
+  
+  if(order(orbital)==0) //special case: 0-th order orbital
+  {
+      n_segments_temp[color]+=1; n_segments_temp[color+n_env_]+=1; 
+      return n_segments_temp;
+  }
+  else  //general case
+  {
+    std::set<segment>::iterator it_later=segments_[orbital].upper_bound(new_segment);
+    std::set<segment>::iterator it_earlier;
+    if(it_later==segments_[orbital].end() || it_later==segments_[orbital].begin())  
+    {
+       it_later = segments_[orbital].begin();
+       it_earlier = segments_[orbital].end();
+       it_earlier--;
+    }
+    else
+    {
+       it_earlier = it_later;
+       it_earlier--;
+    } 
+
+    std::cout << std::endl;
+    std::cout << "new_segment = " << new_segment << std::endl;
+    std::cout << "it_earlier = " << *it_earlier << std::endl;
+    std::cout << "it_later = " << *it_later << std::endl;
+    std::cout << std::endl;
+
+
+    n_segments_temp[color]+=1; //add one segment
+    if(it_earlier->c_end_ == it_later->c_start_) 
+       n_segments_temp[it_later->c_start_+n_env_]-=1; //break one antisegment
+    if(color==it_later->c_start_) 
+       n_segments_temp[color+n_env_]+=1; //add the right antisegment 
+    if(color==it_earlier->c_end_) 
+       n_segments_temp[color+n_env_]+=1; //add the left antisegment
+    return n_segments_temp; 
+  }  
+}
+
+
+
+//Leo: get the number of segments and antisegments after removing a segment
+std::vector<int> local_configuration::get_new_n_segments_remove_segment(const segment &new_segment, int orbital)
+{
+  std::vector<int> n_segments_temp = get_n_segments(orbital); //old numbers
+  int color = new_segment.c_start_;
+  
+  if(order(orbital)==1) //special case: 1-th order orbital
+  {
+      n_segments_temp[color]-=1; n_segments_temp[color+n_env_]-=1; 
+      return n_segments_temp;
+  }
+  else  //general case
+  {
+    std::set<segment>::iterator it_later=segments_[orbital].upper_bound(new_segment);
+    std::set<segment>::iterator it_earlier;
+    if(it_later==segments_[orbital].end() || it_later==segments_[orbital].begin())  
+    {
+       it_later = segments_[orbital].begin();
+       it_earlier = segments_[orbital].end();
+       it_earlier--;
+    }
+    else
+    {
+       it_earlier = it_later;
+       it_earlier--;
+    } 
+    std::cout << std::endl;
+    std::cout << "new_segment = " << new_segment << std::endl;
+    std::cout << "it_earlier = " << *it_earlier << std::endl;
+    std::cout << "it_later = " << *it_later << std::endl;
+    std::cout << std::endl;
+
+    n_segments_temp[color]-=1; //subtract one segment
+    if(it_earlier->c_end_ == it_later->c_start_) 
+       n_segments_temp[it_later->c_start_+n_env_]+=1; //add one antisegment
+    if(color==it_later->c_start_) 
+       n_segments_temp[color+n_env_]-=1; //subtract the right antisegment 
+    if(color==it_earlier->c_end_) 
+       n_segments_temp[color+n_env_]-=1; //subtract the left antisegment 
+    return n_segments_temp; 
+  }  
+}
+
+
+//Leo: get the number of segments and antisegments after removing an antisegment
+std::vector<int> local_configuration::get_new_n_segments_remove_antisegment(const segment &new_antisegment, int orbital)
+{
+  std::vector<int> n_segments_temp = get_n_segments(orbital); //old numbers
+  int color = new_antisegment.c_start_;
+  
+  if(order(orbital)==1) //special case: 1-th order orbital
+  {
+      n_segments_temp[color]-=1; n_segments_temp[color+n_env_]-=1; 
+      return n_segments_temp;
+  }
+  else  //general case
+  {
+    std::set<segment>::iterator it_later=segments_[orbital].upper_bound(new_antisegment);
+
+//    std::cout << "it_later = " << *it_later << std::endl;
+//    std::cout << "new_antisegment = " << new_antisegment << std::endl;
+
+    std::set<segment>::iterator it_earlier;
+    if(it_later==segments_[orbital].end() || it_later==segments_[orbital].begin())  
+    {
+       it_later = segments_[orbital].begin();
+       it_earlier = segments_[orbital].end();
+       it_earlier--;
+    }
+    else
+    {
+       it_earlier = it_later;
+       it_earlier--;
+    } 
+
+    std::cout << std::endl;
+    std::cout << "new_antisegment = " << new_antisegment << std::endl;
+    std::cout << "it_earlier = " << *it_earlier << std::endl;
+    std::cout << "it_later = " << *it_later << std::endl;
+    std::cout << std::endl;
+
+
+    n_segments_temp[color+n_env_]-=1; //subtract one antisegment
+    if(it_earlier->c_start_ == it_later->c_end_) 
+       n_segments_temp[it_later->c_end_]+=1; //add one segment
+    if(color==it_later->c_end_) 
+       n_segments_temp[color]-=1; //subtract the right segment 
+    if(color==it_earlier->c_start_) 
+       n_segments_temp[color]-=1; //subtract the left segment
+
+    for(std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+    {
+       if(*it<0)
+       {
+          std::cout << "it_earlier = " << *it_earlier << std::endl;
+          std::cout << "it_later = " << *it_later << std::endl;
+          std::cout << "new_antisegment = " << new_antisegment << std::endl;
+       }
+    }
+    return n_segments_temp; 
+  }  
+}
+

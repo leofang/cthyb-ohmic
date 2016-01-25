@@ -76,6 +76,15 @@ public:
   void measure_sector_statistics(std::vector<double> &sector_statistics, double sign) const;
   friend std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
 
+  std::vector<int> get_new_n_segments_insert_antisegment(const segment &new_segment, int orbital);
+  std::vector<int> get_new_n_segments_remove_antisegment(const segment &new_segment, int orbital);
+  std::vector<int> get_new_n_segments_insert_segment(const segment &new_segment, int orbital);
+  std::vector<int> get_new_n_segments_remove_segment(const segment &new_segment, int orbital);
+  //Leo: return the private member n_segments_
+  std::vector<int> get_n_segments(int orbital) const {return n_segments_[orbital];} 
+  //Leo: modify the private member n_segments_
+  void set_n_segments(int orbital, std::vector<int> new_n_segments) { n_segments_[orbital]=new_n_segments; }
+
   //debug functions
   void check_consistency() const;
   double full_weight() const;
@@ -103,6 +112,11 @@ private:
   std::vector< std::set<segment> >  segments_;
   std::vector<bool > zero_order_orbital_occupied_; //special case for perturbation order zero, where the orbital can either be occupied or empty. True means it is occupied, false is empty.
   std::set<double> times_set_; //this is a map making sure we don't have any times double, which would otherwise confuse the commutators.
+
+  //Leo: store the number of segments and antisegments in the current configuration
+  //This is necessary when n_env>1
+  std::vector< std::vector<int> > n_segments_;
+
 } local_configuration; //Leo: is this line necessary?
 
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
