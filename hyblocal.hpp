@@ -80,6 +80,7 @@ public:
   std::vector<int> get_new_n_segments_remove_antisegment(const segment &new_segment, int orbital);
   std::vector<int> get_new_n_segments_insert_segment(const segment &new_segment, int orbital);
   std::vector<int> get_new_n_segments_remove_segment(const segment &new_segment, int orbital);
+  void check_n_segments_consistency(int orbital);
   //Leo: return the private member n_segments_
   std::vector<int> get_n_segments(int orbital) const {return n_segments_[orbital];} 
   //Leo: modify the private member n_segments_

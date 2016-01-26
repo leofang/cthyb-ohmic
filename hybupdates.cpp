@@ -497,6 +497,7 @@ void hybridization::insert_segment_update(int orbital)
         std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
+        local_config.check_n_segments_consistency(orbital);
     }
   }
 }
@@ -583,6 +584,7 @@ void hybridization::remove_segment_update(int orbital)
         std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
+        local_config.check_n_segments_consistency(orbital);
     }
   }
 }
@@ -682,6 +684,7 @@ void hybridization::insert_antisegment_update(int orbital)
         std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
+        local_config.check_n_segments_consistency(orbital);
     }
   }
 }
@@ -774,11 +777,12 @@ void hybridization::remove_antisegment_update(int orbital)
         for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
         {
             std::cout << *it; 
-            if(*it<0)  throw std::logic_error("number of segments is negative!"); 
+            //if(*it<0)  throw std::logic_error("number of segments is negative!"); 
         }
         std::cout << ")" << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
+        local_config.check_n_segments_consistency(orbital);
     }
   }
 }
