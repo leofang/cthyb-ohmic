@@ -8,7 +8,7 @@ import numpy as np
 from numpy import exp, log, sqrt, pi, arctan # some math
 import subprocess
 import os, sys, shutil
-from hyb_config import * # read parameters
+from hyb_config_v1 import * # read parameters
 
 
 
@@ -35,17 +35,16 @@ else:
 initial_dir = os.getcwd()
 
 
-#if 'MuValues' not in locals():
-#    MuValues = []
-#    Mu_div   = (Mu_max-Mu_min)/N_Mu
-#    for i in range(N_Mu+1):
-#      Mu = Mu_min + Mu_div*i
-#      MuValues.append(Mu)
+if 'MuValues' not in locals():
+    MuValues = []
+    Mu_div   = (Mu_max-Mu_min)/N_Mu
+    for i in range(N_Mu+1):
+      Mu = Mu_min + Mu_div*i
+      MuValues.append(Mu)
 
 
-values=[[] for u in Uvalues]
-errors=[[] for u in Uvalues]
-
+values=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
+errors=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
 
 #histogram_values=[]
 #histogram_errors=[]
@@ -105,8 +104,8 @@ for T in Tvalues:
                g0tau = -0.5
                delta.append(g0tau)
     
-        # semicircular density of states
-        if DOS == 2 or DOS == 3:  
+        # semicircular or flat density of states
+        if DOS == 2 or DOS == 3: 
             g=[]
             I=complex(0., 1.)
             for n in range(N_MATSUBARA):
@@ -138,10 +137,10 @@ for T in Tvalues:
               ar['/Delta_%i'%m]=np.array(delta)*V[i]**2 # need to conver delta to a numpy array!
            del ar
        
-        print "done"
+        print "hybridization generated..."
 
 
-    for Ucounter, U in enumerate(Uvalues):
+    for Mu_counter, Mu in enumerate(MuValues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
           parms = {
                    # solver parameters
@@ -151,7 +150,7 @@ for T in Tvalues:
                    'SEED'               : SEED,                               
                    'N_MEAS'             : N_MEAS,      
                    'N_ORBITALS'         : N_ORBITALS,  
-                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, U/2, U), # base name of the h5 output file
+                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, Mu, U), # base name of the h5 output file
                    'MAX_TIME'           : MAX_TIME,                         
                    'VERBOSE'            : 0,                            
                    'VERY_VERBOSE'       : VERY_VERBOSE,
@@ -164,11 +163,11 @@ for T in Tvalues:
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
                    'DELTA0'             : "DELTA0.h5",                    
-                   'DELTA1'		    : "DELTA1.h5",
+                   'DELTA1'		: "DELTA1.h5",
                    'DELTA_IN_HDF5'      : 1,                               
                    # physical parameters
                    'U'                  : U,                               
-                   'MU'                 : U/2,                            
+                   'MU'                 : Mu,                            
                    'BETA'               : 1/T, # inverse temperature 
                    'T'			: T,   # temperature              
                    # measurements
@@ -220,19 +219,12 @@ for T in Tvalues:
           if goal == 2:   
               ar=archive(output_path + parms['BASENAME']+'.out.h5')
 
-              nn_0_0=ar['simulation/results/nnw_re_0_0/mean/value']
-              nn_1_1=ar['simulation/results/nnw_re_1_1/mean/value']
-              nn_1_0=ar['simulation/results/nnw_re_1_0/mean/value']
-              dnn_0_0=ar['simulation/results/nnw_re_0_0/mean/error']
-              dnn_1_1=ar['simulation/results/nnw_re_1_1/mean/error']
-              dnn_1_0=ar['simulation/results/nnw_re_1_0/mean/error']
-
-              nn  = nn_0_0 + nn_1_1 - 2*nn_1_0
-              dnn = sqrt(dnn_0_0**2 + dnn_1_1**2 + ((2*dnn_1_0)**2) )
-
-              T = parms['T']
-              values[Ucounter].append(T*nn)
-              errors[Ucounter].append(T*dnn)
+              t_counter = Tvalues.tolist().index(parms['T'])
+              for orb in range(N_ORBITALS):
+                 n_mean=ar['simulation/results/density_%i/mean/value'%orb]
+                 n_error=ar['simulation/results/density_%i/mean/error'%orb]
+                 values[t_counter][orb][Mu_counter] = n_mean
+                 errors[t_counter][orb][Mu_counter] = n_error
     
               del ar
     
@@ -249,20 +241,34 @@ if goal == 1:
 
 if goal == 2:
        print "Start plotting..."
-       plt.figure()
-       plt.xlabel(r'$T/t$')
-       plt.ylabel(r'$T\chi$')
-       plt.title(r'cthyb_ohmic: $\chi$ vs T')
-       plt.xscale('log')
-       a=[]
-       for i in range(len(Uvalues)):
-          a.append(plt.errorbar(np.array(Tvalues)/parms['t'], np.array(values[i]), errors[i], \
-                      label="U=%.3f"%(Uvalues[i]/parms['t'])))
-       plt.xlim(np.array([Tmin, Tmax])/parms['t'])
-       plt.ylim([0.0, 1.0])
-       plt.legend(loc='lower right', prop={'size':10})
+       #print values[0][0]
 
-       plt.savefig('chi_vs_T_vs_U_' + output_dir + '.pdf') 
+       plt.figure()
+       plt.xlabel(r'$\mu/t$')
+       plt.ylabel(r'$n$')
+       plt.title(r'cthyb_ohmic: density vs $\mu$')
+       a=[]
+       for i in range(len(Tvalues)):
+          for orb in range(N_ORBITALS):
+             a.append(plt.errorbar(np.array(MuValues)/parms['t'], np.array(values[i][orb]), errors[i][orb], \
+                      label=r"orbital %i, $\beta t$=%.3f"%(orb, parms['t']/Tvalues[i])))
+       plt.xlim(np.array([Mu_min, Mu_max])/parms['t'])
+
+       if ZeroTresult is True: 
+         theory=[]
+         V[0] = V[0]*sqrt(N_ENV) # rescale the width
+         for mu in MuValues:
+            if DOS == 2:
+               # Note that in this expression the bandwidth is set to be 1.
+               theory.append((pi*((V[0]**2)-1)+(V[0]**2)*arctan(mu/sqrt(4-mu**2))+((V[0]**2)-2)*arctan((-(V[0]**2)+2)*mu/(V[0]**2)/sqrt(4-mu**2)))/(2*pi*((V[0]**2)-1)))
+            if DOS == 3:
+               theory.append(0.5+arctan(4*W*mu/(pi*(V[0]**2)))/pi)
+         a.append(plt.plot(np.array(MuValues)/parms['t'], np.array(theory), 'k-', linewidth=2.0, label="theory (T=0)"))
+       
+       plt.legend(loc='lower right', prop={'size':10})
+       plt.savefig('n_vs_mu_vs_T_' + output_dir + '.pdf')
+       #plt.show()
+   
 
 
 ################################# Working area #################################
