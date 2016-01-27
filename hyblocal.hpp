@@ -90,7 +90,7 @@ public:
   void check_consistency() const;
   double full_weight() const;
   void print_time_map() const; /* Leo Fang: print the map of c and c^dagger times */ 
-  void print_segments() const; /* Leo Fang: print start and end times of segments */
+  //void print_segments() const; /* Leo Fang: print start and end times of segments */
 
 private:
   //private member functions

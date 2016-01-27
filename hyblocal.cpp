@@ -74,46 +74,51 @@ local_configuration::local_configuration(const alps::params &p, int crank): cran
 //}
 
 
-/* Leo Fang: for test purpose, print out the segment times and colors */
-void local_configuration::print_segments() const
-{
-	for (int i=0; i<n_orbitals_; i++)
-        {
-	    std::cout << "Orbital " << i << ":";
-	    if(order(i)==0 && zero_order_orbital_occupied(i))
-            { 
-                std::cout << " fully occupied" << std::endl << std::endl; 
-            }
-	    else
-	    {
-                std::cout << std::endl;
-                for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it)
-		{
-			std::cout << "(" << it->c_start_ << ", " << it->t_start_ << "; "\
-		                  << it->c_end_ << ", " << it->t_end_ << ")" << std::endl; 
-		}
-		std::cout << std::endl;
-	    }
-	}
-}
+//Leo: for test purpose, print out the segment times and colors
+//This function seems redundant, so it is replaced by the overloaded operator<< defined below...
+//void local_configuration::print_segments() const
+//{
+//    for (int i=0; i<n_orbitals_; i++)
+//    {
+//        std::cout << "Orbital " << i << ":";
+//        if(order(i)==0)
+//        {
+//            std::cout << (zero_order_orbital_occupied(i)?" fully occupied":" empty") << std::endl << std::endl; 
+//        }
+//        else
+//        {
+//            std::cout << std::endl;
+//            for(std::set<segment>::const_iterator it=segments_[i].begin(); it != segments_[i].end();++it)
+//    	    {
+//                 std::cout << *it << std::endl;
+//    	    }
+//    	std::cout << std::endl;
+//        }
+//    }
+//}
 
 
+//Leo: the overloaded operator is slightly modified to accomodate the colors
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf)
 {
   os<<"local configuration: "<<std::endl;
-  for(int i=0;i<local_conf.n_orbitals_;++i)
+  for(int i=0; i<local_conf.n_orbitals_; ++i)
   {
+    os << "Orbital "<< i << ":" << std::endl; 
     if(local_conf.segments_[i].size()==0)
     {
-      os<<i<<" "<<(local_conf.zero_order_orbital_occupied_[i]?"occupied":"empty")<<std::endl;
+      os << (local_conf.zero_order_orbital_occupied_[i]?"occupied":"empty") << std::endl << std::endl;
     }
     else
     {
-      os<<i<<" ";
+      //os<<i<<" ";
       for(std::set<segment>::const_iterator it=local_conf.segments_[i].begin(); it!=local_conf.segments_[i].end(); ++it)
       {
-        os<<"("<<it->t_start_<<" "<<it->t_end_<<") ";
+        //Leo: use the overloaded operator for segments
+        //os<<"("<<it->t_start_<<" "<<it->t_end_<<") ";
+        os << *it << std::endl;
       }
+      os << std::endl;
     }
   }
   return os;
@@ -269,6 +274,7 @@ void local_configuration::insert_segment(const segment &new_segment, int orbital
   {  
      std::stringstream s; 
      s<<crank_; 
+     std::cout<<*this<<std::endl; //Leo: print out the local configuration
      throw std::logic_error("rank "+s.str()+": insert segment start time could not be inserted.");
   }
   if(!times_set_.insert(new_segment.t_end_).second)
@@ -276,7 +282,8 @@ void local_configuration::insert_segment(const segment &new_segment, int orbital
      std::stringstream s; 
      s<<crank_; 
      std::cout<<*this<<std::endl; 
-     std::cout<<"inserted segment: "<<new_segment<<"into orbital: "<<orbital<<std::endl; 
+     //Leo: with the modified operator<<, this line is redundant
+     //std::cout<<"inserted segment: "<<new_segment<<"into orbital: "<<orbital<<std::endl; 
      throw std::logic_error("rank "+s.str()+": insert segment end time could not be inserted.");
   }
 }
@@ -310,12 +317,14 @@ void local_configuration::insert_antisegment(const segment &new_antisegment, int
   {
     std::stringstream s; 
     s<<crank_; 
+    std::cout<<*this<<std::endl; //Leo: print out the local configuration
     throw std::logic_error("rank "+s.str()+": insert antisegment start time could not be inserted.");
   }
   if(!times_set_.insert(new_antisegment.t_end_).second)
   {
     std::stringstream s; 
     s<<crank_; 
+    std::cout<<*this<<std::endl; //Leo: print out the local configuration
     throw std::logic_error("rank "+s.str()+": insert antisegment start time could not be inserted.");
   }
 }
@@ -1112,6 +1121,7 @@ void local_configuration::check_n_segments_consistency(int orbital)
    {
        if(it->c_start_==it->c_end_)  n_segments_count[it->c_start_]++; // count number of segments
        std::set<segment>::const_iterator it_next = it; it_next++;
+       if(it_next==segments_[orbital].end()) continue; //hit the last segment, stop counting
        if(it->c_end_==it_next->c_start_) n_segments_count[it->c_end_+n_env_]++; // count number of antisegments
    }
 

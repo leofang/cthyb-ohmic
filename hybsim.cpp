@@ -242,7 +242,7 @@ std::ostream &operator<<(std::ostream &os, const hybridization &hyb){
 std::ostream &operator<<(std::ostream &os, const segment &s)
 {
   //Leo: the colors of the end points are also printed out.
-  os << "(" << s.c_start_ << ", " << s.t_start_ << "; " << s.c_end_ << ", " << s.t_end_ << ")";
+  os << std::setprecision(15) << std::fixed << "(" << s.c_start_ << ", " << s.t_start_ << "; " << s.c_end_ << ", " << s.t_end_ << ")";
   //os<<"( "<<s.t_start_<<" , "<<s.t_end_<<" ) ";
   return os;
 }
