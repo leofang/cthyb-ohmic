@@ -36,6 +36,7 @@
 #include"hybsegment.hpp"
 #include<set>
 #include<vector>
+
 //this is the class that handles everything in connection with the local
 //impurity operators. It knows about segments, chemical potentials,
 //interactions, and so on.
@@ -92,6 +93,10 @@ public:
   void print_time_map() const; /* Leo Fang: print the map of c and c^dagger times */ 
   //void print_segments() const; /* Leo Fang: print start and end times of segments */
 
+  double dissipation_weight_change(const segment &seg, int orbital, bool antisegment) const;
+  inline double phase_correlator_J(double tau) const;
+
+
 private:
   //private member functions
   double segment_overlap(const segment &seg1, const segment &seg2) const;
@@ -117,6 +122,15 @@ private:
   //Leo: store the number of segments and antisegments in the current configuration
   //This is necessary when n_env>1
   std::vector< std::vector<int> > n_segments_;
+
+  //Leo: dissipation parameters
+  bool dissipation_; //Leo: turn on dissipation or not
+  double r_;         //Leo: dissipation strength
+  double C0_;        //Leo: capacitance ratio of the 0-th capacitor to total capacitance
+  double wc_;        //Leo: cutoff frequency
+  double kappa_;     //Leo: kappa=1/(beta*wc)
+  double gamma_;     //Leo: Euler constant
+  std::vector< std::vector<double> > dissipation_coeff_;
 
 } local_configuration; //Leo: is this line necessary?
 

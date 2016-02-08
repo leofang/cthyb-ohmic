@@ -64,6 +64,7 @@ public:
 private:
   bool VERBOSE;
   bool VERY_VERBOSE; //Leo: for debug purpose
+  bool Dissipation; //Leo: turn on the ohmic environment
   int crank;
   int csize;
   int output_period;

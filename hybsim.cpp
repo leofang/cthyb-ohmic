@@ -106,9 +106,10 @@ hyb_config(parms)
   N_w_aux = (N_w2+N_W>1 ? N_w2+N_W-1 : 0);                                         //number of Matsubara frequency points for the measurment of M(w1,w2)
 
   debug_number = parms["DEBUGGER"]|5; /* Leo Fang: number for debug purpose */
+  Dissipation = parms["Dissipation"]|0; //Leo: whether to turn on the bosonic environment (default is no)
   
   //Leo: for debug purpose
-  if(VERY_VERBOSE) std::cout << "N_ENV: " << n_env << std::endl << std::endl;
+//  if(VERY_VERBOSE) std::cout << "N_ENV: " << n_env << std::endl << std::endl;
 
   //create measurement objects
   create_measurements();
@@ -162,9 +163,16 @@ void hybridization::sanity_check(const alps::params &parms)
   //TODO: remove this restriction in the future!
   if(parms.defined("N_ENV") && parms["N_ENV"].cast<int>()>2)
 	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2. Abort.");
+
   //Leo: I'm surprised that this check was omitted...
   if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))
         throw std::invalid_argument("The system has only one orbital, so SPINFLIP=1 is invalid. Abort.");
+ 
+  //Leo: checks for adding dissipation
+  if(parms["Dissipation"]|false && !parms.defined("r"))
+        throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");
+  if(parms["Dissipation"]|false && !parms.defined("C0"))
+        throw std::invalid_argument("If the ohmic environment is needed, please give a value for the capacitance ratio \"C0\" in [0,1], otherwise set Dissipation to 0.");
 
   if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) 
 	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");
@@ -239,6 +247,7 @@ std::ostream &operator<<(std::ostream &os, const hybridization &hyb){
 }
 
 
+//Leo: the overloaded << operator for the segment class
 std::ostream &operator<<(std::ostream &os, const segment &s)
 {
   //Leo: the colors of the end points are also printed out.
