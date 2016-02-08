@@ -496,10 +496,16 @@ void hybridization::insert_segment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
-        std::cout << "the number configuration    = (";
-        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-            std::cout << *it; 
-        std::cout << ")" << std::endl;
+        std::cout << "the number configuration    = ";
+        for(int i=0; i<n_orbitals; i++)
+        {
+             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
+             std::cout << "(";
+             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+                  std::cout << *it; 
+             std::cout << ") ";
+        }
+        std::cout << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
         local_config.check_n_segments_consistency(orbital);
@@ -584,10 +590,16 @@ void hybridization::remove_segment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
-        std::cout << "the number configuration    = (";
-        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-            std::cout << *it; 
-        std::cout << ")" << std::endl;
+        std::cout << "the number configuration    = ";
+        for(int i=0; i<n_orbitals; i++)
+        {
+             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
+             std::cout << "(";
+             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+                  std::cout << *it; 
+             std::cout << ") ";
+        }
+        std::cout << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
         local_config.check_n_segments_consistency(orbital);
@@ -689,10 +701,16 @@ void hybridization::insert_antisegment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
-        std::cout << "the number configuration    = (";
-        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-            std::cout << *it; 
-        std::cout << ")" << std::endl;
+        std::cout << "the number configuration    = ";
+        for(int i=0; i<n_orbitals; i++)
+        {
+             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
+             std::cout << "(";
+             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+                  std::cout << *it; 
+             std::cout << ") ";
+        }
+        std::cout << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
         local_config.check_n_segments_consistency(orbital);
@@ -785,13 +803,16 @@ void hybridization::remove_antisegment_update(int orbital)
         std::cout << "local_weight_change         = " << local_weight_change << std::endl;
         std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
         std::cout << "permutation_factor          = " << permutation_factor << std::endl;
-        std::cout << "the number configuration    = (";
-        for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+        std::cout << "the number configuration    = ";
+        for(int i=0; i<n_orbitals; i++)
         {
-            std::cout << *it; 
-            //if(*it<0)  throw std::logic_error("number of segments is negative!"); 
+             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
+             std::cout << "(";
+             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
+                  std::cout << *it; 
+             std::cout << ") ";
         }
-        std::cout << ")" << std::endl;
+        std::cout << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
         std::cout << std::endl;
         local_config.check_n_segments_consistency(orbital);
