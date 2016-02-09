@@ -47,6 +47,13 @@ local_configuration::local_configuration(const alps::params &p, int crank): cran
 
   //Leo: read the dissipaton parameters (sanity_checks has done necessary checks when this class is initialized!)
   dissipation_=p["Dissipation"]|0;
+  //Leo: checks for adding dissipation. 
+  //     These checks cannot be added to sanity_check because local_configuration initializes first...
+  if(dissipation_ && !p.defined("r"))
+        throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");
+  if(dissipation_ && !p.defined("C0"))
+        throw std::invalid_argument("If the ohmic environment is needed, please give a value for the capacitance ratio \"C0\" in [0,1], otherwise set Dissipation to 0.");
+
   r_ = (dissipation_?(double)(p["r"]):0.);
   C0_= (dissipation_?(double)(p["C0"]):0.);
   wc_= 100.0/beta_; //Leo: set cutoff to be a hundred times of the temperature
@@ -1178,7 +1185,7 @@ void local_configuration::check_n_segments_consistency(int orbital)
 
 
 
-double local_configuration::dissipation_weight_change(const segment &seg, int orbital, bool insert, bool segment) const
+double local_configuration::dissipation_weight_change(const segment &seg, int orbital, bool insert) const
 {
    if(!dissipation_) return 1.; //Leo: dissipation is turned off, so no need to compute
   
@@ -1195,12 +1202,12 @@ double local_configuration::dissipation_weight_change(const segment &seg, int or
        return std::exp(J);
    }
 
-   //general case: this is a O(4k+1) operation
-   if(insert && segment) //insert segment 
+   //general case: this is a O(4k+1) operation for insertion to a k-th order orbital
+   if(insert) //insert a segment or antisegment 
    {
      for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
-     { //pair the start and end times of the segment with other segments
-         if(seg.t_start_ == it->t_start_) continue; //Leo: check! (avoid counting the (anti)segment to be removed) 
+     { //pair the start and end times of the (anti)segment with other segments
+       //  if(seg.t_start_ == it->t_start_) continue; //Leo: check! (avoid counting the (anti)segment to be removed) 
     
          tau = std::abs(seg.t_start_ - it->t_start_);
          J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau);
@@ -1218,16 +1225,26 @@ double local_configuration::dissipation_weight_change(const segment &seg, int or
      tau = std::abs(seg.t_start_ - seg.t_end_);
      J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
    }
-   else if(insert && !segment) //insert antisegment
+   else //remove a segment or antisegment
    {
-
-   }
-   else if(!insert && segment) //remove segment
-   {
-
-   }
-   else //remove antisegment
-   {
+     double len = std::abs(seg.t_end_-seg.t_start_);
+     for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
+     { 
+         tau = std::abs(seg.t_start_ - it->t_start_);
+         J-=(tau==0||tau==len)?0.:dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau);
+   
+         tau = std::abs(seg.t_start_ - it->t_end_);
+         J-=(tau==0||tau==len)?0.:dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau);
+  
+         tau = std::abs(seg.t_end_ - it->t_start_);
+         J-=(tau==0||tau==len)?0.:dissipation_coeff_[orbital][seg.c_end_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau); 
+  
+         tau = std::abs(seg.t_end_ - it->t_end_);
+         J-=(tau==0||tau==len)?0.:dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau); 
+     }
+     //the contribution of the to-be-moved segment itself
+     tau = std::abs(seg.t_start_ - seg.t_end_);
+     J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
    }
    return std::exp(J);
 }

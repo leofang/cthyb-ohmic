@@ -459,6 +459,9 @@ void hybridization::insert_segment_update(int orbital)
   
   //compute hybridization weight change
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_segment, orbital, color_temp);
+
+  //Leo: compute the dissipation weight change
+  double dissipation_weight_change=local_config.dissipation_weight_change(new_segment, orbital, true);
   
   //compute the proposal probability ratio
   //Leo: the old algorithm must be modified when n_env>1
@@ -493,9 +496,10 @@ void hybridization::insert_segment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert segment" << std::endl; //local_config.print_segments();
         std::cout << local_config << std::endl;
-        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
-        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
-        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "local weight change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
+        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
+        std::cout << "permutation factor          = " << permutation_factor << std::endl;
         std::cout << "the number configuration    = ";
         for(int i=0; i<n_orbitals; i++)
         {
@@ -548,6 +552,9 @@ void hybridization::remove_segment_update(int orbital)
   //compute hybridization weight change
   double hybridization_weight_change=1.0/hyb_config.hyb_weight_change_remove(segment_to_remove, orbital, color_temp);
   
+  //Leo: compute the dissipation weight change
+  double dissipation_weight_change=local_config.dissipation_weight_change(segment_to_remove, orbital, false);
+  
   //compute the proposal probability ratio
   double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_remove.t_start_,orbital);
   //Leo: the old algorithm must be modified when n_env>1
@@ -587,9 +594,10 @@ void hybridization::remove_segment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove segment" << std::endl; //local_config.print_segments(); 
         std::cout << local_config << std::endl;
-        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
-        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
-        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "local weight change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
+        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
+        std::cout << "permutation factor          = " << permutation_factor << std::endl;
         std::cout << "the number configuration    = ";
         for(int i=0; i<n_orbitals; i++)
         {
@@ -660,6 +668,9 @@ void hybridization::insert_antisegment_update(int orbital)
   //compute hybridization weight change //Leo: I don't quite understand...
   segment new_antisegment(t_end, t_start, color_temp, color_temp);
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_antisegment, orbital, color_temp);
+
+  //Leo: compute the dissipation weight change
+  double dissipation_weight_change=local_config.dissipation_weight_change(new_segment, orbital, true);
   
   //Leo: compute the number of segments and antisegments of the new configuration
   std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_antisegment(new_antisegment, orbital);
@@ -698,9 +709,10 @@ void hybridization::insert_antisegment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert antisegment" << std::endl; //local_config.print_segments();
         std::cout << local_config << std::endl;
-        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
-        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
-        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "local weight change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
+        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
+        std::cout << "permutation factor          = " << permutation_factor << std::endl;
         std::cout << "the number configuration    = ";
         for(int i=0; i<n_orbitals; i++)
         {
@@ -758,6 +770,9 @@ void hybridization::remove_antisegment_update(int orbital)
   segment antisegment(segment_later.t_start_, segment_earlier.t_end_, color_temp, color_temp);
   double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital, color_temp);
 
+  //Leo: compute the dissipation weight change
+  double dissipation_weight_change=local_config.dissipation_weight_change(antisegment, orbital, false);
+
   //Leo: get the current number of segments and antisegments
   std::vector<int> n_segments = local_config.get_n_segments(orbital); 
   //Leo: compute the number of segments and antisegments of the new configuration
@@ -800,9 +815,10 @@ void hybridization::remove_antisegment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove antisegment" << std::endl; //local_config.print_segments(); 
         std::cout << local_config << std::endl;
-        std::cout << "local_weight_change         = " << local_weight_change << std::endl;
-        std::cout << "hybridization_weight_change = " << hybridization_weight_change << std::endl;
-        std::cout << "permutation_factor          = " << permutation_factor << std::endl;
+        std::cout << "local weight change         = " << local_weight_change << std::endl;
+        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
+        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
+        std::cout << "permutation factor          = " << permutation_factor << std::endl;
         std::cout << "the number configuration    = ";
         for(int i=0; i<n_orbitals; i++)
         {

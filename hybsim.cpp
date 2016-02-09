@@ -168,11 +168,11 @@ void hybridization::sanity_check(const alps::params &parms)
   if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))
         throw std::invalid_argument("The system has only one orbital, so SPINFLIP=1 is invalid. Abort.");
  
-  //Leo: checks for adding dissipation
-  if(parms["Dissipation"]|false && !parms.defined("r"))
-        throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");
-  if(parms["Dissipation"]|false && !parms.defined("C0"))
-        throw std::invalid_argument("If the ohmic environment is needed, please give a value for the capacitance ratio \"C0\" in [0,1], otherwise set Dissipation to 0.");
+//  //Leo: checks for adding dissipation
+//  if(parms["Dissipation"]|false && !parms.defined("r"))
+//        throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");
+//  if(parms["Dissipation"]|false && !parms.defined("C0"))
+//        throw std::invalid_argument("If the ohmic environment is needed, please give a value for the capacitance ratio \"C0\" in [0,1], otherwise set Dissipation to 0.");
 
   if(parms["MEASURE_freq"]|false && !parms.defined("N_MATSUBARA")) 
 	throw std::invalid_argument("please specify parameter N_MATSUBARA for # of Matsubara frequencies to be measured");

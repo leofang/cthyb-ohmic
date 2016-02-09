@@ -157,6 +157,9 @@ for T in Tvalues:
                    'TEXT_OUTPUT'        : 1,                                
                    'N_ENV' 		: N_ENV, # number of colors
                    'SPINFLIP'           : SPINFLIP,
+                   'Dissipation'        : Dissipation,
+                   'r'                  : r,
+                   'C0'                 : C0,
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
     #               'DELTA1'		    : "delta-01.dat",

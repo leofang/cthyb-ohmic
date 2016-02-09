@@ -93,7 +93,7 @@ public:
   void print_time_map() const; /* Leo Fang: print the map of c and c^dagger times */ 
   //void print_segments() const; /* Leo Fang: print start and end times of segments */
 
-  double dissipation_weight_change(const segment &seg, int orbital, bool antisegment) const;
+  double dissipation_weight_change(const segment &seg, int orbital, bool insert) const;
   inline double phase_correlator_J(double tau) const;
 
 
