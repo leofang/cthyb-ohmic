@@ -36,7 +36,7 @@ hybridization_configuration::hybridization_configuration(const alps::params &p):
   //n_env_ = (int)p["N_ENV"]|1;
   if(p.defined("VERY_VERBOSE") && p["VERY_VERBOSE"].cast<bool>()==true)
   {
-     std::cout << "Debug output: hybridization_configuration is initializing..." << std::endl;
+     std::cout << "hybridization_configuration is initializing..." << std::endl;
      std::cout << "N_ENV = " << n_env_ << std::endl;
   }
   //hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p));
