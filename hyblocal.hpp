@@ -29,13 +29,14 @@
 #ifndef LOCAL_CONFIG_HPP
 #define LOCAL_CONFIG_HPP
 
-#include<alps/ngs/params.hpp>
-#include"hybint.hpp"
+#include <alps/ngs/params.hpp>
+#include "hybint.hpp"
 //Leo: disable retarded interaction
 //#include"hybretintfun.hpp"
-#include"hybsegment.hpp"
-#include<set>
-#include<vector>
+#include "hybsegment.hpp"
+#include "hybdissipation.hpp"
+#include <set>
+#include <vector>
 
 //this is the class that handles everything in connection with the local
 //impurity operators. It knows about segments, chemical potentials,
@@ -45,6 +46,7 @@ typedef std::set<segment> segment_container_t;
 typedef std::map<double,int> state_map;
 
 class local_configuration{
+  friend class dissipation_configuration; //This class needs to access the private members below.
 public:
   local_configuration(const alps::params &p, int crank);
   double local_energy(const segment &seg, int orb,bool d_mu_only=false) const;
@@ -93,8 +95,8 @@ public:
   void print_time_map() const; /* Leo Fang: print the map of c and c^dagger times */ 
   //void print_segments() const; /* Leo Fang: print start and end times of segments */
 
-  double dissipation_weight_change(const segment &seg, int orbital, bool insert) const;
-  inline double phase_correlator_J(double tau) const;
+  //double dissipation_weight_change(const segment &seg, int orbital, bool insert) const;
+  //inline double phase_correlator_J(double tau) const;
 
 
 private:
@@ -124,13 +126,13 @@ private:
   std::vector< std::vector<int> > n_segments_;
 
   //Leo: dissipation parameters
-  bool dissipation_; //Leo: turn on dissipation or not
-  double r_;         //Leo: dissipation strength
-  double C0_;        //Leo: capacitance ratio of the 0-th capacitor to total capacitance
-  double wc_;        //Leo: cutoff frequency
-  double kappa_;     //Leo: kappa=1/(beta*wc)
-  double gamma_;     //Leo: Euler constant
-  std::vector< std::vector<double> > dissipation_coeff_;
+  //bool dissipation_; //Leo: turn on dissipation or not
+  //double r_;         //Leo: dissipation strength
+  //double C0_;        //Leo: capacitance ratio of the 0-th capacitor to total capacitance
+  //double wc_;        //Leo: cutoff frequency
+  //double kappa_;     //Leo: kappa=1/(beta*wc)
+  //double gamma_;     //Leo: Euler constant
+  //std::vector< std::vector<double> > dissipation_coeff_;
 
 }; //Leo: is this line necessary?
 

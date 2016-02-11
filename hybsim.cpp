@@ -32,12 +32,14 @@
 
 #include <iomanip>
 #include"hyb.hpp"
+#include "hybdissipation.hpp"
 
 hybridization::hybridization(const alps::params &parms, int crank_)
 : alps::mcbase(parms, crank_),
 crank(crank_),
 local_config(parms,crank),
-hyb_config(parms)
+hyb_config(parms),
+ohmic_config(parms)
 {
   sanity_check(parms); //before doing anything, check whether the input parameters make sense
   show_info(parms,crank);

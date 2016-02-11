@@ -88,7 +88,8 @@ if(LAPACK_FOUND)
        hybconfig.cpp
        hybupdates.cpp
        hybevaluate.cpp
-       hybmeasurements.cpp)
+       hybmeasurements.cpp
+       hybdissipation.cpp)
 
 #  set (DMFT_QMC_SOLVERS "")
  

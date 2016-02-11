@@ -26,8 +26,9 @@
  *
  *****************************************************************************/
 #include <iomanip>
-#include"hyb.hpp"
-#include"hyblocal.hpp"
+#include "hyb.hpp"
+#include "hyblocal.hpp"
+#include "hybdissipation.hpp"
 
 //this is the heart of the Monte Carlo procedure: we have the following updates:
 //1: change the zero order state, swap an empty orbital versus a filled one (8% or 10%)
@@ -461,7 +462,7 @@ void hybridization::insert_segment_update(int orbital)
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_segment, orbital, color_temp);
 
   //Leo: compute the dissipation weight change
-  double dissipation_weight_change=local_config.dissipation_weight_change(new_segment, orbital, true);
+  double dissipation_weight_change=ohmic_config.dissipation_weight_change(new_segment, orbital, true, local_config);
   
   //compute the proposal probability ratio
   //Leo: the old algorithm must be modified when n_env>1
@@ -553,7 +554,7 @@ void hybridization::remove_segment_update(int orbital)
   double hybridization_weight_change=1.0/hyb_config.hyb_weight_change_remove(segment_to_remove, orbital, color_temp);
   
   //Leo: compute the dissipation weight change
-  double dissipation_weight_change=1.0/local_config.dissipation_weight_change(segment_to_remove, orbital, false);
+  double dissipation_weight_change=1.0/ohmic_config.dissipation_weight_change(segment_to_remove, orbital, false, local_config);
   
   //compute the proposal probability ratio
   double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_remove.t_start_,orbital);
@@ -670,7 +671,7 @@ void hybridization::insert_antisegment_update(int orbital)
   double hybridization_weight_change=hyb_config.hyb_weight_change_insert(new_antisegment, orbital, color_temp);
 
   //Leo: compute the dissipation weight change
-  double dissipation_weight_change=local_config.dissipation_weight_change(new_antisegment, orbital, true);
+  double dissipation_weight_change=ohmic_config.dissipation_weight_change(new_antisegment, orbital, true, local_config);
   
   //Leo: compute the number of segments and antisegments of the new configuration
   std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_antisegment(new_antisegment, orbital);
@@ -771,7 +772,7 @@ void hybridization::remove_antisegment_update(int orbital)
   double hybridization_weight_change=hyb_config.hyb_weight_change_remove(antisegment, orbital, color_temp);
 
   //Leo: compute the dissipation weight change
-  double dissipation_weight_change=1.0/local_config.dissipation_weight_change(antisegment, orbital, false);
+  double dissipation_weight_change=1.0/ohmic_config.dissipation_weight_change(antisegment, orbital, false, local_config);
 
   //Leo: get the current number of segments and antisegments
   std::vector<int> n_segments = local_config.get_n_segments(orbital); 

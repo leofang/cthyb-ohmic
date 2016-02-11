@@ -35,6 +35,7 @@
 #include "hybsegment.hpp"
 #include "hyblocal.hpp"
 #include "hybconfig.hpp"
+#include "hybdissipation.hpp"
 #include "boost/chrono/chrono.hpp"
 
 #ifdef HYB_SIM_MAIN
@@ -208,6 +209,9 @@ private:
 
   //impurity operator configuration
   hybridization_configuration hyb_config;
+
+  //Leo: dissipative environment configuration
+  dissipation_configuration ohmic_config;
 };
 
 std::ostream &operator<<(std::ostream &os, const hybridization &hyb);
