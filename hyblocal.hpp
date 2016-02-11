@@ -44,7 +44,7 @@
 typedef std::set<segment> segment_container_t;
 typedef std::map<double,int> state_map;
 
-typedef class local_configuration{
+class local_configuration{
 public:
   local_configuration(const alps::params &p, int crank);
   double local_energy(const segment &seg, int orb,bool d_mu_only=false) const;
@@ -132,7 +132,7 @@ private:
   double gamma_;     //Leo: Euler constant
   std::vector< std::vector<double> > dissipation_coeff_;
 
-} local_configuration; //Leo: is this line necessary?
+}; //Leo: is this line necessary?
 
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
 
