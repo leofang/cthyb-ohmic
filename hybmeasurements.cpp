@@ -318,7 +318,7 @@ void hybridization::measure_G(std::vector<std::map<double,double> > &F_prefactor
   //if(!color_updated) return;
 
   //delegate the actual measurement to the hybridization configuration
-  hyb_config.measure_G(G, F, F_prefactor, sign);
+  hyb_config.measure_G(G, F, F_prefactor, sign, dissipation_weight_ratio);
 }
 
 

@@ -480,9 +480,10 @@ void hybridization::insert_segment_update(int orbital)
     nacc[1]++;
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
-    hyb_config.insert_segment(new_segment, orbital, color_temp);
     local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
-    
+    hyb_config.insert_segment(new_segment, orbital, color_temp);
+    dissipation_weight_ratio = 1.0/dissipation_weight_change; //Leo: keep the weight change (of removal!) for measure_G   
+ 
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -576,8 +577,9 @@ void hybridization::remove_segment_update(int orbital)
     if(weight_change < 0) sign*=-1.;
 //      double fwo = full_weight();
     local_config.remove_segment(segment_to_remove, orbital);
-    hyb_config.remove_segment(segment_to_remove, orbital, color_temp);
     local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+    hyb_config.remove_segment(segment_to_remove, orbital, color_temp);
+    dissipation_weight_ratio = dissipation_weight_change; //Leo: keep the weight change for measure_G   
 
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
@@ -692,8 +694,9 @@ void hybridization::insert_antisegment_update(int orbital)
     //std::cout<<cred<<"accepting insert antisegment."<<cblack<<std::endl;
     if(weight_change < 0) sign*=-1.;
     local_config.insert_antisegment(new_antisegment, orbital);
-    hyb_config.insert_antisegment(new_antisegment, orbital, color_temp);
     local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+    hyb_config.insert_antisegment(new_antisegment, orbital, color_temp);
+    dissipation_weight_ratio = 1.0/dissipation_weight_change; //Leo: keep the weight change (of removal!) for measure_G   
 
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
@@ -798,8 +801,9 @@ void hybridization::remove_antisegment_update(int orbital)
     //std::cout<<cred<<"accepting remove antisegment."<<cblack<<std::endl;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_antisegment(antisegment, orbital);
-    hyb_config.remove_antisegment(antisegment, orbital, color_temp);
     local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+    hyb_config.remove_antisegment(antisegment, orbital, color_temp);
+    dissipation_weight_ratio = dissipation_weight_change; //Leo: keep the weight change for measure_G   
 
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
@@ -838,6 +842,7 @@ void hybridization::remove_antisegment_update(int orbital)
 }
 
 
+//Leo: TODO: remove this!
 /********************************************************\
  New spin-flip updates
  Idea: take remove_segment_update and insert_segment_update and combine them so one segment is removed from on orbital (spin up or down) and inserted on the corresponding other_orbital (spin down or up), if the other_orbital is not filled.

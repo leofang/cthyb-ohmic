@@ -42,7 +42,7 @@ dissipation_configuration::dissipation_configuration(const alps::params &p)
   n_env_=p["N_ENV"]|1;   //Leo Fang: number of reservoirs
 
   //Leo: read the dissipaton parameters 
-  dissipation_=p["Dissipation"]|0;
+  dissipation_=p["Dissipation"]|false;
   //Leo: checks for adding dissipation. These checks cannot be added to sanity_check 
   //     because dissipation_configuration initializes first...
   if(dissipation_ && !p.defined("r"))

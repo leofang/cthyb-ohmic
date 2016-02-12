@@ -46,7 +46,10 @@ typedef std::set<segment> segment_container_t;
 typedef std::map<double,int> state_map;
 
 class local_configuration{
-  friend class dissipation_configuration; //This class needs to access the private members below.
+  //friend class dissipation_configuration; //This class needs to access the private members below.
+  //Let this function of the dissipation class access the private members below
+  friend double dissipation_configuration::dissipation_weight_change(const segment &seg, int orbital, bool insert, const local_configuration &local_conf) const;
+
 public:
   local_configuration(const alps::params &p, int crank);
   double local_energy(const segment &seg, int orb,bool d_mu_only=false) const;
@@ -84,9 +87,9 @@ public:
   std::vector<int> get_new_n_segments_insert_segment(const segment &new_segment, int orbital);
   std::vector<int> get_new_n_segments_remove_segment(const segment &new_segment, int orbital);
   void check_n_segments_consistency(int orbital);
-  //Leo: return the private member n_segments_
+  //Leo: return the number of colored segments and antisegments
   std::vector<int> get_n_segments(int orbital) const {return n_segments_[orbital];} 
-  //Leo: modify the private member n_segments_
+  //Leo: modify the number of colored segments and antisegments
   void set_n_segments(int orbital, std::vector<int> new_n_segments) { n_segments_[orbital]=new_n_segments; }
 
   //debug functions
@@ -134,7 +137,7 @@ private:
   //double gamma_;     //Leo: Euler constant
   //std::vector< std::vector<double> > dissipation_coeff_;
 
-}; //Leo: is this line necessary?
+};
 
 std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf);
 

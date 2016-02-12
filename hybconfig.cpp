@@ -229,13 +229,13 @@ void hybridization_configuration::insert_antisegment(const segment &new_antisegm
 }
 
 
-void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign) const
+void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign, double dissipation_weight_ratio) const
 {
   for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
   {
 	for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
 	{
-	  hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign);
+	  hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign, dissipation_weight_ratio);
 	}
   }
 }

@@ -306,7 +306,7 @@ double hybmatrix::full_weight() const
 }
 
 
-void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign) const
+void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double dissipation_weight_ratio) const
 {
   double N_div_beta=(G.size()-1)/beta_;
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
@@ -334,6 +334,7 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
       }
       int index = (int) (argument * N_div_beta + 0.5);
       double g = operator() (j, i) * bubble_sign;
+      g*=dissipation_weight_ratio; //Leo: the dissipative environment also contributes to the local Green's function
       //NOTE:  - corresponds to -<T c(tau) c^dag(tau')>
       G[index] -= g; //changed this to-; check consistency with ALPS DMFT loop!
       F[index] -= g*f_pref;

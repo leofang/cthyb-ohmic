@@ -29,11 +29,10 @@
 #ifndef OHMIC_CONFIG_HPP
 #define OHMIC_CONFIG_HPP
 
-#include <alps/ngs/params.hpp>
-#include "hybint.hpp"
+#include <alps/ngs.hpp>
 #include "hybsegment.hpp"
+//#include "hybmatrix.hpp"
 #include "hyblocal.hpp"
-#include <set>
 #include <vector>
 
 //This is a friend class of local_configuration that handles the ohmic
@@ -49,23 +48,25 @@
 class local_configuration; //forward declaration
 
 class dissipation_configuration{
+  //friend void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign) const;
+
 public:
   dissipation_configuration(const alps::params &p);
   //friend std::ostream &operator<<(std::ostream &os, const dissipation_configuration &ohmic_conf);
-
-  double dissipation_weight_change(const segment &seg, int orbital, bool insert, const local_configuration &local_config) const;
+  double dissipation_weight_change(const segment &seg, int orbital, bool insert, const local_configuration &local_conf) const;
+  //inline void set_weight_change(double i) { weight_change = i; };
   inline double phase_correlator_J(double tau) const;
 
 private:
-  int n_env_; //number of reservoirs
+  int n_env_;           //number of reservoirs
   double beta_;
   int n_orbitals_;
-  bool dissipation_; //turn on dissipation or not
-  double r_;         //dissipation strength
-  double C0_;        //capacitance ratio of the 0-th capacitor to total capacitance
-  double wc_;        //cutoff frequency
-  double kappa_;     //kappa=1/(beta*wc)
-  double gamma_;     //Euler constant
+  bool dissipation_;    //turn on dissipation or not
+  double r_;            //dissipation strength
+  double C0_;           //capacitance ratio of the 0-th capacitor to total capacitance
+  double wc_;           //cutoff frequency
+  double kappa_;        //kappa=1/(beta*wc)
+  double gamma_;        //Euler constant
   std::vector< std::vector<double> > dissipation_coeff_;
 };
 

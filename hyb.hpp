@@ -79,7 +79,7 @@ private:
   //measure_* functions perform the actual measurements
   void measure_order();
   void measure_color(); //Leo: for color measurement
-  void measure_G(std::vector<std::map<double,double> > &F_prefactor);
+  void measure_G(std::vector<std::map<double,double> > &F_prefactor); 
   void measure_Gw(std::vector<std::map<double,double> > &F_prefactor);
   void measure_Gl(std::vector<std::map<double,double> > &F_prefactor);
   void measure_G2w(std::vector<std::map<double,double> > &F_prefactor);
@@ -203,6 +203,7 @@ private:
   std::vector<double>h2wi;
 
   std::vector<std::map<double,double> > F_prefactor;
+  double dissipation_weight_ratio; //Leo: record the weight change when the proposed configuration is successfully updated
 
   //local impurity operator configuration
   local_configuration local_config;

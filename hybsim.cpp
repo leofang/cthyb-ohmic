@@ -70,6 +70,8 @@ ohmic_config(parms)
   ncolor.assign(n_env, 0.);          				         //Leo: to count the number of color updates
   ncolor_diff.assign(n_env, 0.);          			         //Leo: difference between colored insert and remove
 
+  dissipation_weight_ratio = 1.; //Initially the impurity is empty, so it's not affected by the dissipative environment, if any
+
   //initializing physics parameters
   beta = parms["BETA"];                                                            //inverse temperature
 //  U_ = parms["U"];
