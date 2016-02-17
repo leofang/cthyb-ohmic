@@ -233,10 +233,13 @@ void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G
 {
   for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
   {
-	for(size_t color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
-	{
-	  hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital], sign, dissipation_weight_ratio);
-	}
+    // //Leo: not sure if the sign here is correct for N_ENV=2, need to check!
+    // for(int color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+    // {
+       int color = 0;
+       hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
+                                          sign, dissipation_weight_ratio);
+    // }
   }
 }
 

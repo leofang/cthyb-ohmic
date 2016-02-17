@@ -214,18 +214,35 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital)
 std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
 {
   os<<"hyb matrix size: "<<hyb_mat.size()<<" permutation sign: "<<hyb_mat.permutation_sign_<<std::endl;
+
   os<<"c map: ";
   for(hyb_map_t::const_iterator it=hyb_mat.c_index_map_.begin(); it!=hyb_mat.c_index_map_.end(); ++it)
   {
     os<<"( "<<it->first<<" , "<<it->second<<" ) ";
   }
   os<<std::endl;
+
   os<<"cdagger map: ";
   for(hyb_map_t::const_iterator it=hyb_mat.cdagger_index_map_.begin(); it!=hyb_mat.cdagger_index_map_.end(); ++it)
   {
     os<<"( "<<it->first<<" , "<<it->second<<" ) ";
   }
-  std::cout<<std::endl;
+  os<<std::endl;
+
+  //Leo: output the whole blasmatrix object for debug purpose; adapted from ostream of blas_matrix 
+  os<<"[ ";
+  for(int i=0; i<hyb_mat.size(); ++i)
+  {
+    //os<<"[ ";
+    for(int j=0; j<hyb_mat.size(); ++j)
+    {
+      os<< hyb_mat.operator()(i,j) << " ";
+    }
+    if(i<hyb_mat.size()-1)  os << " ;" << " ";
+  }
+  os << "]" <<" " << std::endl;
+
+  os << std::endl;
   return os;
 }
 
@@ -334,7 +351,7 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
       }
       int index = (int) (argument * N_div_beta + 0.5);
       double g = operator() (j, i) * bubble_sign;
-      g*=dissipation_weight_ratio; //Leo: the dissipative environment also contributes to the local Green's function
+      //g*=dissipation_weight_ratio; //Leo: the dissipative environment also contributes to the local Green's function
       //NOTE:  - corresponds to -<T c(tau) c^dag(tau')>
       G[index] -= g; //changed this to-; check consistency with ALPS DMFT loop!
       F[index] -= g*f_pref;

@@ -119,11 +119,12 @@ ohmic_config(parms)
   create_measurements();
   
   if(crank==0)
-  {
+  { //Leo: TODO need to modify this later
     std::cout<<"Hybridization Expansion Simulation CT-HYB"<<std::endl;
     std::cout<<"Part of the ALPS DMFT Project"<<std::endl;
     std::cout<<"Usage requires citation of the ALPS CT-HYB paper and the ALPS paper"<<std::endl;
     std::cout<<"Refer to the documentation for more information."<<std::endl;
+    std::cout << std::endl;
   }
   
   start_time=clock();

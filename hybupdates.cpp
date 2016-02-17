@@ -498,6 +498,13 @@ void hybridization::insert_segment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert segment" << std::endl; //local_config.print_segments();
         std::cout << local_config << std::endl;
+        std::cout << hyb_config << std::endl;
+        if(sign<0)   std::cout << "negative sign!" << std::endl;
+        //double hyb_full_weight = hyb_config.full_weight();
+        //if(hyb_full_weight<0)
+        //{
+        //        std::cout << hyb_full_weight << std::endl;
+        //}
         std::cout << "local weight change         = " << local_weight_change << std::endl;
         std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
         std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
@@ -597,6 +604,13 @@ void hybridization::remove_segment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove segment" << std::endl; //local_config.print_segments(); 
         std::cout << local_config << std::endl;
+        std::cout << hyb_config << std::endl;
+        if(sign<0)   std::cout << "negative sign!" << std::endl;
+        //double hyb_full_weight = hyb_config.full_weight();
+        //if(hyb_full_weight<0)
+        //{
+        //        std::cout << hyb_full_weight << std::endl;
+        //}
         std::cout << "local weight change         = " << local_weight_change << std::endl;
         std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
         std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
@@ -713,6 +727,13 @@ void hybridization::insert_antisegment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: insert antisegment" << std::endl; //local_config.print_segments();
         std::cout << local_config << std::endl;
+        std::cout << hyb_config << std::endl;
+        if(sign<0)   std::cout << "negative sign!" << std::endl;
+        //double hyb_full_weight = hyb_config.full_weight();
+        //if(hyb_full_weight<0)
+        //{
+        //        std::cout << hyb_full_weight << std::endl;
+        //}
         std::cout << "local weight change         = " << local_weight_change << std::endl;
         std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
         std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
@@ -820,6 +841,13 @@ void hybridization::remove_antisegment_update(int orbital)
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
         std::cout << "Accepted move: remove antisegment" << std::endl; //local_config.print_segments(); 
         std::cout << local_config << std::endl;
+        std::cout << hyb_config << std::endl;
+        if(sign<0)   std::cout << "negative sign!" << std::endl;
+        //double hyb_full_weight = hyb_config.full_weight();
+        //if(hyb_full_weight<0)
+        //{
+        //        std::cout << hyb_full_weight << std::endl;
+        //}
         std::cout << "local weight change         = " << local_weight_change << std::endl;
         std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
         std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
