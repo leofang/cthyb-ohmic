@@ -569,6 +569,10 @@ void local_configuration::check_consistency()const
       }
     }
   }
+
+  //Leo: also check the consistency of number of segments and antisegments
+  for (int i=0; i<n_orbitals_; ++i) 
+     check_n_segments_consistency(i);
 }
 
 
@@ -1154,7 +1158,7 @@ std::vector<int> local_configuration::get_new_n_segments_remove_antisegment(cons
 
 
 
-void local_configuration::check_n_segments_consistency(int orbital)
+void local_configuration::check_n_segments_consistency(int orbital) const
 {  
    if(order(orbital)==0) return; //empty or filled line, no need to check
 

@@ -34,11 +34,11 @@ hybridization_configuration::hybridization_configuration(const alps::params &p):
   hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p))
 {
   //n_env_ = (int)p["N_ENV"]|1;
-  if(p.defined("VERY_VERBOSE") && p["VERY_VERBOSE"].cast<bool>()==true)
-  {
-     std::cout << "hybridization_configuration is initializing..." << std::endl;
-     std::cout << "N_ENV = " << n_env_ << std::endl;
-  }
+  //if(p.defined("VERY_VERBOSE") && p["VERY_VERBOSE"].cast<bool>()==true)
+  //{
+  //   std::cout << "hybridization_configuration is initializing..." << std::endl;
+  //   std::cout << "N_ENV = " << n_env_ << std::endl;
+  //}
   //hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p));
   std::cout << "Initialize Delta for " << n_env_ << " color(s)..." << std::endl << std::endl;
   initialize_Delta(p);
@@ -140,6 +140,19 @@ void hybridization_configuration::rebuild()
 }
 
 
+//Leo: for debug purpose
+void hybridization_configuration::rebuild_ordered() 
+{
+  for (int i=0; i<hybmat_.size(); i++) //N_orbital
+  {
+     for (int j=0; j<hybmat_[i].size(); j++) //Leo: N_ENV
+     {
+    	hybmat_[i][j].rebuild_ordered_hyb_matrix(i, Delta[j]);
+     }
+  }
+}
+
+
 void hybridization_configuration::rebuild(int orbital) 
 {
    for (int j=0; j<hybmat_[orbital].size(); j++) //Leo: N_ENV
@@ -159,7 +172,7 @@ void hybridization_configuration::rebuild(std::vector<int> orbital)
 
 //Leo: since the size of reservoir matrices coupled to the same orbital are correlated (n_L+n_R=n),
 //     there should be a consistency check after each update to gaurantee we're doing it correctly
-int hybridization_configuration::total_color_matrix_size(int orbital)
+int hybridization_configuration::total_color_matrix_size(int orbital) const
 {
    int total_size=0;
    for (int i=0; i<n_env_; i++)
@@ -233,13 +246,13 @@ void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G
 {
   for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
   {
-    // //Leo: not sure if the sign here is correct for N_ENV=2, need to check!
-    // for(int color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
-    // {
-       int color = 0;
+     //Leo: not sure if the sign here is correct for N_ENV=2, need to check!
+     for(int color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+     {
+    //   int color = (n_env_==1?0:1);
        hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
-                                          sign, dissipation_weight_ratio);
-    // }
+                                          (sign<0?sign+color:sign), dissipation_weight_ratio);
+     }
   }
 }
 
@@ -300,8 +313,10 @@ std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hy
   {
     for(size_t j=0; j<hyb_config.hybmat_[i].size(); j++) //Leo: not sure if j=color here works...
     {
-        os<<cblue<<"------- "<<"orbital: "<<i<< ", color: " << j << " ------"<<cblack<<std::endl;
-        os<<hyb_config.hybmat_[i][j]<<std::endl;
+        //Leo: get rid of text colors
+	//os<<cblue<<"------- "<<"orbital: "<<i<< ", color: " << j << " ------"<<cblack<<std::endl;
+        os << "------- orbital: " << i << ", color: " << j << " -------" << std::endl;
+        os << hyb_config.hybmat_[i][j] << std::endl;
     }
   }
   return os;

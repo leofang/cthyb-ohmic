@@ -62,6 +62,12 @@ public:
   double fraction_completed() const;
   friend std::ostream &operator<<(std::ostream &os, const hybridization &hyb);
 
+  //Leo: debug output during update
+  void debug_output(int updatetype, const double &local_weight_change, const double &hybridization_weight_change, const double &dissipation_weight_change, const double &permutation_factor) const;
+
+  //Leo: check the consistency of things during runtime. This is an very expansive function!
+  void check_consistency();
+
 private:
   bool VERBOSE;
   bool VERY_VERBOSE; //Leo: for debug purpose

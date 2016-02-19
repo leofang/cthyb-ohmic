@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 #include "hybmatrix.hpp"
+#include "hybblasmatrix.hpp" //Leo: for matrix inversion; TODO: remove this after debugging!
 
 //this was changed with update 51!
 //nomenclature: the c        is at the segment end  , so the time for c        is new_segment->t_end_
@@ -215,22 +216,22 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
 {
   os<<"hyb matrix size: "<<hyb_mat.size()<<" permutation sign: "<<hyb_mat.permutation_sign_<<std::endl;
 
-  os<<"c map: ";
+  os<<"c map: " << std::endl;
   for(hyb_map_t::const_iterator it=hyb_mat.c_index_map_.begin(); it!=hyb_mat.c_index_map_.end(); ++it)
   {
-    os<<"( "<<it->first<<" , "<<it->second<<" ) ";
+    os<<"("<<it->first<<", "<<it->second<<") ";
   }
   os<<std::endl;
 
-  os<<"cdagger map: ";
+  os<<"cdagger map: " << std::endl;
   for(hyb_map_t::const_iterator it=hyb_mat.cdagger_index_map_.begin(); it!=hyb_mat.cdagger_index_map_.end(); ++it)
   {
-    os<<"( "<<it->first<<" , "<<it->second<<" ) ";
+    os<<"("<<it->first<<", "<<it->second<<") ";
   }
   os<<std::endl;
 
   //Leo: output the whole blasmatrix object for debug purpose; adapted from ostream of blas_matrix 
-  os<<"[ ";
+  os<<"matrix: " << std::endl << "[ ";
   for(int i=0; i<hyb_mat.size(); ++i)
   {
     //os<<"[ ";
@@ -238,11 +239,31 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
     {
       os<< hyb_mat.operator()(i,j) << " ";
     }
-    if(i<hyb_mat.size()-1)  os << " ;" << " ";
+    if(i<hyb_mat.size()-1)  os << ";" << std::endl << "  ";
   }
-  os << "]" <<" " << std::endl;
+  os << "] " << std::endl;
 
-  os << std::endl;
+  //Leo: output the inverted matrix; make sense only when its dimension is nonzero
+  if(hyb_mat.size()>=1)
+  {
+    blas_matrix delta(hyb_mat);
+    delta.invert();
+    os<<"inverted matrix: " << std::endl << "[ ";
+    for(int i=0; i<delta.size(); ++i)
+    {
+      //os<<"[ ";
+      for(int j=0; j<delta.size(); ++j)
+      {
+        os<< delta.operator()(i,j) << " ";
+      }
+      if(i<delta.size()-1)  os << " ;" << std::endl << "  ";
+    }
+    os << "] " << std::endl;
+  }
+  else
+    os << "inverted matrix:\n[ ]" << std::endl;
+
+  //os << std::endl;
   return os;
 }
 
@@ -350,7 +371,9 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
         argument += beta_;
       }
       int index = (int) (argument * N_div_beta + 0.5);
-      double g = operator() (j, i) * bubble_sign;
+      double g = operator() (j, i) * bubble_sign; //Leo: original code
+      //double g = operator() (j, i) * bubble_sign * ((i+j)%2?-1:1); //Leo: test!
+      //double g = operator() (j, i) * ((i+j)%2?-1:1); //Leo: test!
       //g*=dissipation_weight_ratio; //Leo: the dissipative environment also contributes to the local Green's function
       //NOTE:  - corresponds to -<T c(tau) c^dag(tau')>
       G[index] -= g; //changed this to-; check consistency with ALPS DMFT loop!
