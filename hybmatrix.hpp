@@ -53,6 +53,7 @@ public:
       ,cdagger_index_map_(rhs.cdagger_index_map_)
       ,c_index_map_(rhs.c_index_map_)
       ,c_cdagger_map_(rhs.c_cdagger_map_) //Leo: map of operator positions
+      ,n_env_(rhs.n_env_)
       ,Q(rhs.Q)
       ,R(rhs.R)
       ,PinvQ(rhs.PinvQ)
@@ -61,13 +62,13 @@ public:
       ,S_tilde(rhs.S_tilde)
       ,weight_ratio_(rhs.weight_ratio_)
       ,permutation_sign_(rhs.permutation_sign_)
+      ,time_ordering_sign_(rhs.time_ordering_sign_)
+      ,disordered_times(rhs.disordered_times)
       ,determinant_(rhs.determinant_)
       ,determinant_old_(rhs.determinant_old_)
       ,beta_(rhs.beta_)
       ,measure_g2w_(rhs.measure_g2w_)
       ,measure_h2w_(rhs.measure_h2w_)
-      ,time_ordering_sign_(rhs.time_ordering_sign_)
-      ,n_env_(rhs.n_env_)
   {}
   ~hybmatrix() {
 //    std::cerr << "Deleting hybmatrix\n";
