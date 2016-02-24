@@ -44,13 +44,15 @@ typedef std::map<double,std::size_t> hyb_map_t;
 class hybmatrix:public blas_matrix{
 public:
   hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; 
-  //Leo Fang: introduce multiple reservoirs
-  //n_env_=p["N_ENV"]|1;
+  n_env_=p["N_ENV"]|1; //Leo: introduce multiple reservoirs
+  time_ordering_sign_=1;      //Leo: 1 means no, -1 means yes
 }
+
   hybmatrix(const hybmatrix &rhs) 
       :blas_matrix(rhs)
       ,cdagger_index_map_(rhs.cdagger_index_map_)
       ,c_index_map_(rhs.c_index_map_)
+      ,c_cdagger_map_(rhs.c_cdagger_map_) //Leo: map of operator positions
       ,Q(rhs.Q)
       ,R(rhs.R)
       ,PinvQ(rhs.PinvQ)
@@ -82,6 +84,9 @@ public:
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
   void measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl, const std::map<double,double> &F_prefactor, double sign) const;
   void consistency_check() const;
+  //Leo: this seems to be necessary when n_env>1
+  void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
+  int sign() const {return time_ordering_sign_;}    //Leo: access the sign
 
 private:
 
@@ -89,12 +94,15 @@ private:
   hyb_map_t cdagger_index_map_;
   hyb_map_t c_index_map_;
 
-  // Leo Fang: a vectorized vesion of the above map for colored operators
+  //Leo: map of start/end times and their corresponding positions in the segment (start or end).
+  hyb_map_t c_cdagger_map_;
+
+  //Leo: a vectorized vesion of the above map for colored operators
   //hyb_vector_map_t cdagger_index_vector_map_;
   //hyb_vector_map_t c_index_vector_map_;
  
   // Leo Fang: number of reservoirs
-  //int n_env_;
+  int n_env_;
    
   //auxiliary column and row vectors for inserting and removing elements.
   std::vector<double> Q;
@@ -105,6 +113,8 @@ private:
   double S_tilde;
   double weight_ratio_;
   double permutation_sign_;
+  int time_ordering_sign_;  //Leo: this seems to be necessary when n_env>1; 1 means no, -1 means yes
+  std::set<double> disordered_times;
   
   //debug
   double determinant_;

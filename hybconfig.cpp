@@ -183,6 +183,42 @@ int hybridization_configuration::total_color_matrix_size(int orbital) const
 }
 
 
+//Leo: when N_ENV>1, it is possible to have the sign problem due to operator time ordering,
+//     therefore, this function returns the overall sign by multiplying those of each matrix.
+//     This sign should agree with that of hybridization_configuration::full_weight!
+//     TOTALLY EXPERIMENTAL! BE CAREFUL!
+int hybridization_configuration::overall_color_matrix_sign() const
+{
+   int sign=1;
+   for (int i=0; i<hybmat_.size(); i++) //N_orbital
+   {
+      for (int j=0; j<hybmat_[i].size(); j++) //N_ENV
+      {
+     	sign*=hybmat_[i][j].sign();
+      }
+      //sign*=(total_color_matrix_size(i)%2?-1:1);
+   }
+   return sign;
+}
+
+
+void hybridization_configuration::haunt_missing_sign(int orbital)
+{
+    int orbital_order = total_color_matrix_size(orbital);
+    if(orbital_order==0) return;
+
+    std::vector<int> matrix_size(n_env_, 0);
+    for(int i=0; i<n_env_; i++)
+       matrix_size[i] = hybmat_[orbital][i].size();
+  
+    //select the case in which n is even, and both n_R and n_L are odd
+    if( !(orbital_order%2) && (matrix_size[0]%2) )
+        std::cout << "SPECIAL CASE: n is even, and both n_R and n_L are odd!" << std::endl;
+}
+
+
+
+
 double hybridization_configuration::hyb_weight_change_insert(const segment &new_segment, int orbital, size_t color)
 {
 //  if(new_segment.c_start_ == new_segment.c_end_) //Leo: the colors of both ends of a (anti-)segment should be the same!
@@ -249,9 +285,15 @@ void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G
      //Leo: not sure if the sign here is correct for N_ENV=2, need to check!
      for(int color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
      {
-    //   int color = (n_env_==1?0:1);
-       hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
-                                          (sign<0?sign+color:sign), dissipation_weight_ratio);
+    //   int color = 1; //(n_env_==1?0:1);
+    //   if(color!=0 && overall_color_matrix_sign()<0)  sign*=-1; //Leo: test!
+    //   if(overall_color_matrix_sign()<0)
+    //        hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
+    //                                           sign*hybmat_[orbital][color].sign(), dissipation_weight_ratio);
+    //   else
+            hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
+                                               sign, dissipation_weight_ratio);
+                                         // (sign<0?sign+color:sign), dissipation_weight_ratio);
      }
   }
 }
@@ -316,7 +358,8 @@ std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hy
         //Leo: get rid of text colors
 	//os<<cblue<<"------- "<<"orbital: "<<i<< ", color: " << j << " ------"<<cblack<<std::endl;
         os << "------- orbital: " << i << ", color: " << j << " -------" << std::endl;
-        os << hyb_config.hybmat_[i][j] << std::endl;
+        os << hyb_config.hybmat_[i][j];
+        if(i!=hyb_config.hybmat_.size()-1)  os << std::endl;
     }
   }
   return os;

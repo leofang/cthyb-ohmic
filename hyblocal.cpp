@@ -154,7 +154,7 @@ std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf
         //os<<"("<<it->t_start_<<" "<<it->t_end_<<") ";
         os << *it << std::endl;
       }
-      os << std::endl;
+      if(i!=local_conf.n_orbitals_-1)  os << std::endl;
     }
   }
   //if(local_conf.dissipation_)

@@ -482,7 +482,7 @@ void hybridization::insert_segment_update(int orbital)
     local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     hyb_config.insert_segment(new_segment, orbital, color_temp);
     dissipation_weight_ratio = 1.0/dissipation_weight_change; //Leo: keep the weight change (of removal!) for measure_G   
- 
+
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -490,39 +490,23 @@ void hybridization::insert_segment_update(int orbital)
     ncolor_diff[color]++;  //Leo: + for insertion, - for removal 
     //color_updated = true;
 
-    /* Leo Fang: for test purpose, print out the segment map */
+    /* Leo Fang: for test purpose, print out a lot of things... */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-        check_consistency();
-        debug_output(1, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-////	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
-//        std::cout << "Accepted move: insert segment" << std::endl; //local_config.print_segments();
-//        std::cout << local_config << std::endl;
-//        std::cout << hyb_config << std::endl;
-//        if(sign<0)   std::cout << "negative sign!" << std::endl;
-//        //double hyb_full_weight = hyb_config.full_weight();
-//        //if(hyb_full_weight<0)
-//        //{
-//        //        std::cout << hyb_full_weight << std::endl;
-//        //}
-//        std::cout << "local weight change         = " << local_weight_change << std::endl;
-//        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
-//        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
-//        std::cout << "permutation factor          = " << permutation_factor << std::endl;
-//        std::cout << "the number configuration    = ";
-//        for(int i=0; i<n_orbitals; i++)
-//        {
-//             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
-//             std::cout << "(" << local_config.order(i) << "_";
-//             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-//                  std::cout << *it; 
-//             std::cout << ") ";
-//        }
-//        std::cout << std::endl;
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-//        std::cout << std::endl;
-//        local_config.check_n_segments_consistency(orbital);
+       check_consistency();
+       debug_output(1, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
+
+       hyb_config.haunt_missing_sign(orbital);
+
+       int number_segments = 0;
+       int number_antisegments = 0;
+       for(int i=0; i<n_env; i++)
+       {
+           number_segments += n_segments_temp[i];
+           number_antisegments += n_segments_temp[i+n_env];
+       }
+       if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
+         std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." << std::endl;
     }
   }
 }
@@ -603,34 +587,18 @@ void hybridization::remove_segment_update(int orbital)
     { 
         check_consistency();
         debug_output(2, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-// 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-////	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
-//        std::cout << "Accepted move: remove segment" << std::endl; //local_config.print_segments(); 
-//        std::cout << local_config << std::endl;
-//        std::cout << hyb_config << std::endl;
-//        if(sign<0)   std::cout << "negative sign!" << std::endl;
-//        //double hyb_full_weight = hyb_config.full_weight();
-//        //if(hyb_full_weight<0)
-//        //{
-//        //        std::cout << hyb_full_weight << std::endl;
-//        //}
-//        std::cout << "local weight change         = " << local_weight_change << std::endl;
-//        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
-//        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
-//        std::cout << "permutation factor          = " << permutation_factor << std::endl;
-//        std::cout << "the number configuration    = ";
-//        for(int i=0; i<n_orbitals; i++)
-//        {
-//             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
-//             std::cout << "(";
-//             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-//                  std::cout << *it; 
-//             std::cout << ") ";
-//        }
-//        std::cout << std::endl;
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-//        std::cout << std::endl;
-//        local_config.check_n_segments_consistency(orbital);
+
+       hyb_config.haunt_missing_sign(orbital);
+
+    int number_segments = 0;
+    int number_antisegments = 0;
+    for(int i=0; i<n_env; i++)
+    {
+        number_segments += n_segments_temp[i];
+        number_antisegments += n_segments_temp[i+n_env];
+    }
+    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
+        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
     }
   }
 }
@@ -728,34 +696,18 @@ void hybridization::insert_antisegment_update(int orbital)
     {
         check_consistency();
         debug_output(3, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-////	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
-//        std::cout << "Accepted move: insert antisegment" << std::endl; //local_config.print_segments();
-//        std::cout << local_config << std::endl;
-//        std::cout << hyb_config << std::endl;
-//        if(sign<0)   std::cout << "negative sign!" << std::endl;
-//        //double hyb_full_weight = hyb_config.full_weight();
-//        //if(hyb_full_weight<0)
-//        //{
-//        //        std::cout << hyb_full_weight << std::endl;
-//        //}
-//        std::cout << "local weight change         = " << local_weight_change << std::endl;
-//        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
-//        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
-//        std::cout << "permutation factor          = " << permutation_factor << std::endl;
-//        std::cout << "the number configuration    = ";
-//        for(int i=0; i<n_orbitals; i++)
-//        {
-//             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
-//             std::cout << "(";
-//             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-//                  std::cout << *it; 
-//             std::cout << ") ";
-//        }
-//        std::cout << std::endl;
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-//        std::cout << std::endl;
-//        local_config.check_n_segments_consistency(orbital);
+
+       hyb_config.haunt_missing_sign(orbital);
+
+    int number_segments = 0;
+    int number_antisegments = 0;
+    for(int i=0; i<n_env; i++)
+    {
+        number_segments += n_segments_temp[i];
+        number_antisegments += n_segments_temp[i+n_env];
+    }
+    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
+        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
     }
   }
 }
@@ -844,34 +796,18 @@ void hybridization::remove_antisegment_update(int orbital)
     {
         check_consistency();
         debug_output(4, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-////	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
-//        std::cout << "Accepted move: remove antisegment" << std::endl; //local_config.print_segments(); 
-//        std::cout << local_config << std::endl;
-//        std::cout << hyb_config << std::endl;
-//        if(sign<0)   std::cout << "negative sign!" << std::endl;
-//        //double hyb_full_weight = hyb_config.full_weight();
-//        //if(hyb_full_weight<0)
-//        //{
-//        //        std::cout << hyb_full_weight << std::endl;
-//        //}
-//        std::cout << "local weight change         = " << local_weight_change << std::endl;
-//        std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
-//        std::cout << "dissipation weight change   = " << dissipation_weight_change << std::endl;
-//        std::cout << "permutation factor          = " << permutation_factor << std::endl;
-//        std::cout << "the number configuration    = ";
-//        for(int i=0; i<n_orbitals; i++)
-//        {
-//             std::vector<int> n_segments_temp = local_config.get_n_segments(i);
-//             std::cout << "(";
-//             for (std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-//                  std::cout << *it; 
-//             std::cout << ") ";
-//        }
-//        std::cout << std::endl;
-//	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
-//        std::cout << std::endl;
-//        local_config.check_n_segments_consistency(orbital);
+
+       hyb_config.haunt_missing_sign(orbital);
+
+    int number_segments = 0;
+    int number_antisegments = 0;
+    for(int i=0; i<n_env; i++)
+    {
+        number_segments += n_segments_temp[i];
+        number_antisegments += n_segments_temp[i+n_env];
+    }
+    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
+        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
     }
   }
 }
@@ -980,11 +916,16 @@ void hybridization::debug_output(int updatetype, const double &local_weight_chan
         std::cout << local_config << std::endl;
         std::cout << hyb_config << std::endl;
         if(sign<0)   std::cout << "negative sign!" << std::endl;
-        //double hyb_full_weight = hyb_config.full_weight();
-        //if(hyb_full_weight<0)
-        //{
-        //        std::cout << hyb_full_weight << std::endl;
-        //}
+        double hyb_full_weight = hyb_config.full_weight();
+        if(hyb_full_weight<0)
+        {
+                std::cout << std::endl << "the weight of hyb_config is negative! (=" << hyb_full_weight \
+                          << ")" << std::endl << std::endl;
+                throw std::runtime_error("Abort!"); 
+        }
+//        if( (hyb_full_weight<0&&hyb_config.overall_color_matrix_sign()>0) || 
+//             (hyb_full_weight>0&&hyb_config.overall_color_matrix_sign()<0) )
+//             throw std::runtime_error("inconsistent sign, abort!");
         std::cout << std::setprecision(15) << std::fixed;
         std::cout << "local weight change         = " << local_weight_change << std::endl;
         std::cout << "hybridization weight change = " << hybridization_weight_change << std::endl;
@@ -1026,12 +967,10 @@ void hybridization::check_consistency()
   //Leo: check the consistency of the local configuration
   local_config.check_consistency();
 
-  //Leo: time ordering
+  //Leo: time ordering the hyb matrices. When time is ordered, permutation_sign_ should be equal to time_ordering_sign_
   hyb_config.rebuild_ordered();
 
-  std::cout << std::endl;
   std::cout << "************** consistency checked at " << counter+1 << "-th successful update! **************" << std::endl; 
-  std::cout << std::endl;
 
   counter++;
 }

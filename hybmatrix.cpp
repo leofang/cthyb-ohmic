@@ -111,11 +111,17 @@ void hybmatrix::insert_segment(const segment &new_segment, int orbital)
   // add the new segment times:
   cdagger_index_map_.insert(std::make_pair(new_segment.t_start_, last));
   c_index_map_      .insert(std::make_pair(new_segment.t_end_  , last));
+  c_cdagger_map_    .insert(std::make_pair(new_segment.t_start_, 1)); //Leo: 1 means c_dagger  
+  c_cdagger_map_    .insert(std::make_pair(new_segment.t_end_, 0));   //Leo: 0 means c
   
   //keep track of the wraparound sign
   if(new_segment.t_start_>new_segment.t_end_) { permutation_sign_*=-1.; }
   //std::cout<<clred<<*this<<cblack<<std::endl;
-  //consistency_check();  
+  //consistency_check(); 
+
+  //Leo: keep track of the time ordering sign due to operator time ordering
+  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  time_ordering_sign_check(time_ordering_sign_, disordered_times); 
 }
 
 
@@ -201,6 +207,9 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital)
   resize(size()-1);
   cdagger_index_map_.erase(new_segment.t_start_);
   c_index_map_      .erase(new_segment.t_end_);
+
+  c_cdagger_map_    .erase(new_segment.t_start_);   
+  c_cdagger_map_    .erase(new_segment.t_end_);   
   
   //std::cout<<clblue<<*this<<cblack<<std::endl;
   //consistency_check();
@@ -209,12 +218,22 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital)
    std::cout<<*((blas_matrix*)this)<<std::endl;
    std::cout<<clred<<"incremental determinant: "<<determinant_<<" actual determinant: "<<determinant()<<" prev determinant: "<<determinant_old_<<cblack<<std::endl;
    determinant_old_=determinant_;*/
+
+  //Leo: keep track of the time ordering sign due to operator time ordering
+  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  time_ordering_sign_check(time_ordering_sign_, disordered_times); 
 }
 
 
 std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
 {
-  os<<"hyb matrix size: "<<hyb_mat.size()<<" permutation sign: "<<hyb_mat.permutation_sign_<<std::endl;
+  os<< "hyb matrix size: "<<hyb_mat.size()<<", permutation sign: "<<hyb_mat.permutation_sign_ \
+    << ", time ordering sign: " << hyb_mat.sign() << std::endl;
+  
+  os << "disordered times: ";
+  for(std::set<double>::const_iterator it=hyb_mat.disordered_times.begin(); it!=hyb_mat.disordered_times.end(); it++)
+      os << *it << ", ";
+  os << std::endl;
 
   os<<"c map: " << std::endl;
   for(hyb_map_t::const_iterator it=hyb_mat.c_index_map_.begin(); it!=hyb_mat.c_index_map_.end(); ++it)
@@ -229,6 +248,16 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
     os<<"("<<it->first<<", "<<it->second<<") ";
   }
   os<<std::endl;
+
+  //Leo: for test purpose
+  os<<"c & cdagger map: (0 means c, 1 means cdagger, 0--->beta)" << std::endl;
+  os << "(";
+  for(hyb_map_t::const_iterator it=hyb_mat.c_cdagger_map_.begin(); it!=hyb_mat.c_cdagger_map_.end(); ++it)
+  {
+    //os<<"("<<it->first<<", "<<it->second<<") "; //Leo: the value (second) is either 0 (c) or 1 (cdagger)
+    os << it->second; 
+  }
+  os << ")" << std::endl;
 
   //Leo: output the whole blasmatrix object for debug purpose; adapted from ostream of blas_matrix 
   os<<"matrix: " << std::endl << "[ ";
@@ -284,56 +313,128 @@ void hybmatrix::rebuild_hyb_matrix(int orbital, const hybfun &Delta)
 }
 
 
+//Leo: this version would not properly work when N_ENV>1, because it relies on the fact
+//     that c and c^dagger are alternating, which is not necessarily true in the multi-
+//     color cases.
+//void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
+//{
+//  if(size()<2) return;
+//  //std::cout<<"on entry rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
+//  //std::cout<<*this<<std::endl;
+//  //std::cout<<clblue<<*(blas_matrix*)this<<cblack<<std::endl;
+//
+//  //order the times properly
+//  int k=0;
+//  hyb_map_t::iterator it_bup;
+//  for(hyb_map_t::iterator it_end=cdagger_index_map_.begin(); it_end != cdagger_index_map_.end();)
+//  {
+//    it_bup=it_end++;
+//    std::pair<double,int> new_entry=*it_bup;
+//    new_entry.second=k++;
+//    cdagger_index_map_.erase(it_bup);
+//    cdagger_index_map_.insert(new_entry);
+//  }
+//
+//  k=0;
+//  for(hyb_map_t::iterator it_start=c_index_map_.begin(); it_start != c_index_map_.end();)
+//  {
+//    it_bup=it_start++;
+//    std::pair<double,int> new_entry=*it_bup;
+//    new_entry.second=((it_bup==c_index_map_.begin()) && (it_bup->first<cdagger_index_map_.begin()->first))?c_index_map_.size()-1:k++;
+//    c_index_map_.erase(it_bup);
+//    c_index_map_.insert(new_entry);
+//  }
+//  
+//  //if we have an overlapping segment we need a permutation sign of -1, otherwise it is 1 in the ordered case.
+//  if(size()==0)
+//  {
+//    permutation_sign_=1.;
+//  }
+//  else
+//  {
+//    if(c_index_map_.begin()->first<cdagger_index_map_.begin()->first)
+//    {
+//      permutation_sign_=-1.;
+//    }
+//    else
+//    {
+//      permutation_sign_=1.;
+//    }
+//  }
+//  //then rebuild the hybridization matrix
+//  rebuild_hyb_matrix(orbital, Delta);
+//  //std::cout<<*this<<std::endl;
+//  //std::cout<<clred<<*(blas_matrix*)this<<cblack<<std::endl;
+//  //std::cout<<"on exit rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
+//}
+
+
+//Leo: my version does keep track of the number of times of swapping columns and rows;
+//     however, presumably this is a time consuming action...
 void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
 {
-  if(size()<2) return;
-  //std::cout<<"on entry rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
-  //std::cout<<*this<<std::endl;
-  //std::cout<<clblue<<*(blas_matrix*)this<<cblack<<std::endl;
+  if(size()<2) return; //do nothing to 0*0 and 1*1 matrices
 
-  //order the times properly
-  int k=0;
-  hyb_map_t::iterator it_bup;
-  for(hyb_map_t::iterator it_end=cdagger_index_map_.begin(); it_end != cdagger_index_map_.end();)
+  int counter = 0; //count the number of times of swapping
+  int i=0;
+  hyb_map_t::iterator it_temp;
+
+  //swap cdagger
+  for(hyb_map_t::iterator it=cdagger_index_map_.begin(); it!=cdagger_index_map_.end(); ++it)
   {
-    it_bup=it_end++;
-    std::pair<double,int> new_entry=*it_bup;
-    new_entry.second=k++;
-    cdagger_index_map_.erase(it_bup);
-    cdagger_index_map_.insert(new_entry);
+     if(it->second == i)
+     {
+        i++; 
+        continue;
+     }   
+     else
+     {
+        it_temp = it; it_temp++;
+        while(it_temp->second != i)
+        {
+            it_temp++;
+        }
+        //swap the values
+        it_temp->second = it->second;
+        it->second = i;
+        counter++;  
+        i++;
+     }
   }
 
-  k=0;
-  for(hyb_map_t::iterator it_start=c_index_map_.begin(); it_start != c_index_map_.end();)
+  //swap c 
+  i=0;
+  for(hyb_map_t::iterator it=c_index_map_.begin(); it!=c_index_map_.end(); ++it)
   {
-    it_bup=it_start++;
-    std::pair<double,int> new_entry=*it_bup;
-    new_entry.second=((it_bup==c_index_map_.begin()) && (it_bup->first<cdagger_index_map_.begin()->first))?c_index_map_.size()-1:k++;
-    c_index_map_.erase(it_bup);
-    c_index_map_.insert(new_entry);
+     if(it->second == i)
+     { 
+        i++;
+        continue;
+     }   
+     else
+     {
+        it_temp = it; it_temp++;
+        while(it_temp->second != i)
+        {
+            it_temp++;
+        }
+        //swap the values
+        it_temp->second = it->second;
+        it->second = i;
+        counter++; 
+        i++; 
+     }
   }
   
-  //if we have an overlapping segment we need a permutation sign of -1, otherwise it is 1 in the ordered case.
-  if(size()==0)
-  {
-    permutation_sign_=1.;
-  }
-  else
-  {
-    if(c_index_map_.begin()->first<cdagger_index_map_.begin()->first)
-    {
-      permutation_sign_=-1.;
-    }
-    else
-    {
-      permutation_sign_=1.;
-    }
-  }
+  if(counter%2) //get a minus sign if swapped odd number of times
+      permutation_sign_ *= -1;
+
   //then rebuild the hybridization matrix
   rebuild_hyb_matrix(orbital, Delta);
-  //std::cout<<*this<<std::endl;
-  //std::cout<<clred<<*(blas_matrix*)this<<cblack<<std::endl;
-  //std::cout<<"on exit rebuild orderd: full weight: "<<full_weight()<<" permutation sign: "<<permutation_sign_<<std::endl;
+
+  //observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
+  if(permutation_sign_ != time_ordering_sign_)
+      throw std::runtime_error("Error in hybmatrix::rebuild_ordered_hyb_matrix: permutation_sign_ != time_ordering_sign_. Abort.");
 }
 
 
@@ -346,6 +447,8 @@ double hybmatrix::full_weight() const
 
 void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double dissipation_weight_ratio) const
 {
+  int debug_counter = 0;
+
   double N_div_beta=(G.size()-1)/beta_;
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
   static std::vector<double> c_times(size()); c_times.resize(size());
@@ -372,14 +475,55 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
       }
       int index = (int) (argument * N_div_beta + 0.5);
       double g = operator() (j, i) * bubble_sign; //Leo: original code
+
+      //TODO: avoid this check for n_env=1 because it's unnecessary in this case
+     // if(n_env_>1)
+     // {
+
+      if( disordered_times.find(c_times[i]) != disordered_times.end() )
+      {
+          g *= -1;
+          debug_counter++;
+      }
+      if( disordered_times.find(cdagger_times[j]) != disordered_times.end() )
+      {
+          g *= -1;
+          debug_counter++;
+      }
+
+          //Leo: pick up a minus sign when having two adjacent c or cdagger; see my note. TODO: make it clearer 
+//      if( !disordered_times.count(c_times[i]) != !disordered_times.count(cdagger_times[j]) )
+//      {
+//         g*=-1.;
+//       //  std::cout << "A minus sign at c_time " << c_times[i] << " and cdagger_time " << cdagger_times[j] << " !" << std::endl;
+//         debug_counter++;
+//      }
+     // }
+      
+      //g*=permutation_sign_;
+      //g*=time_ordering_sign_;
+      //int size_dependent_sign = ((size()%2)?-1:1); g*=size_dependent_sign; //Leo: test!
+      //if(g<0)  g*=-1;  //Leo: g must be positive so that G=-g is negative. TOTALLY EXPERIMENTAL!
+      //double g = operator() (j, i); //Leo: test!
+      //double g = operator() (j, i) * bubble_sign * permutation_sign_; //Leo: test!
+      //double g = operator() (j, i) * ((i+j)%2?-1:1) * permutation_sign_; //Leo: test!
+      //double g = operator() (j, i) * bubble_sign * ((i+j)%2?-1:1) * permutation_sign_; //Leo: test!
+      //double g = operator() (j, i) * bubble_sign * time_ordering_sign_; //Leo: due to operator ordering
       //double g = operator() (j, i) * bubble_sign * ((i+j)%2?-1:1); //Leo: test!
       //double g = operator() (j, i) * ((i+j)%2?-1:1); //Leo: test!
+
       //g*=dissipation_weight_ratio; //Leo: the dissipative environment also contributes to the local Green's function
       //NOTE:  - corresponds to -<T c(tau) c^dag(tau')>
       G[index] -= g; //changed this to-; check consistency with ALPS DMFT loop!
       F[index] -= g*f_pref;
     }
   }
+
+//  if( (disordered_times.size()!=0) && (debug_counter != disordered_times.size()*(size()-disordered_times.size()/2)) )   
+//  {
+//      std::cout << debug_counter << " minus signs have been added to the estimation of Green's function. ";
+//      throw std::runtime_error("BUGGY!");
+//  }
 }
 
 
@@ -458,3 +602,58 @@ void hybmatrix::measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl , co
 }
 
 
+//Leo: When time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
+//     During this check, the operator times at which the operators are not ordered (ex. sequential cdaggers) will
+//     be recorded in a set, called disordered_times, for the later usage of measure_G.
+void hybmatrix::time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times)
+{
+    //if(n_env_==1) return; //single lead should not have time ordering sign, so do nothing (TODO: check!)
+
+    if(size()==0) 
+    {
+       time_ordering_sign_ = 1;
+       return; 
+    }
+
+    int time_ordering_sign_counter = 0;
+    int head = c_cdagger_map_.begin()->second;  //determine the head of the sequence should be c or cdagger
+    if((head != 0) && (head != 1))
+       throw std::runtime_error("Error in hybmatrix::time_ordering_sign_check: meaningless head. Abort.");  
+    disordered_times.clear();  //clear the set because we don't know the disordered times at this point yet.
+
+    //construct a sequence {010101...} or {101010...} to be compared with the actual sequence
+    std::vector<int> operator_sequence(2*size(), 0); 
+    for(int i=(head?0:1); i<operator_sequence.size(); i=i+2)   operator_sequence[i]++;
+ 
+    //comparism
+    int i=0;
+    for(hyb_map_t::const_iterator it=c_cdagger_map_.begin(); it!=c_cdagger_map_.end(); ++it)
+    {
+        if(it->second != operator_sequence[i])
+        {
+            time_ordering_sign_counter++;
+            disordered_times.insert(it->first);  //record the time 
+        }
+        i++; 
+    }
+    
+//    //version1 
+//    if(time_ordering_sign_counter!=0 && ((time_ordering_sign_counter/2)%2)) 
+//        time_ordering_sign_=-1; 
+//    else
+//        time_ordering_sign_=1;
+   
+    //version2 
+    //This is the sign coming from (-1)^n, n being the matrix size
+    int size_dependent_sign = ((size()%2)?-1:1); 
+    if(time_ordering_sign_counter!=0 && ((time_ordering_sign_counter/2)%2)) 
+        time_ordering_sign_=-1*(head?1:size_dependent_sign); //size_dependent_sign contributes when the sequence is {010101...}
+    else
+        time_ordering_sign_=1*(head?1:size_dependent_sign);
+ 
+    //version1 
+//    if(time_ordering_sign_counter!=0 && ((time_ordering_sign_counter/2)%2)) 
+//        time_ordering_sign_=-1*(head?-1:1); 
+//    else
+//        time_ordering_sign_=1*(head?-1:1); 
+}
