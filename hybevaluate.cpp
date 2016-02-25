@@ -164,25 +164,51 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
   std::size_t n_orbitals = parms["N_ORBITALS"];
   std::size_t n_sites    = 1;
   bool accurate = parms["ACCURATE_COVARIANCE"]|true;
+  int n_env = parms["N_ENV"]|1; //Leo: number of colors
 
   //Imaginary time Green function
   itime_green_function_t G_tau(N_t+1, n_sites, n_orbitals);
   itime_green_function_t F_tau(N_t+1, n_sites, n_orbitals);
+
+  //Leo: rewrite the loop for debug purpose
+//  for(std::size_t i=0;i<n_orbitals;++i)
+//  {
+//    std::stringstream g_name; g_name<<"g_"<<i;
+//    std::stringstream f_name; f_name<<"f_"<<i;
+//    std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
+//    std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
+//    for(std::size_t t=0;t<N_t+1;++t)
+//    {
+//      G_tau(t,0,0,i)=G[t];
+//      F_tau(t,0,0,i)=F[t];
+//    }
+//    G_tau(0,0,0,i)*=2.; //first and last bin
+//    G_tau(N_t,0,0,i)*=2.; //have half the size
+//    F_tau(0,0,0,i)*=2.; //first and last bin
+//    F_tau(N_t,0,0,i)*=2.; //have half the size
+//  }
+
+  //Leo: the above part of code is modified here
   for(std::size_t i=0;i<n_orbitals;++i)
   {
     std::stringstream g_name; g_name<<"g_"<<i;
     std::stringstream f_name; f_name<<"f_"<<i;
     std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
     std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
-    for(std::size_t t=0;t<N_t+1;++t)
+
+    //Leo: get the end points of the Green's function first 
+    G_tau(0,0,0,i) = G[0]*2;
+    G_tau(N_t,0,0,i) = G[N_t]*2; 
+    double G_normalization = (n_env==1 ? 1.: std::abs(G_tau(0,0,0,i)+G_tau(N_t,0,0,i)) ); //normalization factor
+
+    //Leo: normalize the Green's function
+    for(std::size_t t=1;t<N_t;++t)
     {
-      G_tau(t,0,0,i)=G[t];
+      G_tau(t,0,0,i)=G[t]/G_normalization;
       F_tau(t,0,0,i)=F[t];
     }
-    G_tau(0,0,0,i)*=2.; //first and last bin
-    G_tau(N_t,0,0,i)*=2.; //have half the size
-    F_tau(0,0,0,i)*=2.; //first and last bin
-    F_tau(N_t,0,0,i)*=2.; //have half the size
+    F_tau(0,0,0,i) = F[0]*2;
+    F_tau(N_t,0,0,i) = F[N_t]*2; 
   }
 
   for(std::size_t i=0;i<n_orbitals;++i)
