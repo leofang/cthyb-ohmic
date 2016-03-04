@@ -1004,25 +1004,11 @@ std::vector<int> local_configuration::get_new_n_segments_insert_segment(const se
   else  //general case
   {
     std::set<segment>::const_iterator it_later=segments_[orbital].upper_bound(new_segment);
-    std::set<segment>::const_iterator it_earlier;
-    if(it_later==segments_[orbital].end() || it_later==segments_[orbital].begin())  
-    {
-       it_later = segments_[orbital].begin();
-       it_earlier = segments_[orbital].end();
-       it_earlier--;
-    }
-    else
-    {
-       it_earlier = it_later;
-       it_earlier--;
-    } 
+    if(it_later==segments_[orbital].end())  { it_later=segments_[orbital].begin(); }
 
-//    std::cout << std::endl;
-//    std::cout << "new_segment = " << new_segment << std::endl;
-//    std::cout << "it_earlier = " << *it_earlier << std::endl;
-//    std::cout << "it_later = " << *it_later << std::endl;
-//    std::cout << std::endl;
-
+    std::set<segment>::const_iterator it_earlier=it_later;
+    if(it_later==segments_[orbital].begin())  { it_earlier = segments_[orbital].end(); }
+    it_earlier--;
 
     n_segments_temp[color]+=1; //add one segment
     if(it_earlier->c_end_ == it_later->c_start_) 
@@ -1048,42 +1034,31 @@ std::vector<int> local_configuration::get_new_n_segments_remove_segment(const se
       n_segments_temp[color]-=1; n_segments_temp[color+n_env_]-=1; 
       return n_segments_temp;
   }
-  else if(order(orbital)==2) //special case: 2-th order orbital
-  {
-      //in this case it_later = it_earlier, so just do it once. 
-      //Leo: this case seems to very similar to the next one...maybe can be combined?
-      std::set<segment>::const_iterator it_later=segments_[orbital].upper_bound(new_segment);
-      if(it_later==segments_[orbital].end()) { it_later = segments_[orbital].begin(); }
-      n_segments_temp[color]-=1; //substract the segment
-      n_segments_temp[it_later->c_start_+n_env_]+=1; // add one antisegment
-      if(color==it_later->c_start_) 
-         n_segments_temp[color+n_env_]-=1; //subtract the right antisegment  
-      if(color==it_later->c_end_) 
-         n_segments_temp[color+n_env_]-=1; //subtract the end antisegment  
-      return n_segments_temp;
-  }
+//  else if(order(orbital)==2) //special case: 2-th order orbital
+//  {
+//      //in this case it_later = it_earlier, so just do it once. 
+//      //Leo: this case seems to very similar to the next one...maybe can be combined?
+//      std::set<segment>::const_iterator it_later=segments_[orbital].upper_bound(new_segment);
+//      if(it_later==segments_[orbital].end()) { it_later = segments_[orbital].begin(); }
+//      n_segments_temp[color]-=1; //substract the segment
+//      n_segments_temp[it_later->c_start_+n_env_]+=1; // add one antisegment
+//      if(color==it_later->c_start_) 
+//         n_segments_temp[color+n_env_]-=1; //subtract the right antisegment  
+//      if(color==it_later->c_end_) 
+//         n_segments_temp[color+n_env_]-=1; //subtract the end antisegment  
+//      return n_segments_temp;
+//  }
   else  //general case
   {
       std::set<segment>::const_iterator it_later=segments_[orbital].upper_bound(new_segment);
       if(it_later==segments_[orbital].end())  { it_later = segments_[orbital].begin(); }
   
-      std::set<segment>::const_iterator it_earlier=segments_[orbital].lower_bound(new_segment);
-      if(it_earlier==segments_[orbital].begin()) 
-      { 
-         it_earlier = segments_[orbital].end();
-         it_earlier--; 
-      }
-      else
-      {
-         it_earlier--;
-         //std::cout << "end point!" << std::endl;
-      }
-  
-//      std::cout << std::endl;
-//      std::cout << "new_segment = " << new_segment << std::endl;
-//      std::cout << "it_earlier = " << *it_earlier << std::endl;
-//      std::cout << "it_later = " << *it_later << std::endl;
-//      std::cout << std::endl;
+      std::set<segment>::const_iterator it_earlier=segments_[orbital].find(new_segment);
+      if(it_earlier==segments_[orbital].begin())  { it_earlier = segments_[orbital].end(); }
+      it_earlier--; 
+
+      if( order(orbital)==2 && (it_later != it_earlier) ) // quick check for n=2
+          throw std::logic_error("local_configuration::get_new_n_segments_remove_segment does not capture the correct segments at order n=2. Abort.");
   
       n_segments_temp[color]-=1; //subtract one segment
       if(it_earlier->c_end_ == it_later->c_start_) 
@@ -1110,30 +1085,14 @@ std::vector<int> local_configuration::get_new_n_segments_remove_antisegment(cons
   }
   else  //general case
   {
-    std::set<segment>::const_iterator it_later=segments_[orbital].upper_bound(new_antisegment);
+    std::set<segment>::const_iterator it_later=segments_[orbital].find(new_antisegment);
 
-//    std::cout << "it_later = " << *it_later << std::endl;
-//    std::cout << "new_antisegment = " << new_antisegment << std::endl;
+    std::set<segment>::const_iterator it_earlier=it_later;
+    if(it_later==segments_[orbital].begin()) { it_earlier = segments_[orbital].end(); }
+    it_earlier--;
 
-    std::set<segment>::const_iterator it_earlier;
-    if(it_later==segments_[orbital].end() || it_later==segments_[orbital].begin())  
-    {
-       it_later = segments_[orbital].begin();
-       it_earlier = segments_[orbital].end();
-       it_earlier--;
-    }
-    else
-    {
-       it_earlier = it_later;
-       it_earlier--;
-    } 
-
-//    std::cout << std::endl;
-//    std::cout << "new_antisegment = " << new_antisegment << std::endl;
-//    std::cout << "it_earlier = " << *it_earlier << std::endl;
-//    std::cout << "it_later = " << *it_later << std::endl;
-//    std::cout << std::endl;
-
+//    if( order(orbital)==2 && (it_later != it_earlier) ) // quick check for n=2
+//        throw std::logic_error("local_configuration::get_new_n_segments_remove_segment does not capture the correct segments at order n=2. Abort.");
 
     n_segments_temp[color+n_env_]-=1; //subtract one antisegment
     if(it_earlier->c_start_ == it_later->c_end_) 
@@ -1143,15 +1102,6 @@ std::vector<int> local_configuration::get_new_n_segments_remove_antisegment(cons
     if(color==it_earlier->c_start_) 
        n_segments_temp[color]-=1; //subtract the left segment
 
-//    for(std::vector<int>::const_iterator it=n_segments_temp.begin(); it!=n_segments_temp.end(); it++)
-//    {
-//       if(*it<0)
-//       {
-//          std::cout << "it_earlier = " << *it_earlier << std::endl;
-//          std::cout << "it_later = " << *it_later << std::endl;
-//          std::cout << "new_antisegment = " << new_antisegment << std::endl;
-//       }
-//    }
     return n_segments_temp; 
   }  
 }
@@ -1163,117 +1113,33 @@ void local_configuration::check_n_segments_consistency(int orbital) const
    if(order(orbital)==0) return; //empty or filled line, no need to check
 
    std::vector<int> n_segments_count (2*n_env_, 0);
+   std::vector<int> n_segments_current = get_n_segments(orbital);
+   std::set<segment>::const_iterator it_next;
    for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
    {
        if(it->c_start_==it->c_end_)  n_segments_count[it->c_start_]++; // count number of segments
-       std::set<segment>::const_iterator it_next = it; it_next++;
-       if(it_next==segments_[orbital].end()) continue; //hit the last segment, stop counting
+       it_next = it; it_next++;
+       if(it_next==segments_[orbital].end())  { it_next=segments_[orbital].begin(); } //hit the last segment, wrap around
        if(it->c_end_==it_next->c_start_) n_segments_count[it->c_end_+n_env_]++; // count number of antisegments
    }
 
-   std::set<segment>::const_iterator it_begin=segments_[orbital].begin();
-   std::set<segment>::const_iterator it_end=segments_[orbital].end(); it_end--;
-   if(it_end->c_end_==it_begin->c_start_) n_segments_count[it_end->c_end_+n_env_]++; // the wrapping antisegment, if any
+//   std::set<segment>::const_iterator it_begin=segments_[orbital].begin();
+//   std::set<segment>::const_iterator it_end=segments_[orbital].end(); it_end--;
+//   if(it_end->c_end_==it_begin->c_start_) n_segments_count[it_end->c_end_+n_env_]++; // the wrapping antisegment, if any
 
    for(int i=0; i<2*n_env_; i++)
    {
-       if(n_segments_count[i]-n_segments_[orbital][i]!=0)
+       if(n_segments_count[i] != n_segments_current[i])
        {
-          std::stringstream temp_stream; // stringstream used for the conversion
-          for(int j=0; j<2*n_env_; j++)  { temp_stream << n_segments_count[j]; }           
-          std::string temp = "(" + temp_stream.str() + ")";
-          throw std::logic_error("Error in the number of segments and antisegments! Should be " + temp);
+          std::stringstream temp_stream1, temp_stream2; // stringstream used for the conversion
+          for(int j=0; j<2*n_env_; j++)  { temp_stream1 << n_segments_count[j]; }           
+          std::string temp1 = "(" + temp_stream1.str() + ")";
+          for(int j=0; j<2*n_env_; j++)  { temp_stream2 << n_segments_current[j]; }           
+          std::string temp2 = "(" + temp_stream2.str() + ")";
+          throw std::logic_error("Error in the number of segments and antisegments! It should be " + temp1 + ", but it was " + temp2 + ". Abort.");
        }    
    }
 }
 
 
 
-//double local_configuration::dissipation_weight_change(const segment &seg, int orbital, bool insert) const
-//{
-//   if(!dissipation_) return 1.; //Leo: dissipation is turned off, so no need to compute
-//  
-//   double tau;
-//   double J=0;
-// 
-//   //combine special cases: 
-//   //1. insert a segment or an antisegment into a 0-th order orbital
-//   //2. remove the only segment (which is also an antisegment) from a 1st order orbital 
-//   if( (order(orbital)==0 && insert) || (order(orbital)==1 && !insert) ) 
-//   {
-//       tau = std::abs(seg.t_end_ - seg.t_start_);
-//       J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
-//       return std::exp(J);
-//   }
-//
-//   //general case: this is a O(4k+1) operation for insertion into a k-th order orbital
-//   if(insert) //insert a segment or antisegment 
-//   {
-//     for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
-//     { //pair the start and end times of the (anti)segment with other segments
-//    
-//         tau = std::abs(seg.t_start_ - it->t_start_);
-//         J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau);
-//   
-//         tau = std::abs(seg.t_start_ - it->t_end_);
-//         J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau);
-//  
-//         tau = std::abs(seg.t_end_ - it->t_start_);
-//         J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau); 
-//  
-//         tau = std::abs(seg.t_end_ - it->t_end_);
-//         J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau); 
-//     }
-//     //the contribution of the to-be-moved segment itself
-//     tau = std::abs(seg.t_start_ - seg.t_end_);
-//     J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
-//   }
-//   else //remove a segment or antisegment
-//   {
-//     double len = std::abs(seg.t_end_-seg.t_start_);
-//     for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
-//     {//Leo: this part is a bit complicated due to the need of avoiding counting the (anti)segment to be removed 
-//         int i=0;   
-// 
-//         tau = std::abs(seg.t_start_ - it->t_start_);
-//         if(i<4 && (tau==0||tau==len))  
-//            i+=1; //do nothing except adding the counter 
-//         else
-//            J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau);
-//   
-//         tau = std::abs(seg.t_start_ - it->t_end_);
-//         if(i<4 && (tau==0||tau==len))  
-//            i+=1; //do nothing except adding the counter 
-//         else
-//            J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau);
-//  
-//         tau = std::abs(seg.t_end_ - it->t_start_);
-//         if(i<4 && (tau==0||tau==len))  
-//            i+=1; //do nothing except adding the counter 
-//         else
-//            J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau); 
-//  
-//         tau = std::abs(seg.t_end_ - it->t_end_);
-//         if(i<4 && (tau==0||tau==len))  
-//            i+=1; //do nothing except adding the counter 
-//         else
-//            J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau); 
-//     }
-//     //the contribution of the to-be-moved segment itself
-//     tau = std::abs(seg.t_start_ - seg.t_end_);
-//     J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
-//   }
-//   return std::exp(J);
-//}
-
-
-////Leo: J(|tau|) is defined such that <T exp(i\phi(tau)) exp(-i\phi(0))> = exp(J(|tau|))
-////     Note that the time ordering guarantees that the argument of J is always positive, 
-////     so no need to do time wrapping   
-//double local_configuration::phase_correlator_J(double tau) const
-//{
-////   if(tau<0) tau=std::abs(tau); //TODO: remove this line!
-//   if(tau<0) 
-//     throw std::runtime_error("The argument of the phase correlator is negative!");
-//   return -2.0*r_*(std::log(1.0/kappa_*pow(tgamma(1.0+kappa_),2)/(tgamma(1.0+kappa_-tau/beta_)*tgamma(kappa_+tau/beta_)))+gamma_);
-//}

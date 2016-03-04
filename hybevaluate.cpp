@@ -170,54 +170,55 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
   itime_green_function_t G_tau(N_t+1, n_sites, n_orbitals);
   itime_green_function_t F_tau(N_t+1, n_sites, n_orbitals);
 
-  //Leo: rewrite the loop for debug purpose
-//  for(std::size_t i=0;i<n_orbitals;++i)
-//  {
-//    std::stringstream g_name; g_name<<"g_"<<i;
-//    std::stringstream f_name; f_name<<"f_"<<i;
-//    std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
-//    std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
-//    for(std::size_t t=0;t<N_t+1;++t)
-//    {
-//      G_tau(t,0,0,i)=G[t];
-//      F_tau(t,0,0,i)=F[t];
-//    }
-//    G_tau(0,0,0,i)*=2.; //first and last bin
-//    G_tau(N_t,0,0,i)*=2.; //have half the size
-//    F_tau(0,0,0,i)*=2.; //first and last bin
-//    F_tau(N_t,0,0,i)*=2.; //have half the size
-//  }
-
-  //Leo: the above part of code is modified here
+  //Leo: rewrite the loop for debug purpose; see below
   for(std::size_t i=0;i<n_orbitals;++i)
   {
     std::stringstream g_name; g_name<<"g_"<<i;
     std::stringstream f_name; f_name<<"f_"<<i;
     std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
     std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
-
-    //Leo: get the end points of the Green's function first 
-    G_tau(0,0,0,i) = G[0]*2;
-    G_tau(N_t,0,0,i) = G[N_t]*2; 
-    double G_normalization = (n_env==1 ? 1.: std::abs(G_tau(0,0,0,i)+G_tau(N_t,0,0,i)) ); //normalization factor
-
-    //Leo: normalize the Green's function
-    for(std::size_t t=1;t<N_t;++t)
+    for(std::size_t t=0;t<N_t+1;++t)
     {
-      G_tau(t,0,0,i)=G[t]/G_normalization;
+      G_tau(t,0,0,i)=G[t];
       F_tau(t,0,0,i)=F[t];
     }
-    F_tau(0,0,0,i) = F[0]*2;
-    F_tau(N_t,0,0,i) = F[N_t]*2; 
+    G_tau(0,0,0,i)*=2.; //first and last bin
+    G_tau(N_t,0,0,i)*=2.; //have half the size
+    F_tau(0,0,0,i)*=2.; //first and last bin
+    F_tau(N_t,0,0,i)*=2.; //have half the size
   }
 
-  for(std::size_t i=0;i<n_orbitals;++i)
-  {//replace Green function endpoints by corresponding densities
-    std::stringstream density_name; density_name<<"density_"<<i;
-    double density=results[density_name.str()].mean<double>();
-    G_tau(0,0,0,i)  =-1.*(1-density);
-    G_tau(N_t,0,0,i)=-1.*(density);
-  }
+//  //Leo: the above part of code is modified here
+//  for(std::size_t i=0;i<n_orbitals;++i)
+//  {
+//    std::stringstream g_name; g_name<<"g_"<<i;
+//    std::stringstream f_name; f_name<<"f_"<<i;
+//    std::vector<double> G=results[g_name.str()].mean<std::vector<double> >();
+//    std::vector<double> F=results[f_name.str()].mean<std::vector<double> >();
+//
+//    //Leo: get the end points of the Green's function first 
+//    G_tau(0,0,0,i) = G[0]*2;
+//    G_tau(N_t,0,0,i) = G[N_t]*2; 
+//    double G_normalization = (n_env==1 ? 1.: std::abs(G_tau(0,0,0,i)+G_tau(N_t,0,0,i)) ); //normalization factor
+//
+//    //Leo: normalize the Green's function
+//    for(std::size_t t=1;t<N_t;++t)
+//    {
+//      G_tau(t,0,0,i)=G[t]/G_normalization;
+//      F_tau(t,0,0,i)=F[t];
+//    }
+//    F_tau(0,0,0,i) = F[0]*2;
+//    F_tau(N_t,0,0,i) = F[N_t]*2; 
+//  }
+  
+  //Leo: don't do the replacement for debug purpose 
+//  for(std::size_t i=0;i<n_orbitals;++i)
+//  {//replace Green function endpoints by corresponding densities
+//    std::stringstream density_name; density_name<<"density_"<<i;
+//    double density=results[density_name.str()].mean<double>();
+//    G_tau(0,0,0,i)  =-1.*(1-density);
+//    G_tau(N_t,0,0,i)=-1.*(density);
+//  }
 
   //store in hdf5
   G_tau.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/G_tau");

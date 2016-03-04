@@ -202,8 +202,11 @@ int hybridization_configuration::overall_color_matrix_sign() const
 }
 
 
+//Leo: for debug purpose only! TOTALLY EXPERIMENTAL! BE CAREFUL!
 void hybridization_configuration::haunt_missing_sign(int orbital)
 {
+    return;
+
     int orbital_order = total_color_matrix_size(orbital);
     if(orbital_order==0) return;
 
@@ -213,7 +216,14 @@ void hybridization_configuration::haunt_missing_sign(int orbital)
   
     //select the case in which n is even, and both n_R and n_L are odd
     if( !(orbital_order%2) && (matrix_size[0]%2) )
+    {
         std::cout << "SPECIAL CASE: n is even, and both n_R and n_L are odd!" << std::endl;
+        if(n_env_>1)
+        {
+           if(hybmat_[0][0].head() == hybmat_[0][1].head() && hybmat_[0][0].head()==0)
+              throw std::logic_error("DEBUG! STOP!");
+        }
+    }
 }
 
 
@@ -292,7 +302,7 @@ void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G
     //                                           sign*hybmat_[orbital][color].sign(), dissipation_weight_ratio);
     //   else
             hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
-                                               sign, dissipation_weight_ratio);
+                                               sign, (double)total_color_matrix_size(orbital), dissipation_weight_ratio);
                                          // (sign<0?sign+color:sign), dissipation_weight_ratio);
      }
   }

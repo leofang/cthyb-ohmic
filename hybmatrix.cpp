@@ -230,7 +230,7 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
   os<< "hyb matrix size: "<<hyb_mat.size()<<", permutation sign: "<<hyb_mat.permutation_sign_ \
     << ", time ordering sign: " << hyb_mat.sign() << std::endl;
   
-  os << "disordered times: ";
+  os << "anti-ordered times: ";
   for(std::set<double>::const_iterator it=hyb_mat.disordered_times.begin(); it!=hyb_mat.disordered_times.end(); it++)
       os << *it << ", ";
   os << std::endl;
@@ -250,7 +250,7 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
   os<<std::endl;
 
   //Leo: for test purpose
-  os<<"c & cdagger map: (0 means c, 1 means cdagger, 0--->beta)" << std::endl;
+  os<<"c & cdagger map: (0 means c, 1 means cdagger; from zero to beta)" << std::endl;
   os << "(";
   for(hyb_map_t::const_iterator it=hyb_mat.c_cdagger_map_.begin(); it!=hyb_mat.c_cdagger_map_.end(); ++it)
   {
@@ -260,37 +260,44 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
   os << ")" << std::endl;
 
   //Leo: output the whole blasmatrix object for debug purpose; adapted from ostream of blas_matrix 
-  os<<"matrix: " << std::endl << "[ ";
+  //     Note the format is presented in the Mathematica list structure
+  os<<"matrix: " << std::endl << "{";
   for(int i=0; i<hyb_mat.size(); ++i)
   {
-    //os<<"[ ";
+    os<<"{";
     for(int j=0; j<hyb_mat.size(); ++j)
     {
-      os<< hyb_mat.operator()(i,j) << " ";
+      os<< hyb_mat.operator()(i,j) << (j<hyb_mat.size()-1?", ":"");
     }
-    if(i<hyb_mat.size()-1)  os << ";" << std::endl << "  ";
+    if(i<hyb_mat.size()-1)  
+       os << "}," << std::endl << " ";
+    else
+       os << "}";
   }
-  os << "] " << std::endl;
+  os << "}" << std::endl;
 
   //Leo: output the inverted matrix; make sense only when its dimension is nonzero
   if(hyb_mat.size()>=1)
   {
-    blas_matrix delta(hyb_mat);
-    delta.invert();
-    os<<"inverted matrix: " << std::endl << "[ ";
-    for(int i=0; i<delta.size(); ++i)
+    blas_matrix temp_matrix(hyb_mat);
+    temp_matrix.invert();
+    os<<"inverted matrix: " << std::endl << "{";
+    for(int i=0; i<temp_matrix.size(); ++i)
     {
-      //os<<"[ ";
-      for(int j=0; j<delta.size(); ++j)
+      os<<"{";
+      for(int j=0; j<temp_matrix.size(); ++j)
       {
-        os<< delta.operator()(i,j) << " ";
+        os<< temp_matrix.operator()(i,j) << (j<hyb_mat.size()-1?", ":"");
       }
-      if(i<delta.size()-1)  os << " ;" << std::endl << "  ";
+      if(i<temp_matrix.size()-1)  
+         os << "}," << std::endl << " ";
+      else
+         os << "}";
     }
-    os << "] " << std::endl;
+    os << "}" << std::endl;
   }
   else
-    os << "inverted matrix:\n[ ]" << std::endl;
+    os << "inverted matrix:\n{ }" << std::endl;
 
   //os << std::endl;
   return os;
@@ -385,7 +392,7 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
      if(it->second == i)
      {
         i++; 
-        continue;
+        //continue;
      }   
      else
      {
@@ -409,7 +416,7 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
      if(it->second == i)
      { 
         i++;
-        continue;
+        //continue;
      }   
      else
      {
@@ -445,7 +452,7 @@ double hybmatrix::full_weight() const
 }
 
 
-void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double dissipation_weight_ratio) const
+void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double total_size, double dissipation_weight_ratio) const
 {
   int debug_counter = 0;
 
@@ -476,28 +483,32 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
       int index = (int) (argument * N_div_beta + 0.5);
       double g = operator() (j, i) * bubble_sign; //Leo: original code
 
+//      double temp = size();
+//      double size_ratio = temp*temp/(temp*temp + (total_size-temp)*(total_size-temp));
+//      double g = operator() (j, i) * bubble_sign * size_ratio; //Leo: test!!!!!!!
+
       //TODO: avoid this check for n_env=1 because it's unnecessary in this case
      // if(n_env_>1)
      // {
 
-      if( disordered_times.find(c_times[i]) != disordered_times.end() )
-      {
-          g *= -1;
-          debug_counter++;
-      }
-      if( disordered_times.find(cdagger_times[j]) != disordered_times.end() )
-      {
-          g *= -1;
-          debug_counter++;
-      }
+//      if( disordered_times.find(c_times[i]) != disordered_times.end() )
+//      {
+//          g *= -1;
+//          debug_counter++;
+//      }
+//      if( disordered_times.find(cdagger_times[j]) != disordered_times.end() )
+//      {
+//          g *= -1;
+//          debug_counter++;
+//      }
 
           //Leo: pick up a minus sign when having two adjacent c or cdagger; see my note. TODO: make it clearer 
-//      if( !disordered_times.count(c_times[i]) != !disordered_times.count(cdagger_times[j]) )
-//      {
-//         g*=-1.;
-//       //  std::cout << "A minus sign at c_time " << c_times[i] << " and cdagger_time " << cdagger_times[j] << " !" << std::endl;
-//         debug_counter++;
-//      }
+      if( !disordered_times.count(c_times[i]) != !disordered_times.count(cdagger_times[j]) )
+      {
+         g*=-1.;
+       //  std::cout << "A minus sign at c_time " << c_times[i] << " and cdagger_time " << cdagger_times[j] << " !" << std::endl;
+         debug_counter++;
+      }
      // }
       
       //g*=permutation_sign_;

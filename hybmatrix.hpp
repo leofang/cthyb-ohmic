@@ -81,7 +81,7 @@ public:
   void rebuild_hyb_matrix(int orbital, const hybfun &Delta);
   void rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta);
   double full_weight() const;
-  void measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double dissipation_weight_ratio) const;
+  void measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double total_size, double dissipation_weight_ratio) const;
   void measure_Gw(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_Gw_buffer(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
@@ -90,6 +90,7 @@ public:
   //Leo: this seems to be necessary when n_env>1
   void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
   int sign() const {return time_ordering_sign_;}    //Leo: access the sign
+  inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;}  
 
 private:
 
