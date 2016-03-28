@@ -29,6 +29,7 @@
 #include "hyb.hpp"
 #include "hyblocal.hpp"
 #include "hybdissipation.hpp"
+#include "combinatorial.hpp" //Leo: test!!!!!!!!!!!!!
 
 //this is the heart of the Monte Carlo procedure: we have the following updates:
 //1: change the zero order state, swap an empty orbital versus a filled one (8% or 10%)
@@ -467,9 +468,15 @@ void hybridization::insert_segment_update(int orbital)
   //Leo: the old algorithm must be modified when n_env>1
   //double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
   double permutation_factor=beta*t_next_segment_start/(n_segments_temp[color_temp]);
-  
+ 
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
+
+//  //Leo: test!!!!
+//  int k = local_config.order(orbital);
+//  //double combinatorial_factor_change = (k+1.)/(4.*k+2.);
+//  double combinatorial_factor_change = combinatorial_factor[k]/combinatorial_factor[k+1];
+//  double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change*combinatorial_factor_change;
   
   /*std::cout<<" new segment: "<<new_segment<<std::endl;
    std::cout<<clred<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;*/
@@ -556,8 +563,13 @@ void hybridization::remove_segment_update(int orbital)
   //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_start);
   double permutation_factor=n_segments[color_temp]/(beta*t_next_segment_start);
   
-  //perform metropolis
+  //perform metropolis;
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
+
+//  //Leo: test!!!!!!!!!!!!!!!!
+//  double combinatorial_factor_change = combinatorial_factor[k]/combinatorial_factor[k-1];
+//  //double combinatorial_factor_change = (4.*k-2.)/k;
+//  double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change*combinatorial_factor_change;
   
   /*if(segment_nr==k-1){
    std::cout<<" segment_to_remove: "<<segment_to_remove<<std::endl;
@@ -675,10 +687,16 @@ void hybridization::insert_antisegment_update(int orbital)
   //Leo: the old algorithm must be modified when n_env>1
   //double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
   double permutation_factor=beta*t_next_segment_end/(n_segments_temp[color_temp+n_env]);
-  
+
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
-  
+
+//  //Leo: test!!!!
+//  int k = local_config.order(orbital);
+//  //double combinatorial_factor_change = (k+1.)/(4.*k+2.);
+//  double combinatorial_factor_change = combinatorial_factor[k]/combinatorial_factor[k+1];
+//  double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change*combinatorial_factor_change;
+
   //std::cout<<clred<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
   
   if(std::abs(weight_change)>random())
@@ -777,8 +795,13 @@ void hybridization::remove_antisegment_update(int orbital)
   //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
   double permutation_factor=n_segments[color_temp+n_env]/(beta*t_next_segment_end);
 
-  //perform metropolis
+  //perform metropolis;
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
+
+//  //Leo: test!!!!!!!!!
+//  double combinatorial_factor_change = combinatorial_factor[k]/combinatorial_factor[k-1];
+//  //double combinatorial_factor_change = (4.*k-2.)/k;
+//  double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change*combinatorial_factor_change;
   //std::cout<<clblue<<"weight change: "<<weight_change<<" l: "<<local_weight_change<<" h: "<<hybridization_weight_change<<" p: "<<permutation_factor<<cblack<<std::endl;
   
   if(std::abs(weight_change)>random())

@@ -301,8 +301,9 @@ void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G
     //        hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
     //                                           sign*hybmat_[orbital][color].sign(), dissipation_weight_ratio);
     //   else
+            //int color=0;
             hybmat_[orbital][color].measure_G(G[orbital], F[orbital], F_prefactor[orbital],\
-                                               sign, (double)total_color_matrix_size(orbital), dissipation_weight_ratio);
+                                               sign, total_color_matrix_size(orbital), dissipation_weight_ratio);
                                          // (sign<0?sign+color:sign), dissipation_weight_ratio);
      }
   }

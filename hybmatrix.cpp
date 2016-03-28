@@ -29,6 +29,7 @@
 
 #include "hybmatrix.hpp"
 #include "hybblasmatrix.hpp" //Leo: for matrix inversion; TODO: remove this after debugging!
+#include "combinatorial.hpp"   //Leo: for test purpose
 
 //this was changed with update 51!
 //nomenclature: the c        is at the segment end  , so the time for c        is new_segment->t_end_
@@ -452,9 +453,9 @@ double hybmatrix::full_weight() const
 }
 
 
-void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, double total_size, double dissipation_weight_ratio) const
+void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, int total_size, double dissipation_weight_ratio) const
 {
-  int debug_counter = 0;
+//  int debug_counter = 0;
 
   double N_div_beta=(G.size()-1)/beta_;
   static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
@@ -483,6 +484,12 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
       int index = (int) (argument * N_div_beta + 0.5);
       double g = operator() (j, i) * bubble_sign; //Leo: original code
 
+//      //Leo: test...
+//      if(total_size > 512)
+//          std::runtime_error("The expansion order is too large (>512), abort at measure_G!");
+//      if(n_env_ == 2)
+//          g*=combinatorial_factor[total_size];
+
 //      double temp = size();
 //      double size_ratio = temp*temp/(temp*temp + (total_size-temp)*(total_size-temp));
 //      double g = operator() (j, i) * bubble_sign * size_ratio; //Leo: test!!!!!!!
@@ -503,12 +510,12 @@ void hybmatrix::measure_G(std::vector<double> &G, std::vector<double> &F, const 
 //      }
 
           //Leo: pick up a minus sign when having two adjacent c or cdagger; see my note. TODO: make it clearer 
-      if( !disordered_times.count(c_times[i]) != !disordered_times.count(cdagger_times[j]) )
-      {
-         g*=-1.;
-       //  std::cout << "A minus sign at c_time " << c_times[i] << " and cdagger_time " << cdagger_times[j] << " !" << std::endl;
-         debug_counter++;
-      }
+//      if( !disordered_times.count(c_times[i]) != !disordered_times.count(cdagger_times[j]) )
+//      {
+//         g*=-1.;
+//       //  std::cout << "A minus sign at c_time " << c_times[i] << " and cdagger_time " << cdagger_times[j] << " !" << std::endl;
+//       //  debug_counter++;
+//      }
      // }
       
       //g*=permutation_sign_;
