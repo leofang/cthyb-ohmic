@@ -38,6 +38,8 @@ if [ "$1" == "static" ]; then
   /home/yf30/alps-2.2.b3-r7462-src-with-boost/alps/
 
 elif [ "$1" == "shared" ]; then
+  # 20160328: the two Boost flags are added because of the recent update of
+  # the system...
 
   echo -e "cmake: build a shared (dynamical) ALPS library..."
   cmake \
@@ -50,6 +52,8 @@ elif [ "$1" == "shared" ]; then
   -D CMAKE_C_COMPILER=/usr/bin/gcc \
   -D CMAKE_CXX_COMPILER=/usr/bin/g++ \
   -D ALPS_ENABLE_MPI=ON \
+  -D Boost_LIBRARY_DIR=/usr/lib64/ \
+  -D Boost_INCLUDE_DIR=/usr/include/ \
   /home/yf30/alps-2.2.b3-r7462-src-with-boost/alps/
 
 else
