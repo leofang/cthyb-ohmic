@@ -1,5 +1,10 @@
 #!/bin/bash
 # tweaked for grads-bd
+#
+# 20160328: the two Boost flags (Boost_LIBRARY_DIR, Boost_INCLUDE_DIR) are added because 
+# of the recent update of the system...By using them, one can build the ALPS library
+# against the Boost library (either static or shared version) installed by the package
+# manager.
 
 echo -e
 echo -e "This script is designed for installing ALPS on my workstation (grads-bd) only!"
@@ -30,16 +35,16 @@ if [ "$1" == "static" ]; then
   -D HDF5_LIBRARIES="/usr/lib64/libhdf5.a;/usr/lib64/libhdf5_hl.a" \
   -D ALPS_BUILD_TESTS=OFF \
   -D ALPS_BUILD_EXAMPLES=OFF \
-  -D ALPS_BUILD_APPLICATIONS=ON \
+  -D ALPS_BUILD_APPLICATIONS=OFF \
   -D ALPS_BUILD_PYTHON=OFF \
   -D CMAKE_C_COMPILER=/usr/bin/gcc \
   -D CMAKE_CXX_COMPILER=/usr/bin/g++ \
   -D ALPS_ENABLE_MPI=ON \
+  -D Boost_LIBRARY_DIR=/usr/lib64/ \
+  -D Boost_INCLUDE_DIR=/usr/include/ \
   /home/yf30/alps-2.2.b3-r7462-src-with-boost/alps/
 
 elif [ "$1" == "shared" ]; then
-  # 20160328: the two Boost flags are added because of the recent update of
-  # the system...
 
   echo -e "cmake: build a shared (dynamical) ALPS library..."
   cmake \
