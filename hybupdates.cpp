@@ -437,17 +437,18 @@ void hybridization::insert_segment_update(int orbital)
   
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  std::size_t color_temp;
-  if(n_env == 1) { color_temp = 0; } // Only one color
-  else if(n_env==2)
-  { 
-     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
-     else            { color_temp = 1; } // red = 1 = L  
-  }
-  else 
-  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
-  }
+  std::size_t color_temp = (int)(random()*n_env);
+  //Leo: this part was older, lenther code 
+//  if(n_env == 1) { color_temp = 0; } // Only one color
+//  else if(n_env==2)
+//  { 
+//     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+//     else            { color_temp = 1; } // red = 1 = L  
+//  }
+//  else 
+//  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+//     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
+//  }
 
   //Leo: paint the color on the segment
   segment new_segment(t_start, t_end, color_temp, color_temp);
@@ -543,8 +544,11 @@ void hybridization::remove_segment_update(int orbital)
 
   std::size_t color_temp = segment_to_remove.c_start_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_to_remove.c_end_) ; //do nothing
-  else {return;} //cannot remove because of the different colors
+  //Leo: rolling a dice is crucial here!
+  if(color_temp != segment_to_remove.c_end_ || color_temp != (int)(random()*n_env)) 
+     return; //cannot remove because of the different colors
+//  if(color_temp == segment_to_remove.c_end_) ; //do nothing
+//  else {return;} //cannot remove because of the different colors
  
   //Leo: get the current number of segments and antisegments
   std::vector<int> n_segments = local_config.get_n_segments(orbital); 
@@ -654,17 +658,18 @@ void hybridization::insert_antisegment_update(int orbital)
   
   //Leo: choose the color in which we do the update
   //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
-  std::size_t color_temp;
-  if(n_env == 1) { color_temp = 0; } // Only one color
-  else if(n_env==2)
-  { 
-     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
-     else            { color_temp = 1; } // red = 1 = L  
-  }
-  else 
-  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
-     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
-  }
+  std::size_t color_temp = (int)(random()*n_env);
+  //Leo: this part was older, lenther code 
+//  if(n_env == 1) { color_temp = 0; } // Only one color
+//  else if(n_env==2)
+//  { 
+//     if(random()<0.5){ color_temp = 0; } // blue = 0 = R
+//     else            { color_temp = 1; } // red = 1 = L  
+//  }
+//  else 
+//  {  //Leo: because we set up the sanity_check, this line is redundant here for the moment... 
+//     throw std::runtime_error("The input N_ENV>2 is currently not supported.");
+//  }
 
   //compute local weight of the removed segment with t_start and t_end
   //Leo: need to check!
@@ -763,8 +768,11 @@ void hybridization::remove_antisegment_update(int orbital)
   
   std::size_t color_temp = segment_earlier.c_end_;
   //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_later.c_start_) ; //do nothing
-  else {return;} //cannot remove because of the different colors
+  //Leo: rolling a dice is crucial here!
+  if(color_temp != segment_later.c_start_ || color_temp != (int)(random()*n_env)) 
+     return; //cannot remove because of the different colors
+//  if(color_temp == segment_later.c_start_) ; //do nothing
+//  else {return;} //cannot remove because of the different colors
   
   //std::cout<<clcyan<<"antisegment removal update: "<<cblack<<*this<<std::endl;
   //std::cout<<clcyan<<" antisegment start time: (cdagger) "<<segment_earlier.t_end_<<" end time: (c): "<<segment_later.t_start_<<std::endl;
