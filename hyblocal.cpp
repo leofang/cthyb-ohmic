@@ -143,7 +143,9 @@ std::ostream &operator<<(std::ostream &os, const local_configuration &local_conf
     os << "Orbital "<< i << ":" << std::endl; 
     if(local_conf.segments_[i].size()==0)
     {
-      os << (local_conf.zero_order_orbital_occupied_[i]?"occupied":"empty") << std::endl << std::endl;
+      os << (local_conf.zero_order_orbital_occupied_[i]?"occupied":"empty") << std::endl;
+      if(i!=local_conf.n_orbitals_-1) 
+        os << std::endl;
     }
     else
     {

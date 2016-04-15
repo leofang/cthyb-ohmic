@@ -231,6 +231,9 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
   os<< "hyb matrix size: "<<hyb_mat.size()<<", permutation sign: "<<hyb_mat.permutation_sign_ \
     << ", time ordering sign: " << hyb_mat.sign() << std::endl;
   
+  if(hyb_mat.size()==0) //don't print the rest if nothing to print
+     return os; 
+   
   os << "anti-ordered times: ";
   for(std::set<double>::const_iterator it=hyb_mat.disordered_times.begin(); it!=hyb_mat.disordered_times.end(); it++)
       os << *it << ", ";

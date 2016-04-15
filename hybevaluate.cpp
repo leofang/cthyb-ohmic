@@ -83,7 +83,8 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
     }
 
     {
-      int tot_acc=0,cur_prec = sim_file.precision();
+      //Leo: tot_acc can go beyond the upper limit of 32 bit integer if simulation is long enough
+      boost::uint64_t tot_acc=0,cur_prec = sim_file.precision();
       for (int i=0;i<nacc.size();i++) tot_acc += nacc[i];
       sim_file << std::endl << "|------ Simulation details (master only) after " << sweeps << " sweeps ------|" << std::endl;
       sim_file << "  Total acceptance rate = " << std::setprecision(2) << std::fixed;

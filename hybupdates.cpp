@@ -156,7 +156,11 @@ void hybridization::change_zero_order_state_update()
       nacc[0]++;
       local_config.set_zero_order_orbital_occupied(orbital, false);
       if(local_weight_change<0)
-        sign*=-1.;
+         sign*=-1.;
+      if(VERY_VERBOSE && sweeps<=debug_number) 
+      { 
+         debug_output(0, local_weight_change, 1, 1, 1); 
+      }
     }
   }
   //propose to change from unoccuppied to occuppied.
@@ -169,7 +173,11 @@ void hybridization::change_zero_order_state_update()
       nacc[0]++;
       local_config.set_zero_order_orbital_occupied(orbital, true);
       if(local_weight_change<0)
-        sign*=-1.;
+         sign*=-1.;
+      if(VERY_VERBOSE && sweeps<=debug_number) 
+      { 
+         debug_output(0, local_weight_change, 1, 1, 1); 
+      }
     }
   }
 }
@@ -428,7 +436,7 @@ void hybridization::insert_segment_update(int orbital)
   if(t_len==0) return;
 
   double t_end=t_start+t_len;
-  if(t_end >= beta) t_end-=beta;
+  if(t_end > beta) t_end-=beta;
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
 
   //Leo: this line seems buggy (and doesn't exist in the GitHub version) because it may
@@ -646,7 +654,7 @@ void hybridization::insert_antisegment_update(int orbital)
   if(t_len==0) return;
 
   double t_end=t_start+t_len; //((t_len<0.1*beta)?t_len:0.1*beta); //random()*t_next_segment_end;
-  if(t_end >= beta) t_end-=beta;
+  if(t_end > beta) t_end-=beta;
   if(local_config.exists(t_end)){ /*std::cerr<<"rare event, duplicate: "<<t_end<<std::endl; */return;} //time already exists.
 
   //Leo: this line seems buggy (and doesn't exist in the GitHub version) because it may
@@ -954,11 +962,13 @@ void hybridization::spin_flip_update(int orbital)
 
 void hybridization::debug_output(int updatetype, const double &local_weight_change, const double &hybridization_weight_change, const double &dissipation_weight_change, const double &permutation_factor) const
 {
+        static int counter = 1;
         int cur_prec = std::cout.precision();
 
+        std::cout << std::endl;
 	std::cout << "|---------------------------------------------------------------------------------|" << std::endl;
 //	std::cout << "At " << i+(sweeps-1)*N_meas+1 << "-th update:" << std::endl; local_config.print_segments();
-        std::cout << "Accepted move: " << update_type[updatetype] << std::endl; //local_config.print_segments();
+        std::cout << counter << "-th accepted move: " << update_type[updatetype] << std::endl; //local_config.print_segments();
         std::cout << local_config << std::endl;
         std::cout << hyb_config << std::endl;
         if(sign<0)   std::cout << "negative sign!" << std::endl;
@@ -991,13 +1001,16 @@ void hybridization::debug_output(int updatetype, const double &local_weight_chan
 
         std::cout.unsetf(std::ios_base::fixed);
         std::cout.precision(cur_prec);
+
+        check_consistency(counter);
+        counter++;
 }
 
 
 
-void hybridization::check_consistency() 
+void hybridization::check_consistency(const int &counter) const
 {
-  static int counter = 0;
+  //static int counter = 0;
  
   //Leo: check the size of colored matrices for each orbital
   for(int i=0; i<n_orbitals; i++)
@@ -1013,9 +1026,9 @@ void hybridization::check_consistency()
   local_config.check_consistency();
 
   //Leo: time ordering the hyb matrices. When time is ordered, permutation_sign_ should be equal to time_ordering_sign_
-  hyb_config.rebuild_ordered();
+  //hyb_config.rebuild_ordered();
 
-  std::cout << "************** consistency checked at " << counter+1 << "-th successful update! **************" << std::endl; 
+  std::cout << "************** consistency checked at " << counter << "-th successful update! **************" << std::endl; 
 
-  counter++;
+  //counter++;
 }
