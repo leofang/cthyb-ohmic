@@ -29,7 +29,7 @@
 #include "hyb.hpp"
 #include "hyblocal.hpp"
 #include "hybdissipation.hpp"
-#include "combinatorial.hpp" //Leo: test!!!!!!!!!!!!!
+//#include "combinatorial.hpp" //Leo: test!!!!!!!!!!!!!
 
 //this is the heart of the Monte Carlo procedure: we have the following updates:
 //1: change the zero order state, swap an empty orbital versus a filled one (8% or 10%)
@@ -474,9 +474,9 @@ void hybridization::insert_segment_update(int orbital)
   double dissipation_weight_change=ohmic_config.dissipation_weight_change(new_segment, orbital, true, local_config);
   
   //compute the proposal probability ratio
-  //Leo: the old algorithm must be modified when n_env>1
-  //double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
-  double permutation_factor=beta*t_next_segment_start/(n_segments_temp[color_temp]);
+  //Leo: the old algorithm must be modified when n_env>1; test!
+  double permutation_factor=beta*t_next_segment_start/(local_config.order(orbital)+1);
+  //double permutation_factor=beta*t_next_segment_start/(n_segments_temp[color_temp]);
  
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
@@ -572,8 +572,8 @@ void hybridization::remove_segment_update(int orbital)
   //compute the proposal probability ratio
   double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_remove.t_start_,orbital);
   //Leo: the old algorithm must be modified when n_env>1
-  //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_start);
-  double permutation_factor=n_segments[color_temp]/(beta*t_next_segment_start);
+  double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_start);
+  //double permutation_factor=n_segments[color_temp]/(beta*t_next_segment_start);
   
   //perform metropolis;
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
@@ -698,8 +698,8 @@ void hybridization::insert_antisegment_update(int orbital)
 
   //compute the proposal probability ratio
   //Leo: the old algorithm must be modified when n_env>1
-  //double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
-  double permutation_factor=beta*t_next_segment_end/(n_segments_temp[color_temp+n_env]);
+  double permutation_factor=beta*t_next_segment_end/(local_config.order(orbital)+1);
+  //double permutation_factor=beta*t_next_segment_end/(n_segments_temp[color_temp+n_env]);
 
   //perform metropolis
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
@@ -808,8 +808,8 @@ void hybridization::remove_antisegment_update(int orbital)
   double t_next_segment_end=local_config.order(orbital)==1?beta:segment_later.t_end_-segment_earlier.t_end_; 
   if(t_next_segment_end<0.) t_next_segment_end+=beta;
   //Leo: the old algorithm must be modified when n_env>1
-  //double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
-  double permutation_factor=n_segments[color_temp+n_env]/(beta*t_next_segment_end);
+  double permutation_factor=local_config.order(orbital)/(beta*t_next_segment_end);
+  //double permutation_factor=n_segments[color_temp+n_env]/(beta*t_next_segment_end);
 
   //perform metropolis;
   double weight_change=local_weight_change*hybridization_weight_change*permutation_factor*dissipation_weight_change;
