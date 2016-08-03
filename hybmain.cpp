@@ -73,8 +73,15 @@ int main(int argc, char** argv)
     //Leo: in some distributive environments, a failed run would produce multiple ".out.h5" files such that the code
     //     is unable to write results. This check prevents such a situation.
     if(boost::filesystem::exists(output_file))
-       throw std::runtime_error("The output file ("+ output_file + ") already exists. Remove it before proceeding!");
-
+    {
+       std::cout << "The output file (" << output_file << ") already exists. Removing...";
+       if(boost::filesystem::remove(output_file))
+          std::cout << "Done!" << std::endl;
+       else
+          throw std::runtime_error("An error happens at boost::filesystem::remove. Abort.");
+       //throw std::runtime_error("The output file ("+ output_file + ") already exists. Remove it before proceeding!");
+    }
+ 
 #ifdef ALPS_HAVE_MPI
     //boot up MPI environment
     boost::mpi::environment env(argc, argv);
