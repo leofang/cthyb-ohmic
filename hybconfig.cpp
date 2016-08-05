@@ -288,6 +288,19 @@ void hybridization_configuration::insert_antisegment(const segment &new_antisegm
 }
 
 
+void hybridization_configuration::measure_conductance(std::vector<std::vector<std::vector<double> > > &giwn, double sign) const
+{
+  for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
+  {
+     //Leo: not sure if the sign here is correct for N_ENV=2, need to check!
+     for(int color=0; color<hybmat_[orbital].size(); color++) //Leo: not sure if color here works...
+     {
+         hybmat_[orbital][color].measure_conductance(giwn[orbital][color], sign, orbital, Delta[color]);
+     }
+  }
+}
+
+
 void hybridization_configuration::measure_G(std::vector<std::vector<double> > &G, std::vector<std::vector<double> > &F, const std::vector<std::map<double,double> > &F_prefactor, double sign, double dissipation_weight_ratio) const
 {
   for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)

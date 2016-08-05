@@ -89,6 +89,22 @@ void hybridization::create_measurements()
     measurements << obs_t(color_name.str(),NUM_BINS_CONSTRUCTOR_ARG);
   }
 
+  //Leo: for conductance measurement (for every orbital and color)
+  if (MEASURE_conductance)
+  {
+     giwn_names.resize(n_orbitals);
+     giwn.resize(n_orbitals);
+     for (int i=0; i<n_orbitals; i++)
+     {
+        giwn[i].resize(n_env, std::vector<double>(N_W, 0.));
+        for (int j=0; j<n_env; j++)
+        {
+           std::stringstream giwn_name; giwn_name << "giwn_" << i << "_" << j; giwn_names[i].push_back(giwn_name.str());
+           measurements << vec_obs_t(giwn_name.str(), NUM_BINS_CONSTRUCTOR_ARG); 
+        }
+     }
+  }
+
   //additional measurements, per orbital
   for(std::size_t i=0; i<n_orbitals; ++i)
   {
@@ -240,6 +256,10 @@ void hybridization::measure()
   measure_Gl(F_prefactor);
   accumulate_Gl();
 
+  //Leo: for conductance measurement
+  measure_conductance();
+  accumulate_conductance();
+
   measure_sector_statistics();
   accumulate_sector_statistics();
 
@@ -327,10 +347,33 @@ void hybridization::accumulate_G()
   if(!MEASURE_time) return;
   for(std::size_t i=0;i<n_orbitals;++i)
   {
-    measurements[g_names[i]]<<(N_t*G[i]/(beta*beta*N_meas));
+    measurements[g_names[i]]<<(N_t*G[i]/(beta*beta*N_meas)); //TODO: divide by N_ENV
     measurements[f_names[i]]<<(N_t*F[i]/(beta*beta*N_meas));
     memset(&(G[i][0]), 0, sizeof(double)*G[i].size());
     memset(&(F[i][0]), 0, sizeof(double)*F[i].size());
+  }
+}
+
+//Leo: measure conductance
+void hybridization::measure_conductance()
+{
+  if(!MEASURE_conductance) return;
+
+  //delegate the actual measurement to the hybridization configuration
+  hyb_config.measure_conductance(giwn, sign);
+}
+
+
+void hybridization::accumulate_conductance()
+{
+  if(!MEASURE_conductance) return;
+  for(std::size_t i=0;i<n_orbitals;++i)
+  {
+    for(std::size_t j=0; j<n_env; ++j) 
+    {
+       measurements[giwn_names[i][j]] << (N_t*giwn[i][j]/(beta*beta*n_env));
+       memset(&(giwn[i][j][0]), 0, sizeof(double)*giwn[i][j].size());
+    }
   }
 }
 

@@ -166,6 +166,7 @@ void master_final_tasks(const alps::results_type<hybridization>::type &results,
   evaluate_nnw(results,parms,solver_output);
   evaluate_sector_statistics(results,parms,solver_output);
   evaluate_2p(results, parms, solver_output);
+  evaluate_conductance(results, parms, solver_output);
 }
 
 //#ifdef BUILD_PYTHON_MODULE

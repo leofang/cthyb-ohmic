@@ -38,6 +38,7 @@ void evaluate_nnt(const alps::results_type<hybridization>::type &results, const 
 void evaluate_nnw(const alps::results_type<hybridization>::type &results, const alps::parameters_type<hybridization>::type &parms, alps::hdf5::archive &solver_output);
 void evaluate_sector_statistics(const alps::results_type<hybridization>::type &results, const alps::parameters_type<hybridization>::type &parms, alps::hdf5::archive &solver_output);
 void evaluate_2p(const alps::results_type<hybridization>::type &results, const alps::parameters_type<hybridization>::type &parms, alps::hdf5::archive &solver_output);
+void evaluate_conductance(const alps::results_type<hybridization>::type &results, const alps::parameters_type<hybridization>::type &parms, alps::hdf5::archive &solver_output);
 
 inline std::complex<double> t(int n, int l){//transformation matrix from Legendre to Matsubara basis
   std::complex<double> i_c(0., 1.);

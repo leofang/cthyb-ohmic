@@ -86,6 +86,7 @@ public:
   void measure_Gw_buffer(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
   void measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl, const std::map<double,double> &F_prefactor, double sign) const;
+  void measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const;
   void consistency_check() const;
   //Leo: this seems to be necessary when n_env>1
   void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
