@@ -779,13 +779,13 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
   if(!(parms["MEASURE_conductance"]|false)) return;
   //evaluate Matsubara conductance g(iwn)
   double beta = parms["BETA"];
-  std::size_t N_w=parms["N_MATSUBARA"];
+  std::size_t N_W=parms["N_W"];
   std::size_t n_orbitals=parms["N_ORBITALS"];
   std::size_t n_env=parms["N_ENV"]|1;
   std::size_t n_sites = 1;
 
   //Leo: use itime_green_function_t as the vector container for simplicity 
-  itime_green_function_t g_iwn(N_w, n_sites, n_env);
+  itime_green_function_t g_iwn(N_W, n_sites, n_env);
 
   //Leo: the Matsubara conductance for a particular color has contributions from all orbitals
   std::vector<std::vector<double> > giwn_temp(n_orbitals);
@@ -795,11 +795,15 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
     {
        std::stringstream giwn_name; giwn_name << "giwn_" << i << "_" << j;
        giwn_temp[i]=results[giwn_name.str()].mean<std::vector<double> >();
+
+       //for(std::vector<double>::const_iterator it = giwn_temp[i].begin(); it!=giwn_temp[i].end(); it++)
+       //   std::cout << *it << " ";
+       //std::cout << std::endl;
     }
     std::vector<double> giwn(giwn_temp[0].size(), 0.); //total conductance for color j
     for(int i=0; i<n_orbitals; ++i)  //sum over all orbitals i
         std::transform (giwn.begin(), giwn.end(), giwn_temp[i].begin(), giwn.begin(), std::plus<double>());
-    for(std::size_t w=0; w<N_w; ++w)
+    for(std::size_t w=0; w<N_W; ++w)
     {
       g_iwn(w,0,0,j)=giwn[w];
     }
@@ -812,10 +816,10 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
   std::vector<std::vector<double> > error_temp(n_orbitals);
   for(std::size_t j=0; j<n_env; j++)
   {
-     //std::vector<double> err(N_w);
+     //std::vector<double> err(N_W);
      for(std::size_t i=0; i<n_orbitals; i++)
      {
-       std::stringstream g_name; g_name<<"giwn_"<<i<<j;
+       std::stringstream g_name; g_name << "giwn_" << i << "_" << j;
        error_temp[i] = results[g_name.str()].error<std::vector<double> >();
        //take vector square
        std::transform (error_temp[i].begin(), error_temp[i].end(), error_temp[i].begin(), error_temp[i].begin(), std::plus<double>());
@@ -831,7 +835,7 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
   }
     
   std::ofstream giwn_file("giwn.dat");
-  for(std::size_t n=0; n<N_w; ++n)
+  for(std::size_t n=1; n<N_W; ++n)
   {
     giwn_file << 2.*n*M_PI/beta; //bosonic Matsubara frequency
     for(std::size_t j=0; j<n_env; ++j)

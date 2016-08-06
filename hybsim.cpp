@@ -174,6 +174,10 @@ void hybridization::sanity_check(const alps::params &parms)
   if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))
         throw std::invalid_argument("The system has only one orbital, so SPINFLIP=1 is invalid. Abort.");
  
+  //Leo: the conductance measurement is in Matsubara frequency
+  if(parms["MEASURE_conductance"]|false && !parms.defined("N_W")) 
+	throw std::invalid_argument("please specify the parameter N_W for # of bosonic frequencies for the conductance measurement.");
+
 //  //Leo: checks for adding dissipation
 //  if(parms["Dissipation"]|false && !parms.defined("r"))
 //        throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");

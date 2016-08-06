@@ -176,18 +176,21 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
         argument += beta_;
       }
       double g = -1.* operator() (j, i) * bubble_sign;
-      double d = Delta.interpolate(beta_-argument, orbital);
+      double d = -Delta.interpolate(argument, orbital); //Leo: Delta in the code is my -Delta(beta-tau) (TEST!!!)
       //std::complex<double> exp=c_exp[i]*cdagger_exp[j];
       //std::complex<double> dexp=exp*exp;
       double dwn = 2.*M_PI/beta_; // the basic unit for bosonic Matsubara frequency
-      for(std::size_t n=0; n<giwn.size(); n++)
+      //std::cout << g << ", " << d << ", " << dwn << ", " << giwn.size() << std::endl;
+      for(std::size_t n=1; n<giwn.size(); n++) 
       {
         giwn[n] = 2.* g * d * std::cos(n*dwn*argument)/(n*dwn);
+        //std::cout << giwn[n] << " ";
         //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
         //double meas = -M_ji/beta_;
         //giwn[wn] += meas;
         //exp*=dexp;
       }
+      //std::cout << std::endl << "******************* one measurement done *******************"<< std::endl;
     }
   }
 }
