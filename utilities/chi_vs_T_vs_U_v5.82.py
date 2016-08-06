@@ -71,10 +71,14 @@ if goal == 1:
     #f.write("should_transfer_files=YES\n") # test if output text files are transferred
     #f.write("when_to_transfer_output = ON_EXIT\n")
     requirement = "requirements = (( OpSys == \"LINUX\" && Arch ==\"X86_64\" && FileSystemDomain != \"\" ) && ("
-    # do not use atl machines because they do not have OpenMPI installed
+    # do not use atl or phy-compute machines because they do not have OpenMPI installed
     for i in [11, 12, 13, 14, 15, 16]:
        requirement += "(TARGET.Machine != \"atl0%i.phy.duke.edu\")" %i
        requirement = (requirement+")" if i==16 else requirement+" && ")
+    requirement += " && ("
+    for i in [1, 4]:
+       requirement += "(TARGET.Machine != \"phy-compute-0%i.phy.duke.edu\")" %i
+       requirement = (requirement+")" if i==4 else requirement+" && ")
     # only use nano machines 
     if OnlyUseNanoMachines is True:
        requirement += " && ("
@@ -98,47 +102,59 @@ if goal == 1:
 
 for T in Tvalues:
     if goal == 1: # create hybridization function
-        # flat density of states
+        # flat hybridization
         if DOS == 1:
             delta=[]
             for i in range(N_TAU+1):
                g0tau = -0.5
                delta.append(g0tau)
     
-        # semicircular density of states
+        # semicircular or flat density of states
         if DOS == 2 or DOS == 3:  
-            g=[]
+            g=np.zeros(N_MATSUBARA, dtype=complex) # create an array filled with 0.+0.I
             I=complex(0., 1.)
             for n in range(N_MATSUBARA):
                wn=(2*n+1)*pi*T
                if DOS == 2:
-                  g.append(2.0/(I*wn + I*sqrt(4*W**2+wn**2))) # use GF with semielliptical DOS
+                  g[n]=2.0/(I*wn + I*sqrt(4*W**2+wn**2)) # use GF with semielliptical DOS
                if DOS == 3:
-                  g.append(log((2*W+I*wn)/(-2*W+I*wn))/(4*W)) # use GF with flat DOS
-            delta=[]
-            for i in range(N_TAU/2+1): # generate half of the array G(0) to G(beta/2)
-               tau=i/T/N_TAU
-               g0tau=0.0;
-               for n in range(N_MATSUBARA):
-                  iwn=complex(0.0, (2*n+1)*pi*T)
-                  #g0tau+=((g[n])*exp(-iw*tau)).real # Fourier transform without tail subtracted
-                  g0tau+=((g[n]-1.0/iwn)*exp(-iwn*tau)).real # Fourier transform with tail subtracted
-               g0tau *= 2.0*T
-               g0tau += -1.0/2.0 # add back contribution of the tail
-               delta.append(g0tau) 
+                  g[n]=log((2*W+I*wn)/(-2*W+I*wn))/(4*W) # use GF with flat DOS
+            #print "g array generated!"
+
+            # NOTE: the beta factor is cancelled out in the exponent
+            m = np.array(range(N_TAU/2+1))     # index the imaginary time (from tau=0 to tau=beta/2)
+            n = np.array(range(N_MATSUBARA))   # index the Matsubara frequency
+            iwn = 1j*(2.*n+1.)*pi*T            # compute iwn; note "1j" is the imaginary number i in python
+            F = exp(-1j*pi*np.outer(m, 2.*n+1.)/N_TAU)  # the Fourier transform matrix
+            delta = np.dot(F, g-1./iwn).real    # convert g(iwn) to g(tau), with tail subtracted
+            delta *= 2.*T # the factor of 2 appears because only the real part is taken
+            delta += -0.5 # add back contribution of the tail
+#            # NOTE: this FFT step is the time-consuming part! TODO: rewrite it...
+#            delta=np.zeros(N_TAU/2+1) # create an array filled with 0
+#            for i in range(N_TAU/2+1): # generate half of the array G(0) to G(beta/2)
+#               tau=i/T/N_TAU
+#               g0tau=0.0;
+#               for n in range(N_MATSUBARA):
+#                  iwn=complex(0.0, (2*n+1)*pi*T)
+#                  #g0tau+=((g[n])*exp(-iw*tau)).real # Fourier transform without tail subtracted
+#                  g0tau+=((g[n]-1.0/iwn)*exp(-iwn*tau)).real # Fourier transform with tail subtracted
+#               g0tau *= 2.0*T
+#               g0tau += -1.0/2.0 # add back contribution of the tail
+#               delta[i]=g0tau
+            #print "delta array generated!"
             temp=delta[::-1] # reverse the array to reduce the calculation time
-            del temp[0]      # remove the middile point G(beta/2) to avoid double counting
-            delta=delta+temp # full array
+            temp=np.delete(temp, 0)      # remove the middile point G(beta/2) to avoid double counting
+            delta=np.append(delta, temp) # full array
             if len(delta) != N_TAU+1:
         	    sys.exit("Wrong array size! Abort!")
     
         for i in range(N_ENV if "N_ENV" in locals() else 1):
            ar=archive('DELTA' + str(i) + ".h5", 'w')
            for m in range(N_ORBITALS):
-              ar['/Delta_%i'%m]=np.array(delta)*V[i]**2 # need to conver delta to a numpy array!
+              ar['/Delta_%i'%m]=delta*V[i]**2 
            del ar
        
-        print "done"
+        print "hybridization generated..."
 
 
     for Ucounter, U in enumerate(Uvalues):
@@ -164,11 +180,11 @@ for T in Tvalues:
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
                    'DELTA0'             : "DELTA0.h5",                    
-                   'DELTA1'		    : "DELTA1.h5",
+                   'DELTA1'		: "DELTA1.h5",
                    'DELTA_IN_HDF5'      : 1,                               
                    # physical parameters
                    'U'                  : U,                               
-                   'MU'                 : U/2,                            
+                   'MU'                 : U/2, # particle-hole symmetry                           
                    'BETA'               : 1/T, # inverse temperature 
                    'T'			: T,   # temperature              
                    # measurements
@@ -218,6 +234,7 @@ for T in Tvalues:
     #      pyalps.runApplication('../cthyb_ohmic',parms['BASENAME']+'.in.h5')
       
           if goal == 2:   
+              print "extracting result from " + output_path + "..."
               ar=archive(output_path + parms['BASENAME']+'.out.h5')
 
               nn_0_0=ar['simulation/results/nnw_re_0_0/mean/value']

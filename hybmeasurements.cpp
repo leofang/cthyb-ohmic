@@ -371,7 +371,8 @@ void hybridization::accumulate_conductance()
   {
     for(std::size_t j=0; j<n_env; ++j) 
     {
-       measurements[giwn_names[i][j]] << (N_t*giwn[i][j]/(beta*beta*n_env));
+       //measurements[giwn_names[i][j]] << (N_t*giwn[i][j]/(beta*beta));
+       measurements[giwn_names[i][j]] << (giwn[i][j]/(beta));
        memset(&(giwn[i][j][0]), 0, sizeof(double)*giwn[i][j].size());
     }
   }

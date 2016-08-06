@@ -42,6 +42,11 @@ if 'MuValues' not in locals():
       Mu = Mu_min + Mu_div*i
       MuValues.append(Mu)
 
+# always compute symmetry pt
+if 0. not in MuValues:
+  MuValues.append(0.)
+  MuValues.sort()
+
 
 values=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
 errors=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
@@ -70,10 +75,14 @@ if goal == 1:
     #f.write("should_transfer_files=YES\n") # test if output text files are transferred
     #f.write("when_to_transfer_output = ON_EXIT\n")
     requirement = "requirements = (( OpSys == \"LINUX\" && Arch ==\"X86_64\" && FileSystemDomain != \"\" ) && ("
-    # do not use atl machines because they do not have OpenMPI installed
+    # do not use atl or phy-compute machines because they do not have OpenMPI installed
     for i in [11, 12, 13, 14, 15, 16]:
        requirement += "(TARGET.Machine != \"atl0%i.phy.duke.edu\")" %i
        requirement = (requirement+")" if i==16 else requirement+" && ")
+    requirement += " && ("
+    for i in [1, 4]:
+       requirement += "(TARGET.Machine != \"phy-compute-0%i.phy.duke.edu\")" %i
+       requirement = (requirement+")" if i==4 else requirement+" && ")
     # only use nano machines 
     if OnlyUseNanoMachines is True:
        requirement += " && ("
@@ -97,7 +106,7 @@ if goal == 1:
 
 for T in Tvalues:
     if goal == 1: # create hybridization function
-        # flat density of states
+        # flat hybridization (\delta[\tau]=const)
         if DOS == 1:
             delta=[]
             for i in range(N_TAU+1):
@@ -106,35 +115,45 @@ for T in Tvalues:
     
         # semicircular or flat density of states
         if DOS == 2 or DOS == 3: 
-            g=[]
+            g=np.zeros(N_MATSUBARA, dtype=complex) # create an array filled with 0.+0.I
             I=complex(0., 1.)
             for n in range(N_MATSUBARA):
                wn=(2*n+1)*pi*T
                if DOS == 2:
-                  g.append(2.0/(I*wn + I*sqrt(4*W**2+wn**2))) # use GF with semielliptical DOS
+                  g[n]=2.0/(I*wn + I*sqrt(4*W**2+wn**2)) # use GF with semielliptical DOS
                if DOS == 3:
-                  g.append(log((2*W+I*wn)/(-2*W+I*wn))/(4*W)) # use GF with flat DOS
-            delta=[]
-            for i in range(N_TAU/2+1): # generate half of the array G(0) to G(beta/2)
-               tau=i/T/N_TAU
-               g0tau=0.0;
-               for n in range(N_MATSUBARA):
-                  iwn=complex(0.0, (2*n+1)*pi*T)
-                  #g0tau+=((g[n])*exp(-iw*tau)).real # Fourier transform without tail subtracted
-                  g0tau+=((g[n]-1.0/iwn)*exp(-iwn*tau)).real # Fourier transform with tail subtracted
-               g0tau *= 2.0*T
-               g0tau += -1.0/2.0 # add back contribution of the tail
-               delta.append(g0tau) 
+                  g[n]=log((2*W+I*wn)/(-2*W+I*wn))/(4*W) # use GF with flat DOS
+
+
+            # NOTE: the beta factor is cancelled out in the exponent
+            m = np.array(range(N_TAU/2+1))     # index the imaginary time (from tau=0 to tau=beta/2)
+            n = np.array(range(N_MATSUBARA))   # index the Matsubara frequency
+            iwn = 1j*(2.*n+1.)*pi*T            # compute iwn; note "1j" is the imaginary number i in python
+            F = exp(-1j*pi*np.outer(m, 2.*n+1.)/N_TAU)  # the Fourier transform matrix
+            delta = np.dot(F, g-1./iwn).real    # convert g(iwn) to g(tau), with tail subtracted
+            delta *= 2.*T # the factor of 2 appears because only the real part is taken
+            delta += -0.5 # add back contribution of the tail
+#            delta=[]
+#            for i in range(N_TAU/2+1): # generate half of the array G(0) to G(beta/2)
+#               tau=i/T/N_TAU
+#               g0tau=0.0;
+#               for n in range(N_MATSUBARA):
+#                  iwn=complex(0.0, (2*n+1)*pi*T)
+#                  #g0tau+=((g[n])*exp(-iw*tau)).real # Fourier transform without tail subtracted
+#                  g0tau+=((g[n]-1.0/iwn)*exp(-iwn*tau)).real # Fourier transform with tail subtracted
+#               g0tau *= 2.0*T
+#               g0tau += -1.0/2.0 # add back contribution of the tail
+#               delta.append(g0tau) 
             temp=delta[::-1] # reverse the array to reduce the calculation time
-            del temp[0]      # remove the middile point G(beta/2) to avoid double counting
-            delta=delta+temp # full array
+            temp=np.delete(temp, 0)      # remove the middile point G(beta/2) to avoid double counting
+            delta=np.append(delta, temp) # full array
             if len(delta) != N_TAU+1:
         	    sys.exit("Wrong array size! Abort!")
     
         for i in range(N_ENV if "N_ENV" in locals() else 1):
            ar=archive('DELTA' + str(i) + ".h5", 'w')
            for m in range(N_ORBITALS):
-              ar['/Delta_%i'%m]=np.array(delta)*V[i]**2 # need to conver delta to a numpy array!
+              ar['/Delta_%i'%m]=delta*V[i]**2
            del ar
        
         print "hybridization generated..."
@@ -157,26 +176,27 @@ for T in Tvalues:
                    'TEXT_OUTPUT'        : 1,                                
                    'N_ENV' 		: N_ENV, # number of colors
                    'SPINFLIP'           : SPINFLIP,
-                   'Dissipation'        : Dissipation,
-                   'r'                  : r,
-                   'C0'                 : C0,
+                   'Dissipation'        : Dissipation, # trun dissipation on or off 
+                   'N_W'                : N_W,   # =1 for static susceptibility chi(0) 
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
     #               'DELTA1'		    : "delta-01.dat",
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
-                   'DELTA0'             : "DELTA0.h5",                    
-                   'DELTA1'		: "DELTA1.h5",
+                   'DELTA0'             : "DELTA0.h5", # color 1 for N_ENV=2                   
+                   'DELTA1'		: "DELTA1.h5", # color 2 for N_ENV=2
                    'DELTA_IN_HDF5'      : 1,                               
                    # physical parameters
                    'U'                  : U,                               
                    'MU'                 : Mu,                            
                    'BETA'               : 1/T, # inverse temperature 
                    'T'			: T,   # temperature              
+                   'r'                  : r,   # dissipation strength
+                   'C0'                 : C0,  # dissipation capacitance
                    # measurements
                    'MEASURE_nnw'        : MEASURE_nnw,                               
-		   'N_W'                : 1,   # for static susceptibility chi(0) 
                    'MEASURE_time'       : MEASURE_time,
+                   'MEASURE_conductance': MEASURE_conductance,
                    # measurement parameters
                    'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,           
                    'N_TAU'              : N_TAU,      
@@ -256,17 +276,26 @@ if goal == 2:
              a.append(plt.errorbar(np.array(MuValues)/parms['t'], np.array(values[i][orb]), errors[i][orb], \
                       label=r"orbital %i, $\beta t$=%.3f"%(orb, parms['t']/Tvalues[i])))
        plt.xlim(np.array([Mu_min, Mu_max])/parms['t'])
+       plt.ylim(np.array([0., 1.]))
 
        if ZeroTresult is True: 
          theory=[]
-         V[0] = V[0]*sqrt(N_ENV) # rescale the width
+         if N_ENV==1:
+             V = V[0]
+         if N_ENV==2:
+             V = sqrt(V[0]**2 + V[1]**2) # rescale the width
+             #print V
+         # Note that in this expression the bandwidth is set to be 1.
          for mu in MuValues:
             if DOS == 2:
-               # Note that in this expression the bandwidth is set to be 1.
-               theory.append((pi*((V[0]**2)-1)+(V[0]**2)*arctan(mu/sqrt(4-mu**2))+((V[0]**2)-2)*arctan((-(V[0]**2)+2)*mu/(V[0]**2)/sqrt(4-mu**2)))/(2*pi*((V[0]**2)-1)))
+               # my approach
+               theory.append( (pi*((V**2)-1)+(V**2)*arctan(mu/sqrt(4-mu**2))+((V**2)-2)*arctan((-(V**2)+2)*mu/(V**2)/sqrt(4-mu**2)))/(2*pi*((V**2)-1)) )
+               #print "mu=%.3f, n=%.10f"%(mu, (pi*((V**2)-1)+(V**2)*arctan(mu/sqrt(4-mu**2))+((V**2)-2)*arctan((-(V**2)+2)*mu/(V**2)/sqrt(4-mu**2)))/(2*pi*((V**2)-1)) )
+               ## Gu's approach
+               #theory.append( 0.5-arctan(mu*(V**2-2)/(sqrt(4-mu**2)*V**2))/pi  )
             if DOS == 3:
-               theory.append(0.5+arctan(4*W*mu/(pi*(V[0]**2)))/pi)
-         a.append(plt.plot(np.array(MuValues)/parms['t'], np.array(theory), 'k-', linewidth=2.0, label="theory (T=0)"))
+               theory.append(0.5+arctan(4*W*mu/(pi*(V**2)))/pi)
+         a.append(plt.plot(np.array(MuValues)/parms['t'], np.array(theory), 'k-', linewidth=1.0, label="theory (T=0)"))
        
        plt.legend(loc='lower right', prop={'size':10})
        plt.savefig('n_vs_mu_vs_T_' + output_dir + '.pdf')

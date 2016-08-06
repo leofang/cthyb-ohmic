@@ -72,6 +72,7 @@ int main(int argc, char** argv)
 
     //Leo: in some distributive environments, a failed run would produce multiple ".out.h5" files such that the code
     //     is unable to write results. This check prevents such a situation.
+    //TODO: make this check compatible with the MPI environment
     if(boost::filesystem::exists(output_file))
     {
        std::cout << "The output file (" << output_file << ") already exists. Removing...";
