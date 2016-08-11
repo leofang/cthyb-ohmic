@@ -181,9 +181,10 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
       //std::complex<double> dexp=exp*exp;
       double dwn = 2.*M_PI/beta_; // the basic unit for bosonic Matsubara frequency
       //std::cout << g << ", " << d << ", " << dwn << ", " << giwn.size() << std::endl;
-      for(std::size_t n=1; n<giwn.size(); n++) 
+ 
+      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
       {
-        giwn[n] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn);
+        giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
         //std::cout << giwn[n] << " ";
         //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
         //double meas = -M_ji/beta_;

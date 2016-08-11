@@ -803,12 +803,13 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
     std::vector<double> giwn(giwn_temp[0].size(), 0.); //total conductance for color j
     for(int i=0; i<n_orbitals; ++i)  //sum over all orbitals i
         std::transform (giwn.begin(), giwn.end(), giwn_temp[i].begin(), giwn.begin(), std::plus<double>());
-    for(std::size_t w=0; w<N_W; ++w)
+    for(std::size_t w=0; w<N_W; ++w) //giwn is of size N_W
     {
       g_iwn(w,0,0,j)=giwn[w];
     }
   }
 
+  //////////// post processing; data stored in "/giwn/" //////////// 
   //store in hdf5
   g_iwn.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/giwn");
 
@@ -822,7 +823,7 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
        std::stringstream g_name; g_name << "giwn_" << i << "_" << j;
        error_temp[i] = results[g_name.str()].error<std::vector<double> >();
        //take vector square
-       std::transform (error_temp[i].begin(), error_temp[i].end(), error_temp[i].begin(), error_temp[i].begin(), std::plus<double>());
+       std::transform (error_temp[i].begin(), error_temp[i].end(), error_temp[i].begin(), error_temp[i].begin(), std::multiplies<double>());
      }
      std::vector<double> err(error_temp[0].size(), 0.); //total error
      for(int i=0; i<n_orbitals; ++i)  //sum over all orbitals i
@@ -833,16 +834,20 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
      data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/giwn/"<<j<< "/mean/error";
      solver_output<<alps::make_pvp(data_path.str(),err);
   }
+  //////////// post processing ends //////////// 
     
-  std::ofstream giwn_file("giwn.dat");
-  for(std::size_t n=1; n<N_W; ++n)
+  if(parms["TEXT_OUTPUT"]|true) // write a text file by default
   {
-    giwn_file << 2.*n*M_PI/beta; //bosonic Matsubara frequency
-    for(std::size_t j=0; j<n_env; ++j)
-    {
-      giwn_file << " " << g_iwn(n,0,0,j);
-    }
-    giwn_file << std::endl;
+      std::ofstream giwn_file("giwn.dat");
+      for(std::size_t n=1; n<N_W+1; ++n) //g_iwn is of size N_W
+      {
+        giwn_file << 2.*n*M_PI/beta; //bosonic Matsubara frequency
+        for(std::size_t j=0; j<n_env; ++j)
+        {
+          giwn_file << " " << g_iwn(n,0,0,j);
+        }
+        giwn_file << std::endl;
+      }
+      giwn_file.close();
   }
-  giwn_file.close();
 }
