@@ -2,3 +2,9 @@
 *.pdf
 *.pyc
 *.swp
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+cthyb_ohmic
+utilities/condor_submit_file

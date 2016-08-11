@@ -8,6 +8,7 @@ import numpy as np
 from numpy import exp, log, sqrt, pi, arctan # some math
 import subprocess
 import os, sys, shutil
+from os.path import expanduser #get home path
 from hyb_config_v1 import * # read parameters
 
 
@@ -63,34 +64,40 @@ if goal == 1:
     #f.write("Universe = parallel\n") # run MPI jobs ---- seems not working!
     #f.write("machine_count = 1\n") # number of cores for a MPI job
     f.write("Universe = vanilla\n")
-    f.write("Executable = " + executable + "\n")
+    f.write("Executable = " + expanduser("~") + "/" + executable + "\n")
     f.write("notification=Error\n")
     f.write("notify_user = leofang@phy.duke.edu\n")
-    f.write("+Department = \"Physics\"\n")
-    f.write("should_transfer_files=NO\n") # use Physics shared files system
-    #f.write("should_transfer_files=YES\n") # test if output text files are transferred
-    #f.write("when_to_transfer_output = ON_EXIT\n")
-    requirement = "requirements = (( OpSys == \"LINUX\" && Arch ==\"X86_64\" && FileSystemDomain != \"\" ) && ("
-    # do not use atl or phy-compute machines because they do not have OpenMPI installed
-    for i in [11, 12, 13, 14, 15, 16]:
-       requirement += "(TARGET.Machine != \"atl0%i.phy.duke.edu\")" %i
-       requirement = (requirement+")" if i==16 else requirement+" && ")
-    requirement += " && ("
-    for i in [1, 4]:
-       requirement += "(TARGET.Machine != \"phy-compute-0%i.phy.duke.edu\")" %i
-       requirement = (requirement+")" if i==4 else requirement+" && ")
-    # only use nano machines 
-    if OnlyUseNanoMachines is True:
+    if (RunOnOSG if "RunOnOSG" in locals() else False): # run on Duke Ci-Connect
+       f.write("+ProjectName=\"duke-CMT\"\n")
+       f.write("should_transfer_files=YES\n") # output files are transferred
+       f.write("when_to_transfer_output = ON_EXIT\n")
+       # Periodically retry the jobs every 60 seconds, up to a maximum of 5 retries.
+       f.write("periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > 60)\n")
+       # Send the job to Held state on failure. 
+       f.write("on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n")
+    else:  # run on physics condor
+       f.write("+Department = \"Physics\"\n")
+       f.write("should_transfer_files=NO\n") # use Physics shared files system
+       requirement = "requirements = (( OpSys == \"LINUX\" && Arch ==\"X86_64\" && FileSystemDomain != \"\" ) && ("
+       # do not use atl or phy-compute machines because they do not have OpenMPI installed
+       for i in [11, 12, 13, 14, 15, 16]:
+          requirement += "(TARGET.Machine != \"atl0%i.phy.duke.edu\")" %i
+          requirement = (requirement+")" if i==16 else requirement+" && ")
        requirement += " && ("
-       for i in [6, 7, 8, 9]:
-           requirement += "(TARGET.Machine == \"nano0%i.internal.phy.duke.edu\")" %i
-           requirement = (requirement+")" if i==9 else requirement+" || ")
-    f.write(requirement+")\n")
-    f.write("request_memory = 50\n")
-    f.write("getenv=True\n") # important for finding shared libraries!
+       for i in [1, 4]:
+          requirement += "(TARGET.Machine != \"phy-compute-0%i.phy.duke.edu\")" %i
+          requirement = (requirement+")" if i==4 else requirement+" && ")
+       # only use nano machines 
+       if OnlyUseNanoMachines is True:
+          requirement += " && ("
+          for i in [6, 7, 8, 9]:
+              requirement += "(TARGET.Machine == \"nano0%i.internal.phy.duke.edu\")" %i
+              requirement = (requirement+")" if i==9 else requirement+" || ")
+       f.write(requirement+")\n")
+       #f.write("request_memory = 50\n")
+       f.write("getenv=True\n") # important for finding shared libraries!
     #f.write("periodic_release = (NumGlobusSubmits < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*60))\n")
     #f.write("periodic_hold =  (JobStatus==2) && ((CurrentTime - EnteredCurrentStatus) > (%i*60*60))" % MAX_WALL_TIME)
-    #f.write("+ProjectName=\"duke\"\n")
     f.write("\n")
 
 
@@ -161,38 +168,42 @@ for T in Tvalues:
           # prepare the input parameters; they can be used inside the script and are passed to the solver
           parms = {
                    # solver parameters
-                   'SWEEPS'             : SWEEPS,                       
+                   'SWEEPS'             : SWEEPS,
                    'DEBUGGER'           : DEBUGGER, #for debug purpose
-                   'THERMALIZATION'     : THERMALIZATION,  
-                   'SEED'               : SEED,                               
-                   'N_MEAS'             : N_MEAS,      
+                   'THERMALIZATION'     : THERMALIZATION,
+                   'SEED'               : SEED,
+                   'N_MEAS'             : N_MEAS,
                    'N_ORBITALS'         : N_ORBITALS,  
                    'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, U/2, U), # base name of the h5 output file
-                   'MAX_TIME'           : MAX_TIME,                         
-                   'VERBOSE'            : 0,                            
+                   'MAX_TIME'           : MAX_TIME,
+                   'VERBOSE'            : 0,
                    'VERY_VERBOSE'       : VERY_VERBOSE,
-                   'TEXT_OUTPUT'        : 1,                                
-                   'N_ENV' 		: N_ENV, # number of colors
+                   'TEXT_OUTPUT'        : 1,
+                   'N_ENV'              : N_ENV, # number of colors
                    'SPINFLIP'           : SPINFLIP,
+                   'Dissipation'        : Dissipation, # trun dissipation on or off 
+                   'N_W'                : N_W,   # =1 for static susceptibility chi(0) 
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
-    #               'DELTA1'		    : "delta-01.dat",
+    #               'DELTA1'             : "delta-01.dat",
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
-                   'DELTA0'             : "DELTA0.h5",                    
-                   'DELTA1'		: "DELTA1.h5",
-                   'DELTA_IN_HDF5'      : 1,                               
+                   'DELTA0'             : "DELTA0.h5", # color 1 for N_ENV=2                   
+                   'DELTA1'             : "DELTA1.h5", # color 2 for N_ENV=2
+                   'DELTA_IN_HDF5'      : 1,
                    # physical parameters
-                   'U'                  : U,                               
+                   'U'                  : U, 
                    'MU'                 : U/2, # particle-hole symmetry                           
                    'BETA'               : 1/T, # inverse temperature 
-                   'T'			: T,   # temperature              
-                   # measurements
-                   'MEASURE_nnw'        : MEASURE_nnw,                               
-		   'N_W'                : 1,   # for static susceptibility chi(0) 
+                   'T'                  : T,   # temperature              
+                   'r'                  : r,   # dissipation strength
+                   'C0'                 : C0,  # dissipation capacitance
+                   # measurements       
+                   'MEASURE_nnw'        : MEASURE_nnw, 
                    'MEASURE_time'       : MEASURE_time,
+                   'MEASURE_conductance': MEASURE_conductance,
                    # measurement parameters
-                   'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,           
+                   'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,
                    'N_TAU'              : N_TAU,      
                    'N_MATSUBARA'        : int(N_TAU/(2*pi)), # number of Matsubara frequencies
                    #'N_W'                   : 1, # number of bosonic Matsubara frequencies for the local susceptibility
@@ -221,7 +232,11 @@ for T in Tvalues:
               f.write("output = " + "$(Cluster).$(Process).out\n")
               f.write("error = "  + "$(Cluster).$(Process).err\n")
               f.write("Log = "    + "$(Cluster).$(Process).log\n")
-        #      f.write("transfer_input_files = " + parms['BASENAME'] + ".in.h5," + parms['BASENAME'] + ".out.h5\n")
+              if (RunOnOSG if "RunOnOSG" in locals() else False): # run on OSG nodes
+                  f.write("transfer_input_files = " + parms['BASENAME'] + ".in.h5")
+                  for i in range(N_ENV if "N_ENV" in locals() else 1):
+                      f.write(', DELTA' + str(i) + ".h5")
+                  f.write('\n')
         #      f.write("transfer_input_files = " + parms['BASENAME'] + ".in.h5," + parms['BASENAME'] + ".out.h5\n")
               f.write("Arguments = " + parms['BASENAME']+ ".in.h5" + "\n")
               f.write("Queue\n\n")
