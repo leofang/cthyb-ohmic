@@ -71,10 +71,12 @@ if goal == 1:
        f.write("+ProjectName=\"duke-CMT\"\n")
        f.write("should_transfer_files=YES\n") # output files are transferred
        f.write("when_to_transfer_output = ON_EXIT\n")
-       ## Periodically retry the jobs every 60 seconds, up to a maximum of 5 retries.
-       #f.write("periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > 60)\n")
-       ## Send the job to Held state on failure. 
-       #f.write("on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n")
+       # Periodically retry the jobs every 60 seconds, up to a maximum of 5 retries.
+       f.write("periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > 60)\n")
+       # Send the job to Held state on failure. 
+       f.write("on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n")
+       # Reconnect jobs faster if disconnected (default was 2400 sec)
+       f.write("JobLeaseDuration = 60\n")
     else:  # run on physics condor
        f.write("+Department = \"Physics\"\n")
        f.write("should_transfer_files=NO\n") # use Physics shared files system

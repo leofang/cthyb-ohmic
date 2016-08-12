@@ -10,6 +10,7 @@ import subprocess
 import os, sys, shutil
 from os.path import expanduser #get home path
 from scipy.interpolate import InterpolatedUnivariateSpline # extrapolation
+from scipy.interpolate import BarycentricInterpolator      # extrapolation
 from hyb_config_v1 import * # read parameters
 
 
@@ -34,7 +35,7 @@ if 0. not in MuValues:
 #errors=[[] for u in Uvalues]
 
 for T in Tvalues:
-    sigma_file = open("giwn0_T_%.3f_%s.dat"%(T, output_dir), "w")
+    sigma_file = open("giwn0_T_%.3f_%s_Barycentric.dat"%(T, output_dir), "w")
     for Mu_counter, Mu in enumerate(MuValues):
 #    for Ucounter, U in enumerate(Uvalues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
@@ -90,6 +91,7 @@ for T in Tvalues:
           ED_file.close()
           iwn=[]
           values=[[] for i in range(N_ENV if "N_ENV" in locals() else 1)]
+
           for line in lines:
                iwn.append(float(line.split()[0]))
                for i in range(N_ENV if "N_ENV" in locals() else 1):
@@ -102,11 +104,18 @@ for T in Tvalues:
           # positions to inter/extrapolate
           x = np.linspace(0, max(iwn), 3*len(iwn))
           sigma_file.write("%.8f"%(Mu))
-          # do inter/extrapolation
-          for order in range(5): # 1<=k<=5
-              s = InterpolatedUnivariateSpline(iwn, giwn, k=order+1) # spline order: 1 linear, 2 quadratic, 3 cubic ...
-              y = s(x)
-              sigma_file.write("   %.8f"%(y[0]))
+
+          # do Barycentric interpolation
+          s = BarycentricInterpolator(iwn, giwn)
+          y = s(x)
+          sigma_file.write("   %.8f"%(y[0]))
+        
+#          # do spline inter/extrapolation
+#          for order in range(5): # 1<=k<=5
+#              s = InterpolatedUnivariateSpline(iwn, giwn, k=order+1) # spline order: 1 linear, 2 quadratic, 3 cubic ...
+#              y = s(x)
+#              sigma_file.write("   %.8f"%(y[0]))
+
           sigma_file.write("\n")
     sigma_file.write("\n")
     sigma_file.close()
