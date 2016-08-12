@@ -844,7 +844,7 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
         giwn_file << 2.*n*M_PI/beta; //bosonic Matsubara frequency
         for(std::size_t j=0; j<n_env; ++j)
         {
-          giwn_file << " " << g_iwn(n,0,0,j);
+          giwn_file << " " << g_iwn(n-1,0,0,j);
         }
         giwn_file << std::endl;
       }
