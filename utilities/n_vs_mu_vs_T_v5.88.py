@@ -36,17 +36,21 @@ else:
 initial_dir = os.getcwd()
 
 
-#if 'MuValues' not in locals():
-#    MuValues = []
-#    Mu_div   = (Mu_max-Mu_min)/N_Mu
-#    for i in range(N_Mu+1):
-#      Mu = Mu_min + Mu_div*i
-#      MuValues.append(Mu)
+if 'MuValues' not in locals():
+    MuValues = []
+    Mu_div   = (Mu_max-Mu_min)/N_Mu
+    for i in range(N_Mu+1):
+      Mu = Mu_min + Mu_div*i
+      MuValues.append(Mu)
+
+# always compute symmetry pt
+if U/2. not in MuValues:
+  MuValues.append(U/2.)
+  MuValues.sort()
 
 
-values=[[] for u in Uvalues]
-errors=[[] for u in Uvalues]
-
+values=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
+errors=[[[0 for Mu in MuValues] for orb in range(N_ORBITALS)] for T in Tvalues] 
 
 #histogram_values=[]
 #histogram_errors=[]
@@ -75,8 +79,8 @@ if goal == 1:
        f.write("periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > 60)\n")
        # Send the job to Held state on failure. 
        f.write("on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n")
-       # Reconnect jobs faster if disconnected (default was 2400 sec)
-       f.write("JobLeaseDuration = 60\n")
+       # Reconnect jobs faster if disconnected (default is 2400 sec)
+       f.write("JobLeaseDuration = 90\n")
     else:  # run on physics condor
        f.write("+Department = \"Physics\"\n")
        f.write("should_transfer_files=NO\n") # use Physics shared files system
@@ -102,7 +106,6 @@ if goal == 1:
     #f.write("periodic_hold =  (JobStatus==2) && ((CurrentTime - EnteredCurrentStatus) > (%i*60*60))" % MAX_WALL_TIME)
     f.write("\n")
 
-
 ## create a list of input hdf5 filenames
 #numberCores = 4
 #g=open("mpirun_test.sh","w")
@@ -111,7 +114,7 @@ if goal == 1:
 
 for T in Tvalues:
     if goal == 1: # create hybridization function
-        # flat hybridization
+        # flat hybridization (\delta[\tau]=const)
         if DOS == 1:
             delta=[]
             for i in range(N_TAU+1):
@@ -119,7 +122,7 @@ for T in Tvalues:
                delta.append(g0tau)
     
         # semicircular or flat density of states
-        if DOS == 2 or DOS == 3:  
+        if DOS == 2 or DOS == 3: 
             g=np.zeros(N_MATSUBARA, dtype=complex) # create an array filled with 0.+0.I
             I=complex(0., 1.)
             for n in range(N_MATSUBARA):
@@ -128,7 +131,7 @@ for T in Tvalues:
                   g[n]=2.0/(I*wn + I*sqrt(4*W**2+wn**2)) # use GF with semielliptical DOS
                if DOS == 3:
                   g[n]=log((2*W+I*wn)/(-2*W+I*wn))/(4*W) # use GF with flat DOS
-            #print "g array generated!"
+
 
             # NOTE: the beta factor is cancelled out in the exponent
             m = np.array(range(N_TAU/2+1))     # index the imaginary time (from tau=0 to tau=beta/2)
@@ -138,8 +141,7 @@ for T in Tvalues:
             delta = np.dot(F, g-1./iwn).real    # convert g(iwn) to g(tau), with tail subtracted
             delta *= 2.*T # the factor of 2 appears because only the real part is taken
             delta += -0.5 # add back contribution of the tail
-#            # NOTE: this FFT step is the time-consuming part! TODO: rewrite it...
-#            delta=np.zeros(N_TAU/2+1) # create an array filled with 0
+#            delta=[]
 #            for i in range(N_TAU/2+1): # generate half of the array G(0) to G(beta/2)
 #               tau=i/T/N_TAU
 #               g0tau=0.0;
@@ -149,8 +151,7 @@ for T in Tvalues:
 #                  g0tau+=((g[n]-1.0/iwn)*exp(-iwn*tau)).real # Fourier transform with tail subtracted
 #               g0tau *= 2.0*T
 #               g0tau += -1.0/2.0 # add back contribution of the tail
-#               delta[i]=g0tau
-            #print "delta array generated!"
+#               delta.append(g0tau) 
             temp=delta[::-1] # reverse the array to reduce the calculation time
             temp=np.delete(temp, 0)      # remove the middile point G(beta/2) to avoid double counting
             delta=np.append(delta, temp) # full array
@@ -160,52 +161,52 @@ for T in Tvalues:
         for i in range(N_ENV if "N_ENV" in locals() else 1):
            ar=archive('DELTA' + str(i) + ".h5", 'w')
            for m in range(N_ORBITALS):
-              ar['/Delta_%i'%m]=delta*V[i]**2 
+              ar['/Delta_%i'%m]=delta*V[i]**2
            del ar
        
         print "hybridization generated..."
 
 
-    for Ucounter, U in enumerate(Uvalues):
+    for Mu_counter, Mu in enumerate(MuValues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
           parms = {
                    # solver parameters
-                   'SWEEPS'             : SWEEPS,
+                   'SWEEPS'             : SWEEPS,                       
                    'DEBUGGER'           : DEBUGGER, #for debug purpose
-                   'THERMALIZATION'     : THERMALIZATION,
-                   'SEED'               : SEED,
-                   'N_MEAS'             : N_MEAS,
+                   'THERMALIZATION'     : THERMALIZATION,  
+                   'SEED'               : SEED,                               
+                   'N_MEAS'             : N_MEAS,      
                    'N_ORBITALS'         : N_ORBITALS,  
-                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, U/2, U), # base name of the h5 output file
-                   'MAX_TIME'           : MAX_TIME,
-                   'VERBOSE'            : 0,
+                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, Mu, U), # base name of the h5 output file
+                   'MAX_TIME'           : MAX_TIME,                         
+                   'VERBOSE'            : 0,                            
                    'VERY_VERBOSE'       : VERY_VERBOSE,
-                   'TEXT_OUTPUT'        : 1,
-                   'N_ENV'              : N_ENV, # number of colors
+                   'TEXT_OUTPUT'        : 1,                                
+                   'N_ENV' 		: N_ENV, # number of colors
                    'SPINFLIP'           : SPINFLIP,
                    'Dissipation'        : Dissipation, # trun dissipation on or off 
                    'N_W'                : N_W,   # =1 for static susceptibility chi(0) 
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
-    #               'DELTA1'             : "delta-01.dat",
+    #               'DELTA1'		    : "delta-01.dat",
     #               'DELTA_IN_HDF5'      : 0,                               
                    'DELTA'              : "DELTA0.h5", # for N_ENV=1
                    'DELTA0'             : "DELTA0.h5", # color 1 for N_ENV=2                   
-                   'DELTA1'             : "DELTA1.h5", # color 2 for N_ENV=2
-                   'DELTA_IN_HDF5'      : 1,
+                   'DELTA1'		: "DELTA1.h5", # color 2 for N_ENV=2
+                   'DELTA_IN_HDF5'      : 1,                               
                    # physical parameters
-                   'U'                  : U, 
-                   'MU'                 : U/2, # particle-hole symmetry                           
+                   'U'                  : U,                               
+                   'MU'                 : Mu,                            
                    'BETA'               : 1/T, # inverse temperature 
-                   'T'                  : T,   # temperature              
+                   'T'			: T,   # temperature              
                    'r'                  : r,   # dissipation strength
                    'C0'                 : C0,  # dissipation capacitance
-                   # measurements       
-                   'MEASURE_nnw'        : MEASURE_nnw, 
+                   # measurements
+                   'MEASURE_nnw'        : MEASURE_nnw,                               
                    'MEASURE_time'       : MEASURE_time,
                    'MEASURE_conductance': MEASURE_conductance,
                    # measurement parameters
-                   'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,
+                   'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,           
                    'N_TAU'              : N_TAU,      
                    'N_MATSUBARA'        : int(N_TAU/(2*pi)), # number of Matsubara frequencies
                    #'N_W'                   : 1, # number of bosonic Matsubara frequencies for the local susceptibility
@@ -251,22 +252,14 @@ for T in Tvalues:
     #      pyalps.runApplication('../cthyb_ohmic',parms['BASENAME']+'.in.h5')
       
           if goal == 2:   
-              print "extracting result from " + output_path + "..."
               ar=archive(output_path + parms['BASENAME']+'.out.h5')
 
-              nn_0_0=ar['simulation/results/nnw_re_0_0/mean/value']
-              nn_1_1=ar['simulation/results/nnw_re_1_1/mean/value']
-              nn_1_0=ar['simulation/results/nnw_re_1_0/mean/value']
-              dnn_0_0=ar['simulation/results/nnw_re_0_0/mean/error']
-              dnn_1_1=ar['simulation/results/nnw_re_1_1/mean/error']
-              dnn_1_0=ar['simulation/results/nnw_re_1_0/mean/error']
-
-              nn  = nn_0_0 + nn_1_1 - 2*nn_1_0
-              dnn = sqrt(dnn_0_0**2 + dnn_1_1**2 + ((2*dnn_1_0)**2) )
-
-              T = parms['T']
-              values[Ucounter].append(T*nn)
-              errors[Ucounter].append(T*dnn)
+              t_counter = Tvalues.tolist().index(parms['T'])
+              for orb in range(N_ORBITALS):
+                 n_mean=ar['simulation/results/density_%i/mean/value'%orb]
+                 n_error=ar['simulation/results/density_%i/mean/error'%orb]
+                 values[t_counter][orb][Mu_counter] = n_mean
+                 errors[t_counter][orb][Mu_counter] = n_error
     
               del ar
     
@@ -283,20 +276,43 @@ if goal == 1:
 
 if goal == 2:
        print "Start plotting..."
-       plt.figure()
-       plt.xlabel(r'$T/t$')
-       plt.ylabel(r'$T\chi$')
-       plt.title(r'cthyb_ohmic: $\chi$ vs T')
-       plt.xscale('log')
-       a=[]
-       for i in range(len(Uvalues)):
-          a.append(plt.errorbar(np.array(Tvalues)/parms['t'], np.array(values[i]), errors[i], \
-                      label="U=%.3f"%(Uvalues[i]/parms['t'])))
-       plt.xlim(np.array([Tmin, Tmax])/parms['t'])
-       plt.ylim([0.0, 1.0])
-       plt.legend(loc='lower right', prop={'size':10})
+       #print values[0][0]
 
-       plt.savefig('chi_vs_T_vs_U_' + output_dir + '.pdf') 
+       plt.figure()
+       plt.xlabel(r'$\mu/t$')
+       plt.ylabel(r'$n$')
+       plt.title(r'cthyb_ohmic: density vs $\mu$')
+       a=[]
+       for i in range(len(Tvalues)):
+          for orb in range(N_ORBITALS):
+             a.append(plt.errorbar(np.array(MuValues)/parms['t'], np.array(values[i][orb]), errors[i][orb], \
+                      label=r"orbital %i, $\beta t$=%.3f"%(orb, parms['t']/Tvalues[i])))
+       plt.xlim(np.array([Mu_min, Mu_max])/parms['t'])
+       plt.ylim(np.array([0., 1.]))
+
+       if ZeroTresult is True: 
+         theory=[]
+         if N_ENV==1:
+             V = V[0]
+         if N_ENV==2:
+             V = sqrt(V[0]**2 + V[1]**2) # rescale the width
+             #print V
+         # Note that in this expression the bandwidth is set to be 1.
+         for mu in MuValues:
+            if DOS == 2:
+               # my approach
+               theory.append( (pi*((V**2)-1)+(V**2)*arctan(mu/sqrt(4-mu**2))+((V**2)-2)*arctan((-(V**2)+2)*mu/(V**2)/sqrt(4-mu**2)))/(2*pi*((V**2)-1)) )
+               #print "mu=%.3f, n=%.10f"%(mu, (pi*((V**2)-1)+(V**2)*arctan(mu/sqrt(4-mu**2))+((V**2)-2)*arctan((-(V**2)+2)*mu/(V**2)/sqrt(4-mu**2)))/(2*pi*((V**2)-1)) )
+               ## Gu's approach
+               #theory.append( 0.5-arctan(mu*(V**2-2)/(sqrt(4-mu**2)*V**2))/pi  )
+            if DOS == 3:
+               theory.append(0.5+arctan(4*W*mu/(pi*(V**2)))/pi)
+         a.append(plt.plot(np.array(MuValues)/parms['t'], np.array(theory), 'k-', linewidth=1.0, label="theory (T=0)"))
+       
+       plt.legend(loc='lower right', prop={'size':10})
+       plt.savefig('n_vs_mu_vs_T_' + output_dir + '.pdf')
+       #plt.show()
+   
 
 
 ################################# Working area #################################

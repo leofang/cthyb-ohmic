@@ -26,8 +26,8 @@ if 'MuValues' not in locals():
       MuValues.append(Mu)
 
 # always compute symmetry pt
-if 0. not in MuValues:
-  MuValues.append(0.)
+if U/2. not in MuValues:
+  MuValues.append(U/2.)
   MuValues.sort()
 
 
@@ -35,7 +35,7 @@ if 0. not in MuValues:
 #errors=[[] for u in Uvalues]
 
 for T in Tvalues:
-    sigma_file = open("giwn0_T_%.3f_%s_Barycentric.dat"%(T, output_dir), "w")
+    sigma_file = open("giwn0_T_%.4f_%s_Barycentric.dat"%(T, output_dir), "w")
     for Mu_counter, Mu in enumerate(MuValues):
 #    for Ucounter, U in enumerate(Uvalues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
