@@ -347,7 +347,7 @@ void hybridization::accumulate_G()
   if(!MEASURE_time) return;
   for(std::size_t i=0;i<n_orbitals;++i)
   {
-    measurements[g_names[i]]<<(N_t*G[i]/(beta*beta*N_meas)); //TODO: divide by N_ENV
+    measurements[g_names[i]]<<(N_t*G[i]/(beta*beta*N_meas*n_env));
     measurements[f_names[i]]<<(N_t*F[i]/(beta*beta*N_meas));
     memset(&(G[i][0]), 0, sizeof(double)*G[i].size());
     memset(&(F[i][0]), 0, sizeof(double)*F[i].size());

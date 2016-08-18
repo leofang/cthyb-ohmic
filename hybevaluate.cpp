@@ -212,18 +212,18 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
 //    F_tau(N_t,0,0,i) = F[N_t]*2; 
 //  }
   
-  //Leo: don't do the replacement for debug purpose 
-//  for(std::size_t i=0;i<n_orbitals;++i)
-//  {//replace Green function endpoints by corresponding densities
-//    std::stringstream density_name; density_name<<"density_"<<i;
-//    double density=results[density_name.str()].mean<double>();
-//    G_tau(0,0,0,i)  =-1.*(1-density);
-//    G_tau(N_t,0,0,i)=-1.*(density);
-//  }
+  for(std::size_t i=0;i<n_orbitals;++i)
+  {//replace Green function endpoints by corresponding densities
+    std::stringstream density_name; density_name<<"density_"<<i;
+    double density=results[density_name.str()].mean<double>();
+    G_tau(0,0,0,i)  =-1.*(1-density);
+    G_tau(N_t,0,0,i)=-1.*(density);
+  }
 
   //store in hdf5
+  //Leo: turn off the F_tau part to save disk space as I do not need it at all
   G_tau.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/G_tau");
-  F_tau.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau");
+  //F_tau.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau");
 
   // ERROR
   for(std::size_t i=0; i<n_orbitals; i++)
@@ -237,11 +237,12 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
      std::stringstream data_path;
      data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/G_tau/"<<i<< "/mean/error";
      solver_output<<alps::make_pvp(data_path.str(),err);
-     g_name.str(""); g_name<<"f_"<<i;
-     err = results[g_name.str()].error<std::vector<double> >();
-     data_path.str("");
-     data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau/"<<i<< "/mean/error";
-     solver_output<<alps::make_pvp(data_path.str(),err);
+     //Leo: turn off the F_tau part to save disk space as I do not need it at all
+     //g_name.str(""); g_name<<"f_"<<i;
+     //err = results[g_name.str()].error<std::vector<double> >();
+     //data_path.str("");
+     //data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau/"<<i<< "/mean/error";
+     //solver_output<<alps::make_pvp(data_path.str(),err);
   }
     
   //COVARIANCE
@@ -262,19 +263,20 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
     data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/G_tau/"<<i<< "/mean/covariance";
 
     solver_output<<alps::make_pvp(data_path.str(), data);
-    g_name.str(""); g_name<<"f_"<<i;
-    if (accurate)
-      cov=results[g_name.str()].accurate_covariance<std::vector<double> >(results[g_name.str()]);
-    else
-      cov=results[g_name.str()].covariance<std::vector<double> >(results[g_name.str()]);      
-    for(std::size_t t1=0; t1<=N_t; t1++)
-      for(std::size_t t2=0; t2<=N_t; t2++)
-         data[t1*(N_t+1)+t2]=cov(t1,t2);
-      
-    data_path.str("");
-    data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau/"<<i<< "/mean/covariance";
-      
-    solver_output<<alps::make_pvp(data_path.str(), data);
+    //Leo: turn off the F_tau part to save disk space as I do not need it at all
+    //g_name.str(""); g_name<<"f_"<<i;
+    //if (accurate)
+    //  cov=results[g_name.str()].accurate_covariance<std::vector<double> >(results[g_name.str()]);
+    //else
+    //  cov=results[g_name.str()].covariance<std::vector<double> >(results[g_name.str()]);      
+    //for(std::size_t t1=0; t1<=N_t; t1++)
+    //  for(std::size_t t2=0; t2<=N_t; t2++)
+    //     data[t1*(N_t+1)+t2]=cov(t1,t2);
+    //  
+    //data_path.str("");
+    //data_path << boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/F_tau/"<<i<< "/mean/covariance";
+    //  
+    //solver_output<<alps::make_pvp(data_path.str(), data);
   }
 
   if(parms["TEXT_OUTPUT"]|0)
@@ -290,17 +292,18 @@ void evaluate_time(const alps::results_type<hybridization>::type &results,
       G_file<<std::endl;
     }
     G_file.close();
-     std::ofstream F_file("Ft.dat");
-    for(std::size_t t=0;t<=N_t;++t)
-    {
-      F_file<<beta*t/N_t;
-      for(std::size_t j=0;j<n_orbitals;++j)
-      {
-        F_file<<" "<<F_tau(t,0,0,j);
-      }
-      F_file<<std::endl;
-    }
-    F_file.close();
+    //Leo: turn off the F_tau part to save disk space as I do not need it at all
+    // std::ofstream F_file("Ft.dat");
+    //for(std::size_t t=0;t<=N_t;++t)
+    //{
+    //  F_file<<beta*t/N_t;
+    //  for(std::size_t j=0;j<n_orbitals;++j)
+    //  {
+    //    F_file<<" "<<F_tau(t,0,0,j);
+    //  }
+    //  F_file<<std::endl;
+    //}
+    //F_file.close();
   }
 }
 
