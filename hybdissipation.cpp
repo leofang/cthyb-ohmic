@@ -112,17 +112,21 @@ double dissipation_configuration::dissipation_weight_change(const segment &seg, 
        it != local_config.segments_[orbital].end(); ++it)
    {//pair the start and end times of the (anti)segment with other segments
        
+       //c^dagger to c^dagger
        tau = std::abs(seg.t_start_ - it->t_start_);
        J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau);
    
+       //c^dagger to c; note that "it" does not necessarily have the same color at both ends!
        tau = std::abs(seg.t_start_ - it->t_end_);
-       J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau);
+       J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][it->c_end_+n_env_]*phase_correlator_J(tau);
   
+       //c to c^dagger
        tau = std::abs(seg.t_end_ - it->t_start_);
        J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_]*phase_correlator_J(tau); 
   
+       //c to c; note that "it" does not necessarily have the same color at both ends!
        tau = std::abs(seg.t_end_ - it->t_end_);
-       J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_start_+n_env_]*phase_correlator_J(tau); 
+       J-=dissipation_coeff_[orbital][seg.c_start_+n_env_]*dissipation_coeff_[orbital][it->c_end_+n_env_]*phase_correlator_J(tau); 
    }
    //the contribution of the to-be-changed (anti)segment itself
    tau = std::abs(seg.t_start_ - seg.t_end_);
@@ -130,6 +134,8 @@ double dissipation_configuration::dissipation_weight_change(const segment &seg, 
      J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
    else //the contribution is subtracted twice, so add it back once
      J+=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(tau);
+
+   return std::exp(J);
 
 //Leo: bad design when the distance happens to be the same as len
 //   if(insert) //insert a segment or antisegment 
@@ -189,7 +195,6 @@ double dissipation_configuration::dissipation_weight_change(const segment &seg, 
 //     //the contribution of the to-be-moved segment itself
 //     J-=dissipation_coeff_[orbital][seg.c_start_]*dissipation_coeff_[orbital][seg.c_start_+n_env_]*phase_correlator_J(len);
 //   }
-   return std::exp(J);
 }
 
 
