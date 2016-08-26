@@ -314,6 +314,28 @@ if goal == 2:
        #plt.show()
    
 
+       print "interpolating width as a function of temperature..."
+       Gamma_vs_T = "{"
+       for t_counter, T in enumerate(Tvalues):
+          #for Mu_counter, Mu in enumerate(MuValues):
+          #t_counter = Tvalues.tolist().index(T)
+          for orb in range(N_ORBITALS):
+              x=0 # switch
+              for Mu_counter, Mu in enumerate(MuValues):
+                 if values[t_counter][orb][Mu_counter]>0.2 and x==0:
+                     Mu_min = (Mu-Mu_div) + (0.2-values[t_counter][orb][Mu_counter-1])*Mu_div/(values[t_counter][orb][Mu_counter]-values[t_counter][orb][Mu_counter-1])
+                     x+=1
+                 #values[t_counter][orb][Mu_counter]
+              x=0 # switch
+              for Mu_counter, Mu in enumerate(MuValues):
+                 if values[t_counter][orb][Mu_counter]>0.8 and x==0:
+                     Mu_max = (Mu-Mu_div) + (0.8-values[t_counter][orb][Mu_counter-1])*Mu_div/(values[t_counter][orb][Mu_counter]-values[t_counter][orb][Mu_counter-1])
+                     x+=1
+              Gamma_vs_T += "{%.6f, %.3f}"%(T, Mu_max-Mu_min) 
+          if t_counter != len(Tvalues)-1:
+              Gamma_vs_T += ", "
+       Gamma_vs_T += "}" 
+       print Gamma_vs_T
 
 ################################# Working area #################################
 #      input_file = pyalps.writeParameterFile(parms['BASENAME']+'.txt', parms)

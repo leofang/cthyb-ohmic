@@ -45,7 +45,7 @@ dissipation_configuration::dissipation_configuration(const alps::params &p)
   dissipation_=p["Dissipation"]|false;
   //Leo: checks for adding dissipation. These checks cannot be added to sanity_check 
   //     because dissipation_configuration initializes first...
-  if(dissipation_ && !p.defined("r"))
+  if(dissipation_ && (!p.defined("r") || (p.defined("r") && (double)(p["r"])==0.) ))
         throw std::invalid_argument("If the ohmic environment is needed, please give a nonzero value for \"r\", otherwise set Dissipation to 0.");
   if(dissipation_ && !p.defined("C0"))
         throw std::invalid_argument("If the ohmic environment is needed, please give a value for the capacitance ratio \"C0\" in [0,1], otherwise set Dissipation to 0.");

@@ -16,6 +16,8 @@ from hyb_config_v1 import * # read parameters
 
 
 print "Executing " + sys.argv[0] + " to analyze output files..."
+interpolation_order = int(sys.argv[1])
+print "The interpolation order is " + str(interpolation_order) + "."
 initial_dir = os.getcwd()
 
 if 'MuValues' not in locals():
@@ -35,7 +37,7 @@ if U/2. not in MuValues:
 #errors=[[] for u in Uvalues]
 
 for T in Tvalues:
-    sigma_file = open("giwn0_T_%.4f_%s_Barycentric.dat"%(T, output_dir), "w")
+    sigma_file = open("giwn0_T_%.4f_%s_Barycentric_order_%i.dat"%(T, output_dir, interpolation_order), "w")
     for Mu_counter, Mu in enumerate(MuValues):
 #    for Ucounter, U in enumerate(Uvalues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
@@ -104,6 +106,9 @@ for T in Tvalues:
           # positions to inter/extrapolate
           x = np.linspace(0, max(iwn), 3*len(iwn))
           sigma_file.write("%.8f"%(Mu))
+
+          iwn = iwn[0:interpolation_order]
+          giwn = giwn[0:interpolation_order]
 
           # do Barycentric interpolation
           s = BarycentricInterpolator(iwn, giwn)
