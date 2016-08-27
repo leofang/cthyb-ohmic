@@ -195,32 +195,27 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
     }
   }
   
-  //Leo: contraction between the same operators
+  //Leo: contraction between annihilation operators
   for (int i = 0; i < size(); i++) 
   {
     for (int j = 0; j < i; j++) 
     {
-      //contraction between c
       double argument = std::abs(c_times[i] - c_times[j]);
-      //double bubble_sign = sign;
-      //if (argument < 0)
-      //{
-      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
-      //  argument += beta_;
-      //}
  
       for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
       {
         giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
       }
 
-      //contraction between c^dagger
-      argument = std::abs(cdagger_times[i] - cdagger_times[j]);
-      //if (argument < 0)
-      //{
-      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
-      //  argument += beta_;
-      //}
+    }
+  }
+
+  //Leo: contraction between creation operators
+  for (int i = 0; i < size(); i++) 
+  {
+    for (int j = 0; j < i; j++) 
+    {
+      double argument = std::abs(cdagger_times[i] - cdagger_times[j]);
  
       for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
       {
