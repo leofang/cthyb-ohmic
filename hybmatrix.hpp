@@ -86,12 +86,17 @@ public:
   void measure_Gw_buffer(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
   void measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl, const std::map<double,double> &F_prefactor, double sign) const;
-  void measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const;
+  //void measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const;
   void consistency_check() const;
   //Leo: this seems to be necessary when n_env>1
   void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
   int sign() const {return time_ordering_sign_;}    //Leo: access the sign
   inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;}  
+
+  inline void access_cdagger_times(std::vector<double> &cdagger_times) const
+  {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times[it->second] = it->first;}
+  inline void access_c_times(std::vector<double> &c_times) const
+  {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times[it->second] = it->first;}
 
 private:
 

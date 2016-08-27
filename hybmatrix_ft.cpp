@@ -140,92 +140,92 @@ void hybmatrix::measure_G2w(std::vector<std::complex<double> > &G2w, std::vector
 }
 
 
-//Leo: the conductance measurement
-void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const
-{
-  static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
-  static std::vector<double> c_times(size()); c_times.resize(size());
-  //static std::vector<std::complex<double> > cdagger_exp(size()); cdagger_exp.resize(size());
-  //static std::vector<std::complex<double> > c_exp(size()); c_exp.resize(size());
-
-  //create map of creator and annihilator times
-  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) 
-  {
-    c_times[it->second] = it->first;
-  }
-  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) 
-  {
-    cdagger_times[it->second] = it->first;
-  }
-
-
-  //for(int i=0;i<size();++i) { c_exp      [i]=std::exp(std::complex<double>(0,  M_PI*c_times      [i]/beta_)); }
-  //for(int i=0;i<size();++i) { cdagger_exp[i]=std::exp(std::complex<double>(0, -M_PI*cdagger_times[i]/beta_)); }
-
-  //measure the Matsubara conductance g(iwn)=1/wn \int_0^\beta d\tau cos[wn \tau] <T J(\tau)J(0)>
-  //where <T J(\tau)J(0)> = 2 Gd(\tau)\Delta(\beta-\tau)
-  double dwn = 2.*M_PI/beta_; // the basic unit for bosonic Matsubara frequency
-  double bubble_sign = sign;
-  for (int i = 0; i < size(); i++) 
-  {
-    for (int j = 0; j < size(); j++) 
-    {
-      double argument = std::abs(c_times[i] - cdagger_times[j]);
-      //if (argument < 0)
-      //{
-      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
-      //  argument += beta_;
-      //}
-      //double g = -1.* operator() (j, i) * bubble_sign;
-      //double d = -Delta.interpolate(argument, orbital); //Leo: Delta in the code is my -Delta(beta-tau) (TEST!!!)
-      //std::cout << g << ", " << d << ", " << dwn << ", " << giwn.size() << std::endl;
- 
-      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-      {
-        //giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-        giwn[n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-
-        //std::cout << giwn[n] << " ";
-        //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
-        //double meas = -M_ji/beta_;
-        //giwn[wn] += meas;
-        //exp*=dexp;
-      }
-      //std::cout << std::endl << "******************* one measurement done *******************"<< std::endl;
-    }
-  }
-  
-  //Leo: contraction between the same operators
-  for (int i = 0; i < size(); i++) 
-  {
-    for (int j = 0; j < i; j++) 
-    {
-      //contraction between c
-      double argument = std::abs(c_times[i] - c_times[j]);
-      //double bubble_sign = sign;
-      //if (argument < 0)
-      //{
-      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
-      //  argument += beta_;
-      //}
- 
-      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-      {
-        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-      }
-
-      //contraction between c^dagger
-      argument = std::abs(cdagger_times[i] - cdagger_times[j]);
-      //if (argument < 0)
-      //{
-      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
-      //  argument += beta_;
-      //}
- 
-      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-      {
-        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-      }
-    }
-  }
-}
+////Leo: the conductance measurement
+//void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const
+//{
+//  static std::vector<double> cdagger_times(size()); cdagger_times.resize(size());
+//  static std::vector<double> c_times(size()); c_times.resize(size());
+//  //static std::vector<std::complex<double> > cdagger_exp(size()); cdagger_exp.resize(size());
+//  //static std::vector<std::complex<double> > c_exp(size()); c_exp.resize(size());
+//
+//  //create map of creator and annihilator times
+//  for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) 
+//  {
+//    c_times[it->second] = it->first;
+//  }
+//  for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) 
+//  {
+//    cdagger_times[it->second] = it->first;
+//  }
+//
+//
+//  //for(int i=0;i<size();++i) { c_exp      [i]=std::exp(std::complex<double>(0,  M_PI*c_times      [i]/beta_)); }
+//  //for(int i=0;i<size();++i) { cdagger_exp[i]=std::exp(std::complex<double>(0, -M_PI*cdagger_times[i]/beta_)); }
+//
+//  //measure the Matsubara conductance g(iwn)=1/wn \int_0^\beta d\tau cos[wn \tau] <T J(\tau)J(0)>
+//  //where <T J(\tau)J(0)> = 2 Gd(\tau)\Delta(\beta-\tau)
+//  double dwn = 2.*M_PI/beta_; // the basic unit for bosonic Matsubara frequency
+//  double bubble_sign = sign;
+//  for (int i = 0; i < size(); i++) 
+//  {
+//    for (int j = 0; j < size(); j++) 
+//    {
+//      double argument = std::abs(c_times[i] - cdagger_times[j]);
+//      //if (argument < 0)
+//      //{
+//      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
+//      //  argument += beta_;
+//      //}
+//      //double g = -1.* operator() (j, i) * bubble_sign;
+//      //double d = -Delta.interpolate(argument, orbital); //Leo: Delta in the code is my -Delta(beta-tau) (TEST!!!)
+//      //std::cout << g << ", " << d << ", " << dwn << ", " << giwn.size() << std::endl;
+// 
+//      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//      {
+//        //giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+//        giwn[n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+//
+//        //std::cout << giwn[n] << " ";
+//        //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
+//        //double meas = -M_ji/beta_;
+//        //giwn[wn] += meas;
+//        //exp*=dexp;
+//      }
+//      //std::cout << std::endl << "******************* one measurement done *******************"<< std::endl;
+//    }
+//  }
+//  
+//  //Leo: contraction between the same operators
+//  for (int i = 0; i < size(); i++) 
+//  {
+//    for (int j = 0; j < i; j++) 
+//    {
+//      //contraction between c
+//      double argument = std::abs(c_times[i] - c_times[j]);
+//      //double bubble_sign = sign;
+//      //if (argument < 0)
+//      //{
+//      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
+//      //  argument += beta_;
+//      //}
+// 
+//      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//      {
+//        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+//      }
+//
+//      //contraction between c^dagger
+//      argument = std::abs(cdagger_times[i] - cdagger_times[j]);
+//      //if (argument < 0)
+//      //{
+//      //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
+//      //  argument += beta_;
+//      //}
+// 
+//      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//      {
+//        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+//      }
+//    }
+//  }
+//}

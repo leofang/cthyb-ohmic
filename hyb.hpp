@@ -183,7 +183,7 @@ private:
   std::vector<std::string> gl_names, fl_names;
   std::vector<std::vector<std::string> > g2wr_names, g2wi_names, h2wr_names, h2wi_names;
   std::vector<std::vector<std::string> > nnt_names, nnw_re_names, nn_names;
-  std::vector<std::vector<std::string> > giwn_names; //Leo: for conductance measurement
+  std::vector<std::string> giwn_names; //Leo: for conductance measurement
 
   //measurement vectors (initialized first time in create_measurements() )
   double sgn;
@@ -211,7 +211,7 @@ private:
   std::vector<double>g2wi;
   std::vector<double>h2wr;
   std::vector<double>h2wi;
-  std::vector<std::vector<std::vector<double> > > giwn; //Leo: for conductance measurement; dim: (N_ORBITALS, N_ENV, N_W)
+  std::vector<std::vector<double> > giwn; //Leo: for conductance measurement; dim: (N_ORBITALS, N_W)
 
   std::vector<std::map<double,double> > F_prefactor;
   double dissipation_weight_ratio; //Leo: record the weight change when the proposed configuration is successfully updated

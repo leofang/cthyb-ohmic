@@ -96,14 +96,14 @@ public:
   void measure_Gw(std::vector<std::vector<double> > &Gwr,std::vector<std::vector<double> > &Gwi,std::vector<std::vector<double> > &Fwr,std::vector<std::vector<double> > &Fwi, const std::vector<std::map<double,double> > &F_prefactor, double sign) const;
   void measure_G2w(std::vector<std::vector<std::complex<double> > > &G2w, std::vector<std::vector<std::complex<double> > > &F2w, int N_w2, int N_w_aux, const std::vector<std::map<double,double> > &F_prefactor) const;
   void measure_Gl(std::vector<std::vector<double> > &Gl,std::vector<std::vector<double> > &Fl, const std::vector<std::map<double,double> > &F_prefactor, double sign) const;
-  void measure_conductance(std::vector<std::vector<std::vector<double> > > &giwn, double sign) const; //Leo: conductance measurement
+  void measure_conductance(std::vector<std::vector<double> > &giwn, double sign) const; //Leo: conductance measurement
   double full_weight() const;
 
   friend std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);
 
 private:
-  //Leo: number of reservoirs
-  int n_env_;
+  int n_env_; //Leo: number of reservoirs
+  double beta_; //Leo: for conductance measurement
   //the hybridization function Delta
   //Leo: to accomodate multiple reservoirs, this object should be vectorized with dimension N_ENV
   std::vector<hybfun> Delta;

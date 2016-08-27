@@ -89,19 +89,15 @@ void hybridization::create_measurements()
     measurements << obs_t(color_name.str(),NUM_BINS_CONSTRUCTOR_ARG);
   }
 
-  //Leo: for conductance measurement (for every orbital and color)
+  //Leo: for conductance measurement (for every orbital)
   if (MEASURE_conductance)
   {
-     giwn_names.resize(n_orbitals);
      giwn.resize(n_orbitals);
      for (int i=0; i<n_orbitals; i++)
      {
-        giwn[i].resize(n_env, std::vector<double>(N_W, 0.));
-        for (int j=0; j<n_env; j++)
-        {
-           std::stringstream giwn_name; giwn_name << "giwn_" << i << "_" << j; giwn_names[i].push_back(giwn_name.str());
-           measurements << vec_obs_t(giwn_name.str(), NUM_BINS_CONSTRUCTOR_ARG); 
-        }
+        giwn[i].resize(N_W, 0.);
+        std::stringstream giwn_name; giwn_name << "giwn_" << i; giwn_names.push_back(giwn_name.str());
+        measurements << vec_obs_t(giwn_name.str(), NUM_BINS_CONSTRUCTOR_ARG); 
      }
   }
 
@@ -369,12 +365,9 @@ void hybridization::accumulate_conductance()
   if(!MEASURE_conductance) return;
   for(std::size_t i=0;i<n_orbitals;++i)
   {
-    for(std::size_t j=0; j<n_env; ++j) 
-    {
        //measurements[giwn_names[i][j]] << (N_t*giwn[i][j]/(beta*beta));
-       measurements[giwn_names[i][j]] << (giwn[i][j]/(beta));
-       memset(&(giwn[i][j][0]), 0, sizeof(double)*giwn[i][j].size());
-    }
+       measurements[giwn_names[i]] << (giwn[i]/(beta));
+       memset(&(giwn[i][0]), 0, sizeof(double)*giwn[i].size());
   }
 }
 
