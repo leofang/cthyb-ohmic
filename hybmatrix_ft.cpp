@@ -170,7 +170,7 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
   {
     for (int j = 0; j < size(); j++) 
     {
-      double argument = std::abs(c_times[i] - cdagger_times[j]);
+      double argument = c_times[i] - cdagger_times[j];
       //if (argument < 0)
       //{
       //  //bubble_sign *=-1.; //Leo: just a guess: this is a bosonic quantity, so no sign problem
@@ -180,31 +180,52 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
       //double d = -Delta.interpolate(argument, orbital); //Leo: Delta in the code is my -Delta(beta-tau) (TEST!!!)
       //std::cout << g << ", " << d << ", " << dwn << ", " << giwn.size() << std::endl;
  
-      for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-      {
-        //giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-        giwn[n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
-
-        //std::cout << giwn[n] << " ";
-        //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
-        //double meas = -M_ji/beta_;
-        //giwn[wn] += meas;
-        //exp*=dexp;
-      }
+      //if(argument < 0)
+      //{
+         for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+         {
+           //giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+           giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+   
+           //std::cout << giwn[n] << " ";
+           //std::complex<double> meas = -M_ji*std::exp(std::complex<double>(0,(2.*wn+1)*M_PI/beta_*(c_times[i]-cdagger_times[j])))/beta_;
+           //double meas = -M_ji/beta_;
+           //giwn[wn] += meas;
+           //exp*=dexp;
+         }
+      //}
       //std::cout << std::endl << "******************* one measurement done *******************"<< std::endl;
+    }
+  }
+
+  for (int i = 0; i < size(); i++) 
+  {
+    for (int j = 0; j < size(); j++) 
+    {
+      double argument = cdagger_times[i] - c_times[j];
+ 
+      //if(argument < 0)
+      //{
+         for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+         {
+           //giwn[n-1] += 2.* g * d * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+           giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+   
+         }
+      //}
     }
   }
   
   //Leo: contraction between annihilation operators
   for (int i = 0; i < size(); i++) 
   {
-    for (int j = 0; j < i; j++) 
+    for (int j = 0; j < size(); j++) 
     {
-      double argument = std::abs(c_times[i] - c_times[j]);
+      double argument = c_times[i] - c_times[j];
  
       for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
       {
-        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+        giwn[n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
       }
 
     }
@@ -213,14 +234,31 @@ void hybmatrix::measure_conductance(std::vector<double> &giwn, double sign, int 
   //Leo: contraction between creation operators
   for (int i = 0; i < size(); i++) 
   {
-    for (int j = 0; j < i; j++) 
+    for (int j = 0; j < size(); j++) 
     {
-      double argument = std::abs(cdagger_times[i] - cdagger_times[j]);
+      double argument = cdagger_times[i] - cdagger_times[j];
  
       for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
       {
-        giwn[n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+        giwn[n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
       }
     }
   }
+//
+//  //Leo: tau=0 part
+//  if(size()!=0)
+//  {
+//    for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//    {
+//      giwn[n-1] -= bubble_sign*size()/(n*dwn); // Note how the vector index is shifted to avoid evaluating wn=0
+//    }
+//  }
+//
+//  //normalization
+//  if(size()!=0)
+//  {
+//    for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//       giwn[n-1] *= (double)size(); 
+//  }
+
 }
