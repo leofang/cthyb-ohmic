@@ -780,6 +780,7 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
                    alps::hdf5::archive &solver_output){
 
   if(!(parms["MEASURE_conductance"]|false)) return;
+
   //evaluate Matsubara conductance g(iwn)
   double beta = parms["BETA"];
   std::size_t N_W=parms["N_W"];
@@ -788,11 +789,11 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
   std::size_t n_sites = 1;
 
   //Leo: use itime_green_function_t as the vector container for simplicity 
-  itime_green_function_t g_iwn(N_W, n_sites, 1);
+  itime_green_function_t g_iwn(N_W, n_sites, n_env);
 
-  //Leo: the Matsubara conductance has contributions from all orbitals
-  std::vector<std::vector<double> > giwn_temp(n_orbitals);
-  for(std::size_t i=0; i<n_orbitals; ++i)
+  //Leo: the Matsubara conductance is measured at different leads
+  std::vector<std::vector<double> > giwn_temp(n_env);
+  for(std::size_t i=0; i<n_env; ++i)
   {
      std::stringstream giwn_name; giwn_name << "giwn_" << i;
      giwn_temp[i]=results[giwn_name.str()].mean<std::vector<double> >();
@@ -800,15 +801,14 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
      //for(std::vector<double>::const_iterator it = giwn_temp[i].begin(); it!=giwn_temp[i].end(); it++)
      //   std::cout << *it << " ";
      //std::cout << std::endl;
+//  std::vector<double> giwn(giwn_temp[0].size(), 0.); //total conductance
+//  for(int i=0; i<n_orbitals; ++i)  //sum over all orbitals i
+//      std::transform (giwn.begin(), giwn.end(), giwn_temp[i].begin(), giwn.begin(), std::plus<double>());
+     for(std::size_t w=0; w<N_W; ++w) //giwn is of size N_W
+     {
+       g_iwn(w,0,0,i)=giwn_temp[i][w];
+     }
   }
-  std::vector<double> giwn(giwn_temp[0].size(), 0.); //total conductance
-  for(int i=0; i<n_orbitals; ++i)  //sum over all orbitals i
-      std::transform (giwn.begin(), giwn.end(), giwn_temp[i].begin(), giwn.begin(), std::plus<double>());
-  for(std::size_t w=0; w<N_W; ++w) //giwn is of size N_W
-  {
-    g_iwn(w,0,0,0)=giwn[w];
-  }
-
 //  //////////// post processing; data stored in "/giwn/" //////////// 
 //  //store in hdf5
 //  g_iwn.write_hdf5(solver_output, boost::lexical_cast<std::string>(parms["BASEPATH"]|"")+"/giwn");
@@ -842,7 +842,10 @@ void evaluate_conductance(const alps::results_type<hybridization>::type &results
       for(std::size_t n=1; n<N_W+1; ++n) //g_iwn is of size N_W
       {
         giwn_file << 2.*n*M_PI/beta; //bosonic Matsubara frequency
-        giwn_file << " " << g_iwn(n-1,0,0,0);
+        for(std::size_t j=0; j<n_env; ++j)
+        {
+          giwn_file << " " << g_iwn(n-1,0,0,j);
+        }
         giwn_file << std::endl;
       }
       giwn_file.close();

@@ -94,9 +94,9 @@ public:
   inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;}  
 
   inline void access_cdagger_times(std::vector<double> &cdagger_times) const
-  {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times[it->second] = it->first;}
+  {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times.push_back(it->first);}
   inline void access_c_times(std::vector<double> &c_times) const
-  {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times[it->second] = it->first;}
+  {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times.push_back(it->first);}
 
 private:
 

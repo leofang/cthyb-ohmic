@@ -300,82 +300,156 @@ void hybridization_configuration::measure_conductance(std::vector<std::vector<do
   double dwn = 2.*M_PI/beta_; // the basic unit for bosonic Matsubara frequency
   double bubble_sign = sign;
 
+  static std::vector<std::vector<double> > cdagger_times(n_env_); 
+  static std::vector<std::vector<double> > c_times(n_env_); 
+
+  for(std::size_t color=0; color<n_env_; color++)
+  {
+      //reset
+      cdagger_times[color].clear();
+      c_times[color].clear();
+  }
+
+  //loop over all orbitals and colors to obtain the insert/remove times
   for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
   {
      //loop over all colors
-     for(int color_i=0; color_i<hybmat_[orbital].size(); color_i++) //color_i for the color of cdagger
+     for(std::size_t color=0; color<hybmat_[orbital].size(); color++)
      {
-         for(int color_j=0; color_j<hybmat_[orbital].size(); color_j++) //color_j for the color of c
-         {
-             static std::vector<double> cdagger_times(hybmat_[orbital][color_i].size()); 
-             cdagger_times.resize(hybmat_[orbital][color_i].size());
-
-             static std::vector<double> c_times(hybmat_[orbital][color_j].size()); 
-             c_times.resize(hybmat_[orbital][color_j].size());
- 
-             //create map of creator times (for color i) and annihilator times (for color j)
-             hybmat_[orbital][color_i].access_cdagger_times(cdagger_times);
-             hybmat_[orbital][color_j].access_c_times(c_times);
-      
-             //loop over all pairs of c and c^dagger
-             for (int i = 0; i < hybmat_[orbital][color_i].size(); i++) // i for cdagger
-             {
-                 for (int j = 0; j < hybmat_[orbital][color_j].size(); j++) // j for c
-                 {
-                     double argument = std::abs(c_times[j] - cdagger_times[i]);
-                     for(std::size_t n=1; n<giwn[orbital].size()+1; n++) // The giwn vector is of size N_W.
-                     {
-                       if(color_i == color_j)
-                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn);
-                       else
-                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn);
-                     }
-                 }
-             }
- 
-             //create map of creator times (for color j) and annihilator times (for color i)
-             static std::vector<double> cdagger_times2(hybmat_[orbital][color_j].size()); 
-             cdagger_times2.resize(hybmat_[orbital][color_j].size());
-
-             static std::vector<double> c_times2(hybmat_[orbital][color_i].size()); 
-             c_times2.resize(hybmat_[orbital][color_i].size());
-
-             hybmat_[orbital][color_j].access_cdagger_times(cdagger_times2);
-             hybmat_[orbital][color_i].access_c_times(c_times2);
-
-             //loop over all pairs of c-c and c^dagger-c^dagger
-             for (int i = 0; i < hybmat_[orbital][color_i].size(); i++)
-             {
-       	         for (int j = 0; j < hybmat_[orbital][color_j].size(); j++) 
-                 {
-                     //contraction between c
-                     double argument = std::abs(c_times2[i] - c_times[j]);
-                     for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-                     {
-                       if(color_i == color_j && i<j) //prevent repetitive counts
-                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
-                       else if (color_i < color_j) //prevent repetitive counts
-                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
-		       else
- 			   continue;
-                     }
-                 
-                     //contraction between c^dagger
-                     argument = std::abs(cdagger_times[i] - cdagger_times2[j]);
-                     for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
-                     {
-                       if(color_i == color_j && i<j) //prevent repetitive counts
-                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
-                       else if (color_i < color_j) //prevent repetitive counts
-                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
-		       else
- 			   continue;
-                     }
-                 }
-             }
-         }
+         hybmat_[orbital][color].access_cdagger_times(cdagger_times[color]);
+         hybmat_[orbital][color].access_c_times(c_times[color]);
      }
   }
+
+  for(std::size_t color=0; color<n_env_; color++)
+  {
+      //a quick check
+      if(cdagger_times[color].size() != c_times[color].size())
+         throw std::runtime_error("hybridization_configuration::measure_conductance: vector size do not match, abort!");
+
+      for(std::size_t i=0; i<cdagger_times[color].size(); i++)
+      {
+          for(std::size_t j=0; j<c_times[color].size(); j++)
+          {
+              double argument = c_times[color][i] - cdagger_times[color][j];
+              for(std::size_t n=1; n<giwn[color].size()+1; n++) // The giwn vector is of size N_W.
+              {
+                giwn[color][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+              }
+        
+              argument = cdagger_times[color][i] - c_times[color][j];
+              for(std::size_t n=1; n<giwn[color].size()+1; n++) // The giwn vector is of size N_W.
+              {
+                giwn[color][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+              }
+          }
+      }
+
+      //contraction between annihilation operators
+      for(std::size_t i=0; i<c_times[color].size(); i++)
+      {
+          for(std::size_t j=0; j<c_times[color].size(); j++)
+          {
+              //Leo: contraction between annihilation operators
+              double argument = c_times[color][i] - c_times[color][j];
+              for(std::size_t n=1; n<giwn[color].size()+1; n++) // The giwn vector is of size N_W.
+              {
+                giwn[color][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+              }
+          }
+      }
+
+      //contraction between creation operators
+      for(std::size_t i=0; i<cdagger_times[color].size(); i++)
+      {
+          for(std::size_t j=0; j<cdagger_times[color].size(); j++)
+          {
+              double argument = cdagger_times[color][i] - cdagger_times[color][j];
+              for(std::size_t n=1; n<giwn[color].size()+1; n++) // The giwn vector is of size N_W.
+              {
+                giwn[color][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+              }
+          }
+      }
+  }
+
+
+//  for(std::size_t orbital=0; orbital<hybmat_.size(); ++orbital)
+//  {
+//     //loop over all colors
+//     for(int color_i=0; color_i<hybmat_[orbital].size(); color_i++) //color_i for the color of cdagger
+//     {
+//         for(int color_j=0; color_j<hybmat_[orbital].size(); color_j++) //color_j for the color of c
+//         {
+//             static std::vector<double> cdagger_times(hybmat_[orbital][color_i].size()); 
+//             cdagger_times.resize(hybmat_[orbital][color_i].size());
+//
+//             static std::vector<double> c_times(hybmat_[orbital][color_j].size()); 
+//             c_times.resize(hybmat_[orbital][color_j].size());
+// 
+//             //create map of creator times (for color i) and annihilator times (for color j)
+//             hybmat_[orbital][color_i].access_cdagger_times(cdagger_times);
+//             hybmat_[orbital][color_j].access_c_times(c_times);
+//      
+//             //loop over all pairs of c and c^dagger
+//             for (int i = 0; i < hybmat_[orbital][color_i].size(); i++) // i for cdagger
+//             {
+//                 for (int j = 0; j < hybmat_[orbital][color_j].size(); j++) // j for c
+//                 {
+//                     double argument = std::abs(c_times[j] - cdagger_times[i]);
+//                     for(std::size_t n=1; n<giwn[orbital].size()+1; n++) // The giwn vector is of size N_W.
+//                     {
+//                       if(color_i == color_j)
+//                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn);
+//                       else
+//                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn);
+//                     }
+//                 }
+//             }
+// 
+//             //create map of creator times (for color j) and annihilator times (for color i)
+//             static std::vector<double> cdagger_times2(hybmat_[orbital][color_j].size()); 
+//             cdagger_times2.resize(hybmat_[orbital][color_j].size());
+//
+//             static std::vector<double> c_times2(hybmat_[orbital][color_i].size()); 
+//             c_times2.resize(hybmat_[orbital][color_i].size());
+//
+//             hybmat_[orbital][color_j].access_cdagger_times(cdagger_times2);
+//             hybmat_[orbital][color_i].access_c_times(c_times2);
+//
+//             //loop over all pairs of c-c and c^dagger-c^dagger
+//             for (int i = 0; i < hybmat_[orbital][color_i].size(); i++)
+//             {
+//       	         for (int j = 0; j < hybmat_[orbital][color_j].size(); j++) 
+//                 {
+//                     //contraction between c
+//                     double argument = std::abs(c_times2[i] - c_times[j]);
+//                     for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//                     {
+//                       if(color_i == color_j && i<j) //prevent repetitive counts
+//                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+//                       else if (color_i < color_j) //prevent repetitive counts
+//                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+//		       else
+// 			   continue;
+//                     }
+//                 
+//                     //contraction between c^dagger
+//                     argument = std::abs(cdagger_times[i] - cdagger_times2[j]);
+//                     for(std::size_t n=1; n<giwn.size()+1; n++) // The giwn vector is of size N_W.
+//                     {
+//                       if(color_i == color_j && i<j) //prevent repetitive counts
+//                           giwn[orbital][n-1] -= bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+//                       else if (color_i < color_j) //prevent repetitive counts
+//                           giwn[orbital][n-1] += bubble_sign * std::cos(n*dwn*argument)/(n*dwn); 
+//		       else
+// 			   continue;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//  }
 }
 
 

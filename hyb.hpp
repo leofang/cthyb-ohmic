@@ -211,7 +211,7 @@ private:
   std::vector<double>g2wi;
   std::vector<double>h2wr;
   std::vector<double>h2wi;
-  std::vector<std::vector<double> > giwn; //Leo: for conductance measurement; dim: (N_ORBITALS, N_W)
+  std::vector<std::vector<double> > giwn; //Leo: for conductance measurement; dim: (N_ENV, N_W)
 
   std::vector<std::map<double,double> > F_prefactor;
   double dissipation_weight_ratio; //Leo: record the weight change when the proposed configuration is successfully updated

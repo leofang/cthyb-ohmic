@@ -89,11 +89,11 @@ void hybridization::create_measurements()
     measurements << obs_t(color_name.str(),NUM_BINS_CONSTRUCTOR_ARG);
   }
 
-  //Leo: for conductance measurement (for every orbital)
+  //Leo: for conductance measurement (for every color)
   if (MEASURE_conductance)
   {
-     giwn.resize(n_orbitals);
-     for (int i=0; i<n_orbitals; i++)
+     giwn.resize(n_env);
+     for (int i=0; i<n_env; i++)
      {
         giwn[i].resize(N_W, 0.);
         std::stringstream giwn_name; giwn_name << "giwn_" << i; giwn_names.push_back(giwn_name.str());
@@ -363,7 +363,7 @@ void hybridization::measure_conductance()
 void hybridization::accumulate_conductance()
 {
   if(!MEASURE_conductance) return;
-  for(std::size_t i=0;i<n_orbitals;++i)
+  for(std::size_t i=0; i<n_env; ++i)
   {
        //measurements[giwn_names[i][j]] << (N_t*giwn[i][j]/(beta*beta));
        measurements[giwn_names[i]] << (giwn[i]/(beta));
