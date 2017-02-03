@@ -32,12 +32,13 @@
 //#include "combinatorial.hpp" //Leo: test!!!!!!!!!!!!!
 
 //this is the heart of the Monte Carlo procedure: we have the following updates:
-//1: change the zero order state, swap an empty orbital versus a filled one (8% or 10%)
+//1: change the zero order state, swap an empty orbital versus a filled one (5% or 10%)
 //2: shift an existing segment start- or end-point (not implemented)
 //3: insert or remove a new segment (40% or 50%)
 //4: insert or remove an anti-segment (30% or 40%)
 //5: perform a segment flip between different orbtials (20%)
-//6: perform a global exchange of two orbitals (2%)
+//7. perform a global color flip in a given orbital (5%) (added by Leo)
+//6: perform a global exchange of two orbitals (disabled by Leo)
 //see our review for details of these updates
 
 void hybridization::update()
@@ -54,13 +55,15 @@ void hybridization::update()
     //color_updated = false;
 
     //Leo: Disable global_flip_update because it's too painful to modify it;
-    //     besides, this update is removed in the GitHub version (don't know why).
-//    if (update_type < 0.02 && global_flip)
-//    {
-//      global_flip_update();
-//    } 
-//    else if (update_type<0.1) 
-    if (update_type<0.1)
+    //     use this slot to perform color flip update
+    //if (update_type < 0.02 && global_flip)
+    if (update_type < 0.05 && color_flip)
+    {
+      //global_flip_update();
+      color_flip_update();
+    } 
+    else if (update_type<0.1) 
+//    if (update_type<0.1)
     {
       change_zero_order_state_update();
 //    } else if (update_type < 0) {
@@ -411,6 +414,84 @@ void hybridization::insert_remove_spin_flip_update()
 
   spin_flip_update(orbital);
 }
+
+
+void hybridization::color_flip_update()
+{
+  //choose the orbital in which we do the update
+  int orbital=(int)(random()*n_orbitals);
+
+  color_flip_update(orbital);
+}
+
+
+//Leo: experimental global color flipping in a randomly chosen orbital
+//Notes:
+//1. currently only two colors are supported, so this part should be extended in the future //TODO
+//2. local weight will not be affected by this update
+void hybridization::color_flip_update(int orbital)
+{
+  nprop[7]++;
+
+  if( local_config.order(orbital)==0 ) return; //no segment for flipping
+  
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
+  std::size_t color_1 = (int)(random()*n_env);
+  std::size_t color_2 = (color_1 ? 0 : 1); //TODO: change this line for more colors
+
+  //compute hybridization weight change
+  double hybridization_weight_change = hyb_config.hyb_weight_change_flip(orbital, color_1, color_2);
+
+  //compute the dissipation weight change
+  double dissipation_weight_change = ohmic_config.color_flip_weight_change(orbital, color_1, color_2, local_config);
+  
+  //perform metropolis
+  double weight_change = hybridization_weight_change * dissipation_weight_change;
+
+  if(std::abs(weight_change)>random())
+  {
+    nacc[7]++;
+    if(weight_change < 0) sign*=-1.;
+    local_config.flip_color(orbital, color_1, color_2); 
+    int color_diff = hyb_config.flip_color(orbital, color_1, color_2); //return (old) size1-size2
+    dissipation_weight_ratio = dissipation_weight_change; //TODO: check if necessary
+
+    //Leo: record the updated color 
+    //color = color_temp;
+    updated_colors[(color_diff > 0 ? color_2 : color_1)]++; //increase the count only on one color; no need to worry about
+    ncolor[(color_diff > 0 ? color_2 : color_1)]++;         //imbalance in principle because the color is randomly chosen
+    //updated_colors[color_1] += abs(color_diff);
+    //updated_colors[color_2] += abs(color_diff);
+    //ncolor[color_1] += abs(color_diff);
+    //ncolor[color_2] += abs(color_diff);
+    ncolor_diff[color_1] -= color_diff;  //Leo: + for insertion, - for removal 
+    ncolor_diff[color_2] += color_diff;  //Leo: + for insertion, - for removal 
+
+    /* Leo Fang: for test purpose, print out a lot of things... */
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+       debug_output(7, 0, hybridization_weight_change, dissipation_weight_change, 0); 
+//       check_consistency();
+//       std::cout << std::endl;    
+//
+//       hyb_config.haunt_missing_sign(orbital);
+//
+//       int number_segments = 0;
+//       int number_antisegments = 0;
+//       for(int i=0; i<n_env; i++)
+//       {
+//           number_segments += n_segments_temp[i];
+//           number_antisegments += n_segments_temp[i+n_env];
+//       }
+//       if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
+//         std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." << std::endl;
+    }
+    //check_consistency();
+    //std::cout << std::endl;    
+  }
+}
+
 
 
 void hybridization::insert_segment_update(int orbital)

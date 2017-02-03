@@ -67,6 +67,13 @@ public:
     } else values_=0;
   }
 
+  //Leo: copy assignment constructor
+  blas_matrix & operator=(blas_matrix M)
+  {
+     std::swap(*this, M);
+     return *this;
+  }
+
   inline double &operator()(const fortran_int_t i, const fortran_int_t j){return *(values_+(i*memory_size_+j));}
   inline const double &operator()(const fortran_int_t i, const fortran_int_t j) const {return *(values_+(i*memory_size_+j));}
   //blas_matrix size
@@ -310,11 +317,13 @@ public:
       }
     }
   }
+
 private:
   fortran_int_t size_; //current size of blas_matrix
   fortran_int_t memory_size_; //current size of blas_matrix
   double *values_; //where the actual values are stored
 };
+
 
 /*inline vector operator*(const blas_matrix &M, const vector &v1){
   assert(v1.size()==M.size());

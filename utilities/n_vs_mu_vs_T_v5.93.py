@@ -99,6 +99,8 @@ if goal == 1:
           for i in [6, 7, 8, 9]:
               requirement += "(TARGET.Machine == \"nano0%i.internal.phy.duke.edu\")" %i
               requirement = (requirement+")" if i==9 else requirement+" || ")
+       # my code can only run on SL6 machines since the condor was back online on Sep 21, 2016 
+       requirement += "&& OPSYSMAJORVER == 6" 
        f.write(requirement+")\n")
        #f.write("request_memory = 50\n")
        f.write("getenv=True\n") # important for finding shared libraries!
@@ -177,7 +179,7 @@ for T in Tvalues:
                    'SEED'               : SEED,                               
                    'N_MEAS'             : N_MEAS,      
                    'N_ORBITALS'         : N_ORBITALS,  
-                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(1/T, Mu, U), # base name of the h5 output file
+                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.3f_U_%.3f"%(1./T, Mu, U), # base name of the h5 output file
                    'MAX_TIME'           : MAX_TIME,                         
                    'VERBOSE'            : 0,                            
                    'VERY_VERBOSE'       : VERY_VERBOSE,
@@ -186,6 +188,9 @@ for T in Tvalues:
                    'SPINFLIP'           : SPINFLIP,
                    'Dissipation'        : Dissipation, # trun dissipation on or off 
                    'N_W'                : N_W,   # =1 for static susceptibility chi(0) 
+                   'COLORFLIP'          : COLORFLIP,  # color flip update
+                   'V0'                 : V[0],       # hybridization strength of lead 0
+                   'V1'                 : V[1],       # hybridization strength of lead 1
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
     #               'DELTA1'		    : "delta-01.dat",
@@ -197,7 +202,7 @@ for T in Tvalues:
                    # physical parameters
                    'U'                  : U,                               
                    'MU'                 : Mu,                            
-                   'BETA'               : 1/T, # inverse temperature 
+                   'BETA'               : 1./T, # inverse temperature 
                    'T'			: T,   # temperature              
                    'r'                  : r,   # dissipation strength
                    'C0'                 : C0,  # dissipation capacitance
@@ -208,7 +213,7 @@ for T in Tvalues:
                    # measurement parameters
                    'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,           
                    'N_TAU'              : N_TAU,      
-                   'N_MATSUBARA'        : int(N_TAU/(2*pi)), # number of Matsubara frequencies
+                   'N_MATSUBARA'        : N_MATSUBARA, # number of Matsubara frequencies
                    #'N_W'                   : 1, # number of bosonic Matsubara frequencies for the local susceptibility
                    # additional parameters (used outside the solver only)
                    't'                  : W,   # hopping strength/bandwidth

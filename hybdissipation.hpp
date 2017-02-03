@@ -54,6 +54,7 @@ public:
   dissipation_configuration(const alps::params &p);
   //friend std::ostream &operator<<(std::ostream &os, const dissipation_configuration &ohmic_conf);
   double dissipation_weight_change(const segment &seg, int orbital, bool insert, const local_configuration &local_conf) const;
+  double color_flip_weight_change(int orbital, size_t color_1, size_t color_2, const local_configuration &local_conf) const;
   //inline void set_weight_change(double i) { weight_change = i; };
   inline double phase_correlator_J(double tau) const;
 

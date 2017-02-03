@@ -1144,4 +1144,31 @@ void local_configuration::check_n_segments_consistency(int orbital) const
 }
 
 
+//Leo: flip the segment colors if the update is accepted
+void local_configuration::flip_color(int orbital, size_t color_1, size_t color_2)
+{
+   for(std::set<segment>::iterator it=segments_[orbital].begin(); it!=segments_[orbital].end(); ++it)
+   {
+      //flip the start color
+      if(it->c_start_ == color_1) 
+	 it->c_start_ = color_2;
+      else if(it->c_start_ == color_2) 
+	 it->c_start_ = color_1;
+      else
+	 ; //do nothing
 
+      //flip the end color
+      if(it->c_end_ == color_1) 
+	 it->c_end_ = color_2;
+      else if(it->c_end_ == color_2) 
+	 it->c_end_ = color_1;
+      else
+	 ; //do nothing
+   }
+   
+   //change n_segments_
+   std::vector<int> new_n_segments = get_n_segments(orbital);
+   std::swap(new_n_segments[color_1], new_n_segments[color_2]);
+   std::swap(new_n_segments[color_1+n_env_], new_n_segments[color_2+n_env_]);
+   set_n_segments(orbital, new_n_segments);
+}

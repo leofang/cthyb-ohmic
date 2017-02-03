@@ -87,6 +87,13 @@ dissipation_configuration::dissipation_configuration(const alps::params &p)
 }
 
 
+//Leo: compute weight change for color flip update
+double dissipation_configuration::color_flip_weight_change(int orbital, size_t color_1, size_t color_2, \
+                                                           const local_configuration &local_conf) const
+{
+   return 1.; //TODO: rewrite here!
+}
+
 
 double dissipation_configuration::dissipation_weight_change(const segment &seg, int orbital, bool insert, 
                                                             const local_configuration &local_config) const

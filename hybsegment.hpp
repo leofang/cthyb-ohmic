@@ -35,7 +35,7 @@ struct segment
 {
   segment(){};
   double t_start_, t_end_;
-  std::size_t c_start_, c_end_; 
+  mutable std::size_t c_start_, c_end_; //Leo: colors are not used in ordering later, so it's OK to remove their const-ness
   segment(double t_start, double t_end){t_start_=t_start; t_end_=t_end;}
 
   /* Leo Fang: label the "color" of c^\dagger and c operators;

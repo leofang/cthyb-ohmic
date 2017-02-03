@@ -8,3 +8,4 @@ Makefile
 cmake_install.cmake
 cthyb_ohmic
 utilities/condor_submit_file
+compile_commands.json

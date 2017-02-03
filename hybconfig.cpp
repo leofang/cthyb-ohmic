@@ -30,9 +30,10 @@
 
 hybridization_configuration::hybridization_configuration(const alps::params &p):
 //  Delta((int)(p["N_ENV"]), p),
-  beta_(p["BETA"]),
   n_env_(p.defined("N_ENV")?(int)p["N_ENV"]:1),
-  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p))
+  beta_(p["BETA"]),
+  hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p)),
+  hyb_strength((int)(p["N_ORBITALS"]), std::vector<double>(n_env_, 0))
 {
   std::cout << "hybridization_configuration is initializing...BETA = " << beta_ << std::endl;
   //n_env_ = (int)p["N_ENV"]|1;
@@ -44,6 +45,23 @@ hybridization_configuration::hybridization_configuration(const alps::params &p):
   //hybmat_((int)(p["N_ORBITALS"]), std::vector<hybmatrix>(n_env_, p));
   std::cout << "Initialize Delta for " << n_env_ << " color(s)..." << std::endl << std::endl;
   initialize_Delta(p);
+
+  //Leo: read hybridization strength
+  //currently each lead is categorized by one number, regardless of orbital  //TODO: extension
+  if(p.defined("COLORFLIP") && (bool)p["COLORFLIP"])
+  {
+     for(size_t j=0; j<n_env_; j++)
+     {
+        std::stringstream index;
+        index << j;
+        std::string temp_para = "V"+index.str();
+        if(!p.defined(temp_para)) //sanity check
+           throw std::runtime_error("Parameter "+temp_para+" is not provided. Abort!");
+
+        for(size_t i=0; i<(size_t)(p["N_ORBITALS"]); i++)
+           hyb_strength[i][j] = (double)p[temp_para];
+     }
+  }
 }
 
 
@@ -229,6 +247,34 @@ void hybridization_configuration::haunt_missing_sign(int orbital)
 }
 
 
+//Leo: calculate the weight change for flipping colors in the selected orbital
+//there's no need to do real matrix calculation here as we store the hybridization strengths
+double hybridization_configuration::hyb_weight_change_flip(int orbital, size_t color_1, size_t color_2)
+{
+   if(hyb_strength[orbital][color_1] == hyb_strength[orbital][color_2])
+      return 1.;
+   else
+   {
+      double size_diff = hybmat_[orbital][color_1].size() - hybmat_[orbital][color_2].size();
+      return std::pow(hyb_strength[orbital][color_1], -size_diff) * std::pow(hyb_strength[orbital][color_2], size_diff);
+   }
+}
+
+
+//Leo: swap two hyb matrices if the color flip update is accepted
+//the return value is the size difference in color matrices
+int hybridization_configuration::flip_color(int orbital, size_t color_1, size_t color_2)
+{
+   //swap the hybmatrix objects
+   swap(hybmat_[orbital][color_1], hybmat_[orbital][color_2]);
+
+   //need to rebuild the matrices based on the c and c^dagger times
+   hybmat_[orbital][color_1].rebuild_hyb_matrix(orbital, Delta[color_1]);
+   hybmat_[orbital][color_2].rebuild_hyb_matrix(orbital, Delta[color_2]);
+
+   //it's actually size(m1-m2)
+   return hybmat_[orbital][color_2].size() - hybmat_[orbital][color_1].size();
+}
 
 
 double hybridization_configuration::hyb_weight_change_insert(const segment &new_segment, int orbital, size_t color)

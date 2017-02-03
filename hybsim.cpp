@@ -45,8 +45,8 @@ ohmic_config(parms)
   show_info(parms,crank);
   
   //initializing general simulation constants
-  nacc.assign(7,0.);
-  nprop.assign(7,0.);
+  nacc.assign(8,0.);
+  nprop.assign(8,0.);
   sweep_count=0;
   output_period=parms["OUTPUT_PERIOD"]|100000;
   //lasttime = boost::chrono::steady_clock::now();
@@ -60,6 +60,7 @@ ohmic_config(parms)
   update_type.push_back("remove anti-segment ");
   update_type.push_back("swap segment        ");
   update_type.push_back("global flip         ");
+  update_type.push_back("color flip          ");
   
   sweeps=0;                                                              //Sweeps currently done
   thermalization_sweeps = parms["THERMALIZATION"];                       //Sweeps to be done for thermalization
@@ -91,7 +92,7 @@ ohmic_config(parms)
   //std::cerr << "NUM_BINS = " << NUM_BINS << std::endl;
   //initializing measurement parameters
   spin_flip = parms["SPINFLIP"]| 0;                                    //whether to perform local spin-flip updates
-  global_flip = parms["GLOBALFLIP"]| 0;                                    //whether to perform global spin-flip updates
+  global_flip = parms["GLOBALFLIP"]| 0;                                //whether to perform global spin-flip updates
   MEASURE_nnt = parms["MEASURE_nnt"]| 0;                               //measure density-density correlation function in imaginary time
   MEASURE_nnw = parms["MEASURE_nnw"]| 0;                               //measure density-density correlation function in frequency
   MEASURE_nn = parms["MEASURE_nn"]|0;                                  //measure density-density correlation function at equal times
@@ -110,8 +111,9 @@ ohmic_config(parms)
   N_W = parms["N_W"]|0;                                                //number of bosonic Matsubara frequency points for two-particle measurements
   N_w_aux = (N_w2+N_W>1 ? N_w2+N_W-1 : 0);                             //number of Matsubara frequency points for the measurment of M(w1,w2)
 
-  debug_number = parms["DEBUGGER"]|5; /* Leo Fang: number for debug purpose */
+  debug_number = parms["DEBUGGER"]|5;   //Leo: number for debug purpose
   Dissipation = parms["Dissipation"]|0; //Leo: whether to turn on the bosonic environment (default is no)
+  color_flip = parms["COLORFLIP"]| 0;   //Leo: whether to perform color-flip updates
   
   //Leo: for debug purpose
 //  if(VERY_VERBOSE) std::cout << "N_ENV: " << n_env << std::endl << std::endl;
@@ -170,6 +172,11 @@ void hybridization::sanity_check(const alps::params &parms)
   if(parms.defined("N_ENV") && parms["N_ENV"].cast<int>()>2)
 	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2. Abort.");
 
+  //Leo: meanless to flip color if there's only one
+  if( (!parms.defined("N_ENV") || (parms.defined("N_ENV") && parms["N_ENV"].cast<int>() == 1)) 
+       && (parms.defined("COLORFLIP") && parms["COLORFLIP"].cast<bool>()) )
+        throw std::invalid_argument("The system has only one color, so COLORFLIP=1 is invalid. Abort.");
+
   //Leo: I'm surprised that this check was omitted...
   if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))
         throw std::invalid_argument("The system has only one orbital, so SPINFLIP=1 is invalid. Abort.");
@@ -214,8 +221,6 @@ void hybridization::sanity_check(const alps::params &parms)
   }
   VERBOSE = (parms["VERBOSE"]|false);
   VERY_VERBOSE = (parms["VERY_VERBOSE"]|false); //Leo: for debug purpose
-  
-  return;
 }
 
 

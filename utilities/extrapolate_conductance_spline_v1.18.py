@@ -37,7 +37,7 @@ if U/2. not in MuValues:
 #errors=[[] for u in Uvalues]
 
 for T in Tvalues:
-    sigma_file = open("giwn0_T_%.4f_%s_Barycentric_order_%i.dat"%(T, output_dir, interpolation_order), "w")
+    sigma_file = open("giwn0_T_%.4f_%s_spline_order_%i_with_min_max_spread.dat"%(T, output_dir, interpolation_order), "w")
     for Mu_counter, Mu in enumerate(MuValues):
 #    for Ucounter, U in enumerate(Uvalues):
           # prepare the input parameters; they can be used inside the script and are passed to the solver
@@ -49,7 +49,7 @@ for T in Tvalues:
                    'SEED'               : SEED,
                    'N_MEAS'             : N_MEAS,
                    'N_ORBITALS'         : N_ORBITALS,  
-                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(W/T, Mu, U), # base name of the h5 output file
+                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.3f_U_%.3f"%(1/T, Mu, U), # base name of the h5 output file
                    'MAX_TIME'           : MAX_TIME,
                    'VERBOSE'            : 0,
                    'VERY_VERBOSE'       : VERY_VERBOSE,
@@ -99,27 +99,31 @@ for T in Tvalues:
                for i in range(N_ENV if "N_ENV" in locals() else 1):
                    values[i].append(float(line.split()[i+1]))
           iwn=np.array(iwn)
-          giwn=np.zeros(len(values[0]))
-          for i in range(N_ENV if "N_ENV" in locals() else 1):
-               giwn = giwn + np.array(values[i])
-
-          # positions to inter/extrapolate
-          x = np.linspace(0, max(iwn), 3*len(iwn))
+#          giwn=np.zeros(len(values[0]))
+#          for i in range(N_ENV if "N_ENV" in locals() else 1):
+#               giwn = giwn + np.array(values[i])
           sigma_file.write("%.8f"%(Mu))
 
           iwn = iwn[0:interpolation_order]
-          giwn = giwn[0:interpolation_order]
+          # positions to inter/extrapolate
+          x = np.linspace(0, max(iwn), 3*len(iwn))
+          for i in range(N_ENV if "N_ENV" in locals() else 1):
+             giwn = np.array(values[i][0:interpolation_order])
 
-          # do Barycentric interpolation
-          s = BarycentricInterpolator(iwn, giwn)
-          y = s(x)
-          sigma_file.write("   %.8f"%(y[0]))
+#             # do Barycentric interpolation
+#             s = BarycentricInterpolator(iwn, giwn)
+#             y = s(x)
+#             sigma_file.write("   %.8f"%(y[0]))
         
-#          # do spline inter/extrapolation
-#          for order in range(5): # 1<=k<=5
-#              s = InterpolatedUnivariateSpline(iwn, giwn, k=order+1) # spline order: 1 linear, 2 quadratic, 3 cubic ...
-#              y = s(x)
-#              sigma_file.write("   %.8f"%(y[0]))
+             # do spline inter/extrapolation
+             a=[]
+             for j in range(5): # 1<=k<=5
+                 s = InterpolatedUnivariateSpline(iwn, giwn, k=j+1) # spline order k: 1 linear, 2 quadratic, 3 cubic ...
+                 y = s(x)
+                 a.append( y[0] )
+             a=np.array(a)
+             sigma_file.write("   %.8f   %.8f   %.8f"%(a.mean(), a.min()-a.mean(), a.max()-a.mean() ))
+#             sigma_file.write("   %.8f   %.8f"%(a.mean(), a.std(ddof=1)/sqrt(len(a))) )
 
           sigma_file.write("\n")
     sigma_file.write("\n")

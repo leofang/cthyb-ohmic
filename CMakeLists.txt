@@ -34,6 +34,9 @@ include(${ALPS_USE_FILE})
 # enable C++ compilers
 enable_language(C CXX)
 
+# generate compilation database for external plugins
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
 # rule for generating 'hello world' program
 #add_executable(hello hello.C)
 #target_link_libraries(hello ${ALPS_LIBRARIES})
@@ -100,6 +103,7 @@ if(LAPACK_FOUND)
 #  target_link_libraries(dmft_qmc_impl alps ${LAPACK_LIBRARY} ${BLAS_LIBRARY} ${ALPS_LIBRARIES})
   add_definitions(${LAPACK_DEFINITIONS} )
 #  include_directories(${PROJECT_SOURCE_DIR}/applications/dmft/qmc)
+#  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 

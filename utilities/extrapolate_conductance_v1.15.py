@@ -49,7 +49,7 @@ for T in Tvalues:
                    'SEED'               : SEED,
                    'N_MEAS'             : N_MEAS,
                    'N_ORBITALS'         : N_ORBITALS,  
-                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.2f_U_%.3f"%(1/T, Mu, U), # base name of the h5 output file
+                   'BASENAME'           : "hyb.param_BETAt%.3f_Mu_%.3f_U_%.3f"%(1/T, Mu, U), # base name of the h5 output file
                    'MAX_TIME'           : MAX_TIME,
                    'VERBOSE'            : 0,
                    'VERY_VERBOSE'       : VERY_VERBOSE,

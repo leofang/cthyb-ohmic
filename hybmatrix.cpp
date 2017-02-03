@@ -47,6 +47,37 @@
 //Leo: c_dagger & c in the code mean the impurity operator, not bath operator!
 
 
+//Leo: for swapping two hybmatrix objects
+void swap(hybmatrix &A, hybmatrix &B)
+{
+   using std::swap;
+
+   //first do the blas_matrix swap
+   static_cast<blas_matrix&>(A).swap( static_cast<blas_matrix&>(B) );
+
+   //then swap other private members in hybmatrix
+   swap(A.cdagger_index_map_  , B.cdagger_index_map_  );
+   swap(A.c_index_map_        , B.c_index_map_        );
+   swap(A.c_cdagger_map_      , B.c_cdagger_map_      );
+   //swap(A.n_env_              , B.n_env_              );
+   swap(A.Q                   , B.Q                   );
+   swap(A.R                   , B.R                   );
+   swap(A.PinvQ               , B.PinvQ               );
+   swap(A.S                   , B.S                   );
+   swap(A.S_tilde_inv         , B.S_tilde_inv         );
+   swap(A.S_tilde             , B.S_tilde             );
+   swap(A.weight_ratio_       , B.weight_ratio_       );
+   swap(A.permutation_sign_   , B.permutation_sign_   );
+   swap(A.time_ordering_sign_ , B.time_ordering_sign_ );
+   swap(A.disordered_times    , B.disordered_times    );
+   swap(A.determinant_        , B.determinant_        );
+   swap(A.determinant_old_    , B.determinant_old_    );
+   //swap(A.beta_               , B.beta_               );
+   //swap(A.measure_g2w_        , B.measure_g2w_        );
+   //swap(A.measure_h2w_        , B.measure_h2w_        );
+}
+
+
 //compute the hybridization weight change when an operator pair is inserted
 double hybmatrix::hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta)
 {
@@ -310,7 +341,11 @@ std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat)
 
 void hybmatrix::rebuild_hyb_matrix(int orbital, const hybfun &Delta)
 {
-  blas_matrix bup(*this);
+  //Leo: this line is commented out as it makes no sense --- why we need a fresh blas_matrix copy here?
+  //blas_matrix bup(*this);
+  
+  if(size()<1) return;
+  
   //build the matrix inverse:
   for(hyb_map_t::const_iterator it_start=c_index_map_.begin(); it_start != c_index_map_.end(); ++it_start)
   {
@@ -391,49 +426,33 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
   hyb_map_t::iterator it_temp;
 
   //swap cdagger
-  for(hyb_map_t::iterator it=cdagger_index_map_.begin(); it!=cdagger_index_map_.end(); ++it)
+  for(hyb_map_t::iterator it=cdagger_index_map_.begin(); it!=cdagger_index_map_.end(); ++it, ++i)
   {
-     if(it->second == i)
+     if(it->second != i)
      {
-        i++; 
-        //continue;
-     }   
-     else
-     {
-        it_temp = it; it_temp++;
-        while(it_temp->second != i)
-        {
-            it_temp++;
-        }
+        it_temp = it; ++it_temp;
+        while(it_temp->second != i) { ++it_temp; }
+
         //swap the values
         it_temp->second = it->second;
         it->second = i;
         counter++;  
-        i++;
      }
   }
 
   //swap c 
   i=0;
-  for(hyb_map_t::iterator it=c_index_map_.begin(); it!=c_index_map_.end(); ++it)
+  for(hyb_map_t::iterator it=c_index_map_.begin(); it!=c_index_map_.end(); ++it, ++i)
   {
-     if(it->second == i)
-     { 
-        i++;
-        //continue;
-     }   
-     else
+     if(it->second != i)
      {
-        it_temp = it; it_temp++;
-        while(it_temp->second != i)
-        {
-            it_temp++;
-        }
+        it_temp = it; ++it_temp;
+        while(it_temp->second != i) { ++it_temp; }
+
         //swap the values
         it_temp->second = it->second;
         it->second = i;
         counter++; 
-        i++; 
      }
   }
   
@@ -678,3 +697,6 @@ void hybmatrix::time_ordering_sign_check(int &time_ordering_sign_, std::set<doub
 //    else
 //        time_ordering_sign_=1*(head?-1:1); 
 }
+
+
+

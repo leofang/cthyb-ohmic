@@ -72,6 +72,7 @@ private:
   bool VERBOSE;
   bool VERY_VERBOSE; //Leo: for debug purpose
   bool Dissipation; //Leo: turn on the ohmic environment
+  bool color_flip;  //Leo: turn on global color flip update
   int crank;
   int csize;
   int output_period;
@@ -114,6 +115,7 @@ private:
   void insert_remove_segment_update();
   void insert_remove_antisegment_update();
   void insert_remove_spin_flip_update();
+  void color_flip_update();
 
   //details of update routines
   void insert_segment_update(int orbital);
@@ -121,6 +123,7 @@ private:
   void insert_antisegment_update(int orbital);
   void remove_antisegment_update(int orbital);
   void spin_flip_update(int orbital);
+  void color_flip_update(int orbital); //Leo: overloaded version
   
   //programming and debug functions
   double full_weight() const;

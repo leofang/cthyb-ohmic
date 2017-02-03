@@ -48,6 +48,7 @@ public:
   time_ordering_sign_=1;      //Leo: 1 means no, -1 means yes
 }
 
+  //Leo: copy constructor
   hybmatrix(const hybmatrix &rhs) 
       :blas_matrix(rhs)
       ,cdagger_index_map_(rhs.cdagger_index_map_)
@@ -70,9 +71,19 @@ public:
       ,measure_g2w_(rhs.measure_g2w_)
       ,measure_h2w_(rhs.measure_h2w_)
   {}
+
+  //Leo: copy assignment operator
+  hybmatrix & operator=(hybmatrix rhs)
+  {
+     std::swap(*this, rhs);
+     return *this;
+  }
+
+  //Leo: destructor
   ~hybmatrix() {
 //    std::cerr << "Deleting hybmatrix\n";
   }
+
   double hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta);
   double hyb_weight_change_remove(const segment &new_segment, int orbital, const hybfun &Delta);
   void insert_segment(const segment &new_segment, int orbital);
@@ -97,6 +108,9 @@ public:
   {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times.push_back(it->first);}
   inline void access_c_times(std::vector<double> &c_times) const
   {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times.push_back(it->first);}
+
+  //Leo: for swapping two hybmatrix objects
+  friend void swap(hybmatrix &A, hybmatrix &B);
 
 private:
 

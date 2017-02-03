@@ -39,7 +39,8 @@ class hybridization_configuration{
 public:
   hybridization_configuration(const alps::params &p);
 
-  hybridization_configuration(const hybridization_configuration &rhs) : Delta(rhs.Delta), hybmat_(rhs.hybmat_) 
+  hybridization_configuration(const hybridization_configuration &rhs) : 
+     n_env_(rhs.n_env_), beta_(rhs.beta_), Delta(rhs.Delta), hybmat_(rhs.hybmat_), hyb_strength(rhs.hyb_strength)
   {
     //std::cerr << hybmat_.size() << std::endl;
     //Leo: double loops to accommodate multiple reservoirs 
@@ -50,18 +51,26 @@ public:
     }
   }
 
-  const hybridization_configuration &operator=(const hybridization_configuration &rhs) 
-  {
-    hybmat_ = rhs.hybmat_;
-    Delta = rhs.Delta;
-    //Leo: double loops to accommodate multiple reservoirs 
-    for (int i=0; i<hybmat_.size(); i++) //N_Orbital
-    {
-	for(int j=0; j<hybmat_[i].size(); j++) //N_ENV
-  	      hybmat_[i][j].rebuild_hyb_matrix(i, Delta[j]);
-    }
-    return *this;
+  //Leo: new copy-assignment operator using the copy-elision-and-swap idiom
+  hybridization_configuration &operator=(hybridization_configuration rhs)        
+  {                                     
+     std::swap(*this, rhs);
+     return *this;         
   }
+
+  //Leo: deprecated copy-assignment operator
+//  const hybridization_configuration &operator=(const hybridization_configuration &rhs) 
+//  {
+//    hybmat_ = rhs.hybmat_;
+//    Delta = rhs.Delta;
+//    //Leo: double loops to accommodate multiple reservoirs 
+//    for (int i=0; i<hybmat_.size(); i++) //N_Orbital
+//    {
+//	for(int j=0; j<hybmat_[i].size(); j++) //N_ENV
+//  	      hybmat_[i][j].rebuild_hyb_matrix(i, Delta[j]);
+//    }
+//    return *this;
+//  }
   
   ~hybridization_configuration() {
 //    std::cerr << "Deleting hybconfig\n";
@@ -85,6 +94,8 @@ public:
   void initialize_Delta(const alps::params &p);
   //Leo: TOTALLY EXPERIMENTAL!!!
   void haunt_missing_sign(int orbital);
+  double hyb_weight_change_flip(int orbital, size_t color_1, size_t color_2);
+  int flip_color(int orbital, size_t color_1, size_t color_2);
     
   void dump();
   void rebuild();
@@ -110,6 +121,7 @@ private:
   //Leo: this should be a vector of vector for the same reason
   //The inner vector has dimension N_ENV (new), and the outer vector has dimension N_Orbital (from original code)
   std::vector< std::vector<hybmatrix> > hybmat_;
+  std::vector< std::vector<double> > hyb_strength; //Leo: for color flip update
 };
 
 std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hyb_config);

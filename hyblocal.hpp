@@ -91,6 +91,8 @@ public:
   std::vector<int> get_n_segments(int orbital) const {return n_segments_[orbital];} 
   //Leo: modify the number of colored segments and antisegments
   void set_n_segments(int orbital, std::vector<int> new_n_segments) { n_segments_[orbital]=new_n_segments; }
+  //Leo: for color flip update
+  void flip_color(int orbital, size_t color_1, size_t color_2);
 
   //debug functions
   void check_consistency() const;
