@@ -94,7 +94,9 @@ int main(int argc, char** argv)
     {
       if(options.time_limit!=0)
         throw std::invalid_argument("time limit is passed in the parameter file!");
-      if(!parms.defined("MAX_TIME")) throw std::runtime_error("parameter MAX_TIME is not defined. How long do you want to run the code for? (in seconds)");
+
+      if(!parms.defined("MAX_TIME")) 
+	throw std::runtime_error("parameter MAX_TIME is not defined. How long do you want to run the code for? (in seconds)");
 //#endif
 
 #ifndef ALPS_HAVE_MPI
@@ -131,7 +133,7 @@ int main(int argc, char** argv)
 //#ifdef BUILD_PYTHON_MODULE
 //    return;
 //#else
-    }
+    }//try ends
     catch(std::exception& exc)
     {
       std::cerr<<exc.what()<<std::endl;

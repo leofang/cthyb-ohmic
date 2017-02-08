@@ -153,7 +153,8 @@ void hybmatrix::insert_segment(const segment &new_segment, int orbital)
 
   //Leo: keep track of the time ordering sign due to operator time ordering
   //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
-  time_ordering_sign_check(time_ordering_sign_, disordered_times); 
+  //time_ordering_sign_check(time_ordering_sign_, disordered_times);
+  time_ordering_sign_check();
 }
 
 
@@ -253,7 +254,8 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital)
 
   //Leo: keep track of the time ordering sign due to operator time ordering
   //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
-  time_ordering_sign_check(time_ordering_sign_, disordered_times); 
+  //time_ordering_sign_check(time_ordering_sign_, disordered_times); 
+  time_ordering_sign_check();
 }
 
 
@@ -645,7 +647,8 @@ void hybmatrix::measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl , co
 //Leo: When time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
 //     During this check, the operator times at which the operators are not ordered (ex. sequential cdaggers) will
 //     be recorded in a set, called disordered_times, for the later usage of measure_G.
-void hybmatrix::time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times)
+//void hybmatrix::time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times)
+void hybmatrix::time_ordering_sign_check()
 {
     //if(n_env_==1) return; //single lead should not have time ordering sign, so do nothing (TODO: check!)
 

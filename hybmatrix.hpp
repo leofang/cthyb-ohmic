@@ -55,16 +55,16 @@ public:
       ,c_index_map_(rhs.c_index_map_)
       ,c_cdagger_map_(rhs.c_cdagger_map_) //Leo: map of operator positions
       ,n_env_(rhs.n_env_)
-      ,Q(rhs.Q)
-      ,R(rhs.R)
-      ,PinvQ(rhs.PinvQ)
+//      ,Q(rhs.Q)
+//      ,R(rhs.R)
+//      ,PinvQ(rhs.PinvQ)
       ,S(rhs.S)
       ,S_tilde_inv(rhs.S_tilde_inv)
       ,S_tilde(rhs.S_tilde)
       ,weight_ratio_(rhs.weight_ratio_)
       ,permutation_sign_(rhs.permutation_sign_)
       ,time_ordering_sign_(rhs.time_ordering_sign_)
-      ,disordered_times(rhs.disordered_times)
+//      ,disordered_times(rhs.disordered_times)
       ,determinant_(rhs.determinant_)
       ,determinant_old_(rhs.determinant_old_)
       ,beta_(rhs.beta_)
@@ -100,7 +100,8 @@ public:
   //void measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const;
   void consistency_check() const;
   //Leo: this seems to be necessary when n_env>1
-  void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
+  //void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
+  void time_ordering_sign_check(); 
   int sign() const {return time_ordering_sign_;}    //Leo: access the sign
   inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;}  
 

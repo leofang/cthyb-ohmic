@@ -269,8 +269,8 @@ int hybridization_configuration::flip_color(int orbital, size_t color_1, size_t 
    swap(hybmat_[orbital][color_1], hybmat_[orbital][color_2]);
 
    //need to rebuild the matrices based on the c and c^dagger times
-   hybmat_[orbital][color_1].rebuild_hyb_matrix(orbital, Delta[color_1]);
-   hybmat_[orbital][color_2].rebuild_hyb_matrix(orbital, Delta[color_2]);
+   hybmat_[orbital][color_1].rebuild_ordered_hyb_matrix(orbital, Delta[color_1]);
+   hybmat_[orbital][color_2].rebuild_ordered_hyb_matrix(orbital, Delta[color_2]);
 
    //it's actually size(m1-m2)
    return hybmat_[orbital][color_2].size() - hybmat_[orbital][color_1].size();
