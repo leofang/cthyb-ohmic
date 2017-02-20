@@ -39,11 +39,11 @@
 #include "boost/chrono/chrono.hpp"
 
 #ifdef HYB_SIM_MAIN
-boost::uint64_t sweep_count;
+boost::uint64_t sweep_count, N_Z, N_G;
 std::vector<boost::uint64_t> nacc,nprop, ncolor, ncolor_diff;
 std::vector<std::string> update_type;
 #else
-extern boost::uint64_t sweep_count;
+extern boost::uint64_t sweep_count, N_Z, N_G;
 extern std::vector<boost::uint64_t> nacc,nprop, ncolor, ncolor_diff;
 extern std::vector<std::string> update_type;
 #endif
@@ -58,15 +58,15 @@ public:
   //Monte Carlo update and measurements functions
   void measure();
   void update();
-  bool is_thermalized() const { return (sweeps >= thermalization_sweeps); }
+  bool is_thermalized() const { return (sweeps > thermalization_sweeps); }
   double fraction_completed() const;
   friend std::ostream &operator<<(std::ostream &os, const hybridization &hyb);
 
   //Leo: debug output during update
-  void debug_output(int updatetype, const double &local_weight_change, const double &hybridization_weight_change, const double &dissipation_weight_change, const double &permutation_factor) const;
+  void debug_output(int updatetype, const double &local_weight_change, const double &hybridization_weight_change, const double &dissipation_weight_change, const double &permutation_factor);
 
   //Leo: check the consistency of things during runtime. This is an very expansive function!
-  void check_consistency(const int &counter) const;
+  void check_consistency(const int &counter);
 
 private:
   bool VERBOSE;
@@ -227,6 +227,37 @@ private:
 
   //Leo: dissipative environment configuration
   dissipation_configuration ohmic_config;
+
+  //******************** for worm update ********************
+  //input parameters
+  bool worm_update;                           //whether or not to perform the worm update
+  bool MEASURE_time_worm;                     //whether or not to measure the Green's function in G-space
+  double eta;                                 //the ratio of time spent in G-space to that in Z-space
+
+  //G-space status
+  bool has_worm;                              //indicate it's currently in G-space (ture) or in Z-space (false)
+
+  //G-space measurements
+  void measure_G_worm();                      //Green's function measurement in G-space
+  void accumulate_G_worm();                   //accumulate Green's function measurement in G-space
+ 
+  //G-space updates
+  void insert_worm_update();                  //jump from the Z-space to the G-space 
+  void remove_worm_update();                  //jump from the G-space back to Z-space
+  void worm_creep_update();                   //let worm head creep
+
+  //details of G-space updates
+  void insert_worm_segment_update(int orbital);     //insert a worm as a segment
+  void remove_worm_segment_update(int orbital);     //remove the segment-like worm
+  void insert_worm_antisegment_update(int orbital); //insert a worm as an antisegment
+  void remove_worm_antisegment_update(int orbital); //remove the antisegment-like worm
+
+  //G-space measurement names
+  std::vector<std::string> g_names_worm;
+
+  //G-space measurement vectors
+  std::vector<std::vector<double> > G_worm;
+  //******************** for worm update ********************
 };
 
 std::ostream &operator<<(std::ostream &os, const hybridization &hyb);

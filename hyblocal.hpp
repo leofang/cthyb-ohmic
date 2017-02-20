@@ -28,6 +28,9 @@
  *****************************************************************************/
 #ifndef LOCAL_CONFIG_HPP
 #define LOCAL_CONFIG_HPP
+#ifndef WORM_COLOR
+#define WORM_COLOR 1000
+#endif
 
 #include <alps/ngs/params.hpp>
 #include "hybint.hpp"
@@ -65,6 +68,7 @@ public:
   void remove_segment(const segment &new_segment, int orbital);
   void remove_antisegment(const segment &new_segment, int orbital);
   segment get_segment(int k, int orbital) const;
+  std::set<segment>::iterator get_segment_iterator(int k, int orbital); //Leo: for worm update
   bool exists(double t) const{ return times_set_.find(t)==times_set_.end()?false:true;}
   bool has_overlap(const segment &seg,const int orb);
   void get_segment_densities(std::vector<std::vector<std::vector<double> > > &n_tauprime)const;
@@ -91,8 +95,23 @@ public:
   std::vector<int> get_n_segments(int orbital) const {return n_segments_[orbital];} 
   //Leo: modify the number of colored segments and antisegments
   void set_n_segments(int orbital, std::vector<int> new_n_segments) { n_segments_[orbital]=new_n_segments; }
+  //Leo: count the number of colored segments and antisegments
+  std::vector<int> rebuild_n_segments(int orbital) const;
+
   //Leo: for color flip update
   void flip_color(int orbital, size_t color_1, size_t color_2);
+
+  //Leo: for worm update
+  bool is_worm_segment(int &segment_nr, int orbital) const; 
+  bool is_worm_antisegment(int &segment_nr, int orbital) const; 
+  void set_worm(int orbital, double t_start) { worm_orbital = orbital; worm_position.first = t_start; }
+  void set_worm(int orbital, double t_start, double t_end) 
+  { worm_orbital = orbital; worm_position.first = t_start; worm_position.second = t_end; }
+  int get_worm_orbital() const { return worm_orbital; }
+  double get_worm_length() const { return worm_position.second - worm_position.first; }
+  //double get_worm_head() const { return worm_position.first; }
+  double get_worm_tail() const { return worm_position.second; }
+  std::set<segment>::iterator get_worm_head();
 
   //debug functions
   void check_consistency() const;
@@ -129,6 +148,10 @@ private:
   //Leo: store the number of segments and antisegments in the current configuration
   //This is necessary when n_env>1
   std::vector< std::vector<int> > n_segments_;
+
+  //for worm update
+  int worm_orbital;                        //which orbital the worm is in
+  std::pair<double, double> worm_position; //first: worm's head (operator d^dagger); second: worm's tail (operator d)
 
   //Leo: dissipation parameters
   //bool dissipation_; //Leo: turn on dissipation or not

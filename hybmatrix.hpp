@@ -46,6 +46,7 @@ public:
   hybmatrix(const alps::params &p){ determinant_=1.; determinant_old_=1.; permutation_sign_=1.; beta_=p["BETA"]; measure_g2w_=p["MEASURE_g2w"]|0; measure_h2w_=p["MEASURE_h2w"]|0; 
   n_env_=p["N_ENV"]|1; //Leo: introduce multiple reservoirs
   time_ordering_sign_=1;      //Leo: 1 means no, -1 means yes
+  inv_Delta_small = 0;
 }
 
   //Leo: copy constructor
@@ -65,6 +66,7 @@ public:
       ,permutation_sign_(rhs.permutation_sign_)
       ,time_ordering_sign_(rhs.time_ordering_sign_)
 //      ,disordered_times(rhs.disordered_times)
+      ,inv_Delta_small(0)
       ,determinant_(rhs.determinant_)
       ,determinant_old_(rhs.determinant_old_)
       ,beta_(rhs.beta_)
@@ -82,28 +84,40 @@ public:
   //Leo: destructor
   ~hybmatrix() {
 //    std::cerr << "Deleting hybmatrix\n";
+     if(inv_Delta_small)
+	delete inv_Delta_small;
   }
 
   double hyb_weight_change_insert(const segment &new_segment, int orbital, const hybfun &Delta);
   double hyb_weight_change_remove(const segment &new_segment, int orbital, const hybfun &Delta);
   void insert_segment(const segment &new_segment, int orbital);
   void remove_segment(const segment &new_segment, int orbital);
+
+  //for worm update
+  double hyb_weight_change_worm_creep(double new_worm_head, double old_worm_head, double worm_tail, int orbital, const hybfun &Delta);
+  void worm_creep(double new_worm_head, double old_worm_head, double worm_tail, int orbital, const hybfun &Delta);
+  bool is_worm_cache_empty() { return inv_Delta_small ? false : true; }
+  void clear_worm_cache() { delete inv_Delta_small; inv_Delta_small = 0; }
+
   friend std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat);
+
   void rebuild_hyb_matrix(int orbital, const hybfun &Delta);
   void rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta);
   double full_weight() const;
+
   void measure_G(std::vector<double> &G, std::vector<double> &F, const std::map<double,double> &F_prefactor, double sign, int total_size, double dissipation_weight_ratio) const;
   void measure_Gw(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_Gw_buffer(std::vector<double> &Gwr, std::vector<double> &Gwi,std::vector<double> &Fwr, std::vector<double> &Fwi, const std::map<double,double> &F_prefactor, double sign) const;
   void measure_G2w(std::vector<std::complex<double> > &G2w, std::vector<std::complex<double> >&F2w, int N_w2, int N_w_aux, const std::map<double,double> &F_prefactor) const;
   void measure_Gl(std::vector<double> &Gl, std::vector<double> &Fl, const std::map<double,double> &F_prefactor, double sign) const;
   //void measure_conductance(std::vector<double> &giwn, double sign, int orbital, const hybfun &Delta) const;
+  
   void consistency_check() const;
   //Leo: this seems to be necessary when n_env>1
   //void time_ordering_sign_check(int &time_ordering_sign_, std::set<double> &disordered_times); 
   void time_ordering_sign_check(); 
   int sign() const {return time_ordering_sign_;}    //Leo: access the sign
-  inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;}  
+  inline int head() const {hyb_map_t::const_iterator it=c_cdagger_map_.begin(); return it->second;} //TODO: so useless! remove it!
 
   inline void access_cdagger_times(std::vector<double> &cdagger_times) const
   {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times.push_back(it->first);}
@@ -140,6 +154,9 @@ private:
   double permutation_sign_;
   int time_ordering_sign_;  //Leo: this seems to be necessary when n_env>1; 1 means no, -1 means yes
   std::set<double> disordered_times;
+
+  //for worm update
+  blas_matrix * inv_Delta_small;
   
   //debug
   double determinant_;

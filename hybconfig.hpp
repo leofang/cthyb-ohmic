@@ -85,6 +85,10 @@ public:
   void remove_segment(const segment &new_segment, int orbital, size_t color);
   void remove_antisegment(const segment &new_antisegment, int orbital, size_t color);
 
+  //for worm update
+  double hyb_weight_change_worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital);
+  void worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital);
+
   //Leo: since the size of reservoir matrices coupled to the same orbital are correlated,
   //     there should be a consistency check after each update to gaurantee we're doing it correctly
   int total_color_matrix_size(int orbital) const;

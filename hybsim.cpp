@@ -44,23 +44,33 @@ ohmic_config(parms)
   sanity_check(parms); //before doing anything, check whether the input parameters make sense
   show_info(parms,crank);
   
+  update_type.clear();
+  update_type.push_back("Z: change zero state          ");
+  update_type.push_back("Z: insert segment             ");
+  update_type.push_back("Z: remove segment             ");
+  update_type.push_back("Z: insert anti-segment        ");
+  update_type.push_back("Z: remove anti-segment        ");
+  update_type.push_back("Z: swap segment               ");
+  update_type.push_back("Z: global flip                ");
+  update_type.push_back("Z: color flip                 ");
+  update_type.push_back("Z: insert worm (segment)      ");
+  update_type.push_back("Z: insert worm (anti-segment) ");
+  update_type.push_back("G: remove worm (segment)      ");
+  update_type.push_back("G: remove worm (anti-segment) ");
+  update_type.push_back("G: insert segment             ");
+  update_type.push_back("G: remove segment             ");
+  update_type.push_back("G: insert anti-segment        ");
+  update_type.push_back("G: remove anti-segment        ");
+  update_type.push_back("G: worm creep                 ");
+  update_type.push_back("G: shift worm                 ");
+
   //initializing general simulation constants
-  nacc.assign(8,0.);
-  nprop.assign(8,0.);
+  nacc.assign(update_type.size(), 0);
+  nprop.assign(update_type.size(), 0);
   sweep_count=0;
   output_period=parms["OUTPUT_PERIOD"]|100000;
   //lasttime = boost::chrono::steady_clock::now();
   //delay = boost::chrono::seconds(parms["OUTPUT_PERIOD"]|600);
-  
-  update_type.clear();
-  update_type.push_back("change zero state   ");
-  update_type.push_back("insert segment      ");
-  update_type.push_back("remove segment      ");
-  update_type.push_back("insert anti-segment ");
-  update_type.push_back("remove anti-segment ");
-  update_type.push_back("swap segment        ");
-  update_type.push_back("global flip         ");
-  update_type.push_back("color flip          ");
   
   sweeps=0;                                                              //Sweeps currently done
   thermalization_sweeps = parms["THERMALIZATION"];                       //Sweeps to be done for thermalization
@@ -114,6 +124,16 @@ ohmic_config(parms)
   debug_number = parms["DEBUGGER"]|5;   //Leo: number for debug purpose
   Dissipation = parms["Dissipation"]|0; //Leo: whether to turn on the bosonic environment (default is no)
   color_flip = parms["COLORFLIP"]| 0;   //Leo: whether to perform color-flip updates
+
+  //******************** for worm update ********************
+  worm_update = parms["WORM"] | false;                          //default off (no worm update)
+  MEASURE_time_worm = parms["MEASURE_time_worm"] | worm_update; //default on if worm update is turned on
+  eta = parms["ETA"];
+
+  has_worm = false;
+  N_Z = 0;
+  N_G = 0;
+  //******************** for worm update ********************
   
   //Leo: for debug purpose
 //  if(VERY_VERBOSE) std::cout << "N_ENV: " << n_env << std::endl << std::endl;
@@ -164,13 +184,21 @@ void hybridization::sanity_check(const alps::params &parms)
 	throw std::invalid_argument("please specify parameter N_MEAS for measurement interval");
   if(!parms.defined("THERMALIZATION") || !parms.defined("SWEEPS") || !parms.defined("N_ORBITALS") ) 
 	throw std::invalid_argument("please specify parameters THERMALIZATION, SWEEPS, and N_ORBITALS");
-  
-  //check paramater that are conditionally required
 
   //Leo: stop simulation if N_ENV is larger than 2 
   //TODO: remove this restriction in the future!
   if(parms.defined("N_ENV") && parms["N_ENV"].cast<int>()>2)
 	throw std::invalid_argument("Currently the supported N_ENV value can only be 1 (default) or 2. Abort.");
+
+  //check paramater that are conditionally required
+  //Leo: check if eta is given (for worm update)
+  if( parms.defined("WORM") && parms["WORM"].cast<bool>() )
+  {
+     if( !parms.defined("ETA") || parms["ETA"].cast<double>() <0 )
+	throw std::invalid_argument("Give ETA (the fraction in the Green function space) if worm update is turned on. Abort.");
+
+     //TODO: prevent N_ENV from being larger than WORM_COLOR, which is reserved for the "worm color" defined in hyblocal.hpp
+  }
 
   //Leo: meanless to flip color if there's only one
   if( (!parms.defined("N_ENV") || (parms.defined("N_ENV") && parms["N_ENV"].cast<int>() == 1)) 

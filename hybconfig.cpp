@@ -161,7 +161,7 @@ void hybridization_configuration::rebuild()
 
 
 //Leo: for debug purpose
-void hybridization_configuration::rebuild_ordered() 
+void hybridization_configuration::rebuild_ordered()
 {
   for (int i=0; i<hybmat_.size(); i++) //N_orbital
   {
@@ -322,7 +322,10 @@ void hybridization_configuration::remove_antisegment(const segment &new_antisegm
 {
   hybmat_[orbital][color].remove_segment(new_antisegment, orbital); //hand this off to the determinant matrix
   //std::cout<<clmagenta<<"after as remove recompute "<<cblack<<std::endl;
-  if(hybmat_[orbital][color].size()>0) hybmat_[orbital][color].rebuild_hyb_matrix(orbital, Delta[color]);
+  
+  //Leo: temporarily disable this as color flip also rebuilds the matrices //TODO: evaluate this decision
+  //if(hybmat_[orbital][color].size()>0) hybmat_[orbital][color].rebuild_hyb_matrix(orbital, Delta[color]);
+  
   //std::cout<<clmagenta<<"done after as remove recompute "<<cblack<<std::endl;
 }
 
@@ -585,4 +588,25 @@ std::ostream &operator<<(std::ostream &os, const hybridization_configuration &hy
     }
   }
   return os;
+}
+
+
+double hybridization_configuration::hyb_weight_change_worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital)
+{
+  //first clear the small matrix if it is not empty
+  if(!hybmat_[orbital][new_segment.c_start_].is_worm_cache_empty())
+     hybmat_[orbital][new_segment.c_start_].clear_worm_cache();
+
+  //rebuild before calculation //TODO: test!!!
+  hybmat_[orbital][new_segment.c_start_].rebuild_ordered_hyb_matrix(orbital, Delta[new_segment.c_start_]);
+
+  //hand this off to the determinant matrix
+  return hybmat_[orbital][new_segment.c_start_].hyb_weight_change_worm_creep(new_segment.t_start_, old_worm_head, worm_tail, orbital, Delta[new_segment.c_start_]); 
+}
+
+
+void hybridization_configuration::worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital)
+{
+  //hand this off to the determinant matrix
+  hybmat_[orbital][new_segment.c_start_].worm_creep(new_segment.t_start_, old_worm_head, worm_tail, orbital, Delta[new_segment.c_start_]); 
 }

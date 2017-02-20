@@ -101,6 +101,18 @@ void hybridization::create_measurements()
      }
   }
 
+  //Leo: for worm update
+  if(worm_update && MEASURE_time_worm)
+  {
+     G_worm.resize(n_orbitals, std::vector<double>(N_t+1, 0.));
+     for(std::size_t i=0; i<n_orbitals; ++i)
+     {
+       //g in tau
+       std::stringstream g_name; g_name<<"g_"<<i; g_names_worm.push_back(g_name.str());
+       measurements << vec_obs_t(g_name.str(),NUM_BINS_CONSTRUCTOR_ARG);
+     }
+  }
+
   //additional measurements, per orbital
   for(std::size_t i=0; i<n_orbitals; ++i)
   {
@@ -240,39 +252,43 @@ void hybridization::measure()
 
   accumulate_order();
   accumulate_color(); //Leo: for color measurement
-
   accumulate_G();
-
-  if(!MEASURE_time && (MEASURE_freq || MEASURE_legendre || MEASURE_h2w))//F_prefactor is computed in update() if time measurement is turned on
-    local_config.get_F_prefactor(F_prefactor);//compute segment overlaps in local config
-
-  measure_Gw(F_prefactor);
-  accumulate_Gw();
-
-  measure_Gl(F_prefactor);
-  accumulate_Gl();
-
-  //Leo: for conductance measurement
-  measure_conductance();
-  accumulate_conductance();
+  accumulate_G_worm();
 
   measure_sector_statistics();
   accumulate_sector_statistics();
 
-  //measure 2-particle quantities
-  measure_nn();
-  accumulate_nn();
+  if(!has_worm) // in the Z-space
+  {
+     //F_prefactor is computed in update() if time measurement is turned on
+     if(!MEASURE_time && (MEASURE_freq || MEASURE_legendre || MEASURE_h2w))
+        local_config.get_F_prefactor(F_prefactor);//compute segment overlaps in local config
 
-  measure_nnt();
-  accumulate_nnt();
+     measure_Gw(F_prefactor);
+     accumulate_Gw();
+     
+     measure_Gl(F_prefactor);
+     accumulate_Gl();
 
-  measure_nnw();
-  accumulate_nnw();
+     //Leo: for conductance measurement
+     measure_conductance();
+     accumulate_conductance();
 
-  if(MEASURE_g2w  || MEASURE_h2w) measure_G2w(F_prefactor); //accumulated during measurement to save memory
+     //measure 2-particle quantities
+     measure_nn();
+     accumulate_nn();
+
+     measure_nnt();
+     accumulate_nnt();
+
+     measure_nnw();
+     accumulate_nnw();
+
+     if(MEASURE_g2w  || MEASURE_h2w) 
+	measure_G2w(F_prefactor); //accumulated during measurement to save memory
+  }
 
   sweep_count = sweeps;
-  return;
 }
 
 
@@ -349,6 +365,38 @@ void hybridization::accumulate_G()
     memset(&(F[i][0]), 0, sizeof(double)*F[i].size());
   }
 }
+
+
+//measure the Green's function in G-space
+//there's no need to use the hybridization configuration as the worm already
+//gives all needed information which is recorded in the local configuration
+void hybridization::measure_G_worm()
+{
+  if(!MEASURE_time_worm || !has_worm) return;
+
+  double tau = local_config.get_worm_length();
+  double bubble_sign = sign;
+  if(tau < 0)
+  {
+     bubble_sign *= -1.;
+     tau += beta;
+  }
+  int index = (int) (tau * (G_worm.size()-1)/beta + 0.5);
+  G_worm[local_config.get_worm_orbital()][index] -= bubble_sign;
+}
+
+
+void hybridization::accumulate_G_worm()
+{
+  if(!MEASURE_time_worm) return;
+
+  for(std::size_t i=0; i<n_orbitals; ++i)
+  {
+    measurements[g_names_worm[i]] << (N_t*G_worm[i]/(beta*beta*N_meas));
+    memset(&(G_worm[i][0]), 0, sizeof(double)*G_worm[i].size());
+  }
+}
+
 
 //Leo: measure conductance
 void hybridization::measure_conductance()

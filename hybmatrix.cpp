@@ -70,6 +70,7 @@ void swap(hybmatrix &A, hybmatrix &B)
    swap(A.permutation_sign_   , B.permutation_sign_   );
    swap(A.time_ordering_sign_ , B.time_ordering_sign_ );
    swap(A.disordered_times    , B.disordered_times    );
+   swap(A.inv_Delta_small     , B.inv_Delta_small     );
    swap(A.determinant_        , B.determinant_        );
    swap(A.determinant_old_    , B.determinant_old_    );
    //swap(A.beta_               , B.beta_               );
@@ -166,7 +167,7 @@ double hybmatrix::hyb_weight_change_remove(const segment &new_segment, int orbit
   int k2=c_index_map_[new_segment.t_end_];
   
   S_tilde = operator()(k1,k2);
-  weight_ratio_=1./S_tilde;
+  weight_ratio_=1./S_tilde; //Leo: this line is redundant! the weight ratio is simply S_tilde...
   
   // take care of sign changes due to wraparound segments
   if(new_segment.t_start_>new_segment.t_end_) { weight_ratio_ *=-1; }
@@ -464,7 +465,7 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
   //then rebuild the hybridization matrix
   rebuild_hyb_matrix(orbital, Delta);
 
-  //observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
+  ////observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
   if(permutation_sign_ != time_ordering_sign_)
       throw std::runtime_error("Error in hybmatrix::rebuild_ordered_hyb_matrix: permutation_sign_ != time_ordering_sign_. Abort.");
 }
@@ -703,3 +704,228 @@ void hybmatrix::time_ordering_sign_check()
 
 
 
+//compute the hybridization weight change when the worm is creeping
+double hybmatrix::hyb_weight_change_worm_creep(double new_worm_head, double old_worm_head, double worm_tail, int orbital, const hybfun &Delta)
+{
+  std::size_t row_index = cdagger_index_map_[new_worm_head];
+  std::size_t last = size()-1;
+  std::size_t column_index = last;
+
+  //find the iterators of the last row
+  std::map<double, size_t>::iterator row_it = cdagger_index_map_.begin();
+  for( ; row_it != cdagger_index_map_.end(); ++row_it) { if(row_it->second == last) break; }
+  
+  //create Delta^-1 matrix of size (k-1)*(k-1); this part is adapted from remove_segment
+  //first swap the selected row with the last row
+  if(row_index != last)
+  {
+    swap_row(row_index, last);
+    permutation_sign_ *= -1.;
+    std::swap( cdagger_index_map_[new_worm_head], cdagger_index_map_[row_it->first] );
+    assert(cdagger_index_map_[new_worm_head] == last);
+    row_index = last;
+  }
+
+  //this is the inverse weight of the old configuration
+  double S_tilde_old = operator()(row_index, column_index);
+
+  //find the iterators of the last column
+  std::map<double, size_t>::iterator column_it = c_index_map_.begin();
+  for( ; column_it != c_index_map_.end(); ++column_it) { if(column_it->second == last) break; }
+
+  //then create a copy of the matrix
+  inv_Delta_small = new blas_matrix(*this);
+  
+  fortran_int_t sm1 = last;
+  if(sm1>0)
+  {
+    double alpha = -1./inv_Delta_small->operator()(last, last);
+    fortran_int_t inc = 1;
+    fortran_int_t ms = inv_Delta_small->memory_size();
+    FORTRAN_ID(dger)(&sm1, &sm1, &alpha, &(inv_Delta_small->operator()(last,0)), &inc, &(inv_Delta_small->operator()(0,last)), &ms, &(inv_Delta_small->operator()(0,0)), &ms);
+  }
+
+  //now we have the smaller Delta^-1 matrix.
+  inv_Delta_small->resize(last);
+
+  //now compute the weight of the new configuration
+  Q.resize(last);
+  R.resize(last);
+  PinvQ.resize(last);
+
+  //column  Delta_i,last
+  for(hyb_map_t::const_iterator it = c_index_map_.begin(); it!=c_index_map_.end(); ++it)
+  {
+     if(it->second != column_index)
+        Q[it->second] = Delta.interpolate(it->first - old_worm_head, orbital); //this is the new column Q
+  }
+  
+  //row Delta_last,i
+  for(hyb_map_t::const_iterator it = cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it)
+  {
+     if(it->second != row_index)
+        R[it->second] = Delta.interpolate(column_it->first - it->first, orbital);  //this is the new row R
+  }
+
+  S=Delta.interpolate(column_it->first - old_worm_head, orbital);  //this is the entry S
+  
+  //S_tilde_inv is the new weight
+  S_tilde_inv = S;
+  fortran_int_t s = last; //note the size! 
+  if(s>0)
+  {
+    inv_Delta_small->right_multiply(Q, PinvQ); //dgemv
+    fortran_int_t inc = 1;
+    S_tilde_inv -= FORTRAN_ID(ddot)(&s, &(R[0]), &inc, &(PinvQ[0]),&inc);
+  }
+
+  ////pick up a wrapping sign if c^dagger passes through odd number of c
+  //std::map<double, size_t>::const_iterator it_low = cdagger_index_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
+  //std::map<double, size_t>::const_iterator it_high = cdagger_index_map_.upper_bound((old_worm_head<new_worm_head?new_worm_head:old_worm_head));
+  //--it_high;
+  //int counter = std::distance(it_low, it_high);
+  //weight_ratio_ = S_tilde_old * S_tilde_inv;
+  //if( (counter % 2) && !(size() % 2) )
+  //   weight_ratio_ *= -1.;
+
+  ////pick up a wrapping sign if c^dagger passes through odd number of c
+  //std::map<double, size_t>::const_iterator it_low = c_cdagger_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
+  //std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.upper_bound((old_worm_head<new_worm_head?new_worm_head:old_worm_head));
+  //int counter = 0;
+  //for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) { if(it->second == 1) counter++; }
+  //weight_ratio_ = (counter%2 ? -1. : 1.) * S_tilde_old * S_tilde_inv;
+
+  ////always pick up a minus sign! //TODO: test!
+  //weight_ratio_ = S_tilde_old * S_tilde_inv;
+  //if( (column_it->first > old_worm_head && column_it->first < new_worm_head) ||
+  //    (column_it->first < old_worm_head && column_it->first > new_worm_head) )
+  //   weight_ratio_ *= -1.;
+  
+  //weight_ratio_ = S_tilde_old * S_tilde_inv;
+  //if( column_it->first < old_worm_head )
+  //   weight_ratio_ *= -1.;
+  
+  weight_ratio_ = S_tilde_old * S_tilde_inv;
+  if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
+  {
+     weight_ratio_ *= -1.;
+
+     if(n_env_ != 1)
+     {
+        std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound((new_worm_head>worm_tail?worm_tail:new_worm_head));
+        std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.lower_bound((new_worm_head<worm_tail?worm_tail:new_worm_head));
+        int counter = 0;
+        for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
+        { 
+           if(it->second == 1) 
+              counter++; 
+           else 
+              counter--;
+        }
+	if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
+	    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+	   counter++;
+
+        if(counter != 0)      
+           weight_ratio_ *= -1.;
+     }
+  }
+
+  return weight_ratio_;
+}
+
+
+//actually swap the hybridization line to the old worm head
+void hybmatrix::worm_creep(double new_worm_head, double old_worm_head, double worm_tail, int orbital, const hybfun &Delta)
+{
+  int last = size()-1;
+  
+  //last element
+  operator()(last, last) = 1./S_tilde_inv;
+ 
+  //TODO: see if inv_Delta_small can be reused here
+  fortran_int_t sm1 = last;
+  if(sm1>0)
+  { //this is exactly the content of the loops above, in dger/dgemv blas calls.
+   char trans='T', notrans='N';
+   double alpha = -1./S_tilde_inv, beta=0.;
+   fortran_int_t inc=1;
+   fortran_int_t ms = memory_size(); //this line is safe is because inv_Delta_small has the same memory size as "this" during execution
+   assert(inv_Delta_small->memory_size() == ms);
+   FORTRAN_ID(dgemv)(&  trans, &sm1, &sm1, &alpha, &(inv_Delta_small->operator()(0,0)), &ms, &(Q[0]), &inc, &beta, &(operator()(0,last)), &ms);
+   FORTRAN_ID(dgemv)(&notrans, &sm1, &sm1, &alpha, &(inv_Delta_small->operator()(0,0)), &ms, &(R[0]), &inc, &beta, &(operator()(last,0)), &inc);
+
+   alpha=S_tilde_inv;
+   FORTRAN_ID(dger)(&sm1, &sm1, &alpha, &(operator()(last,0)), &inc, &(operator()(0,last)), &ms, &(inv_Delta_small->operator()(0,0)), &ms);
+   for(fortran_int_t i=0; i<last; ++i)
+   { //for each row: copy the entire row (except for the last element).
+     memcpy(&(operator()(0,0))+i*memory_size(), &(inv_Delta_small->operator()(0,0))+i*inv_Delta_small->memory_size(), sizeof(double)*(size()-1));
+   }
+  }
+  
+  ////TODO: test
+  ////pick up a wrapping sign if c^dagger passes through odd number of c
+  //std::map<double, size_t>::const_iterator it_low = cdagger_index_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
+  //std::map<double, size_t>::const_iterator it_high = cdagger_index_map_.upper_bound((old_worm_head<new_worm_head?new_worm_head:old_worm_head));
+  //--it_high;
+  //int counter = std::distance(it_low, it_high);
+  //if( (counter % 2) && !(size() % 2) )
+  //   permutation_sign_ *= -1.;
+
+  if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
+  {
+     permutation_sign_ *= -1.;
+
+     if(n_env_ != 1)
+     {
+        std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound((new_worm_head>worm_tail?worm_tail:new_worm_head));
+        std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.upper_bound((new_worm_head<worm_tail?worm_tail:new_worm_head));
+        int counter = 0;
+        for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
+        { 
+           if(it->second == 1) 
+              counter++; 
+           else 
+              counter--;
+        }
+	if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
+	    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+	   counter++;
+
+        if(counter != 0)      
+           permutation_sign_ *= -1.;
+     }
+  }
+
+  ////pick up a wrapping sign if c^dagger passes through odd number of c
+  //std::map<double, size_t>::const_iterator it_low = c_cdagger_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
+  //std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.upper_bound((old_worm_head<new_worm_head?new_worm_head:old_worm_head));
+  //int counter = 0;
+  //for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) { if(it->second == 1) counter++; }
+  //if(counter % 2)
+  //   permutation_sign_ *= -1.;
+  
+
+  //if( column_it->first < old_worm_head )
+  //   permutation_sign_ *= -1.;
+
+  //if( (column_it->first > old_worm_head && column_it->first < new_worm_head) ||
+  //    (column_it->first < old_worm_head && column_it->first > new_worm_head) )
+  //   permutation_sign_ *= -1.;
+  
+  //if( worm_tail < old_worm_head )
+  //   permutation_sign_ *= -1.;
+
+  //erase old times:
+  cdagger_index_map_.erase(new_worm_head);
+  c_cdagger_map_    .erase(new_worm_head);
+  
+  // add the new segment times:
+  cdagger_index_map_.insert(std::make_pair(old_worm_head, last));
+  c_cdagger_map_    .insert(std::make_pair(old_worm_head, 1)); //Leo: 1 means c_dagger
+  
+  //Leo: keep track of the time ordering sign due to operator time ordering
+  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  //time_ordering_sign_check(time_ordering_sign_, disordered_times);
+  time_ordering_sign_check();
+}

@@ -438,6 +438,16 @@ segment local_configuration::get_segment(int k, int orbital) const
 }
 
 
+//Leo: overloaded version for worm update
+std::set<segment>::iterator local_configuration::get_segment_iterator(int k, int orbital)
+{
+  std::set<segment>::const_iterator it = segments_[orbital].begin();
+  if(k>=(int)(segments_[orbital].size())) throw std::logic_error("not enough segments to get this one.");
+  advance(it, k);
+  return it;
+}
+
+
 void local_configuration::remove_segment(const segment &new_segment, int orbital)
 {
   //std::cout<<clmagenta<<*this<<cblack<<std::endl;
@@ -1109,13 +1119,9 @@ std::vector<int> local_configuration::get_new_n_segments_remove_antisegment(cons
 }
 
 
-
-void local_configuration::check_n_segments_consistency(int orbital) const
-{  
-   if(order(orbital)==0) return; //empty or filled line, no need to check
-
+std::vector<int> local_configuration::rebuild_n_segments(int orbital) const
+{
    std::vector<int> n_segments_count (2*n_env_, 0);
-   std::vector<int> n_segments_current = get_n_segments(orbital);
    std::set<segment>::const_iterator it_next;
    for(std::set<segment>::const_iterator it=segments_[orbital].begin(); it != segments_[orbital].end(); ++it)
    {
@@ -1124,6 +1130,17 @@ void local_configuration::check_n_segments_consistency(int orbital) const
        if(it_next==segments_[orbital].end())  { it_next=segments_[orbital].begin(); } //hit the last segment, wrap around
        if(it->c_end_==it_next->c_start_) n_segments_count[it->c_end_+n_env_]++; // count number of antisegments
    }
+
+   return n_segments_count;
+}
+
+
+void local_configuration::check_n_segments_consistency(int orbital) const
+{  
+   if(order(orbital)==0) return; //empty or filled line, no need to check
+
+   std::vector<int> n_segments_count = rebuild_n_segments(orbital);
+   std::vector<int> n_segments_current = get_n_segments(orbital);
 
 //   std::set<segment>::const_iterator it_begin=segments_[orbital].begin();
 //   std::set<segment>::const_iterator it_end=segments_[orbital].end(); it_end--;
@@ -1171,4 +1188,55 @@ void local_configuration::flip_color(int orbital, size_t color_1, size_t color_2
    std::swap(new_n_segments[color_1], new_n_segments[color_2]);
    std::swap(new_n_segments[color_1+n_env_], new_n_segments[color_2+n_env_]);
    set_n_segments(orbital, new_n_segments);
+}
+
+
+//return true if the worm's head and tail are adjacent and form a segment, otherwise false
+bool local_configuration::is_worm_segment(int &segment_nr, int orbital) const
+{
+  segment_nr = 0;
+  for(std::set<segment>::const_iterator it = segments_[orbital].begin(); it != segments_[orbital].end(); ++it, ++segment_nr)
+  {
+     if( (it->c_start_ == it->c_end_) && (it->c_start_ == WORM_COLOR))
+	return true;
+  }
+
+  return false;
+}
+
+
+//return true if the worm's head and tail are adjacent and form an anti-segment, otherwise false
+bool local_configuration::is_worm_antisegment(int &segment_nr, int orbital) const
+{
+  std::set<segment>::const_iterator it = segments_[orbital].begin();
+  std::set<segment>::const_iterator it_next = it; ++it_next;
+  segment_nr = 0;
+  for( ; it_next != segments_[orbital].end(); ++it, ++it_next, ++segment_nr)
+  {
+     if( (it_next->c_start_ == it->c_end_) && (it_next->c_start_ == WORM_COLOR) )
+	return true;
+  }
+
+  //wrap around (now it points to the last segment, and segment_nr=segments_[orbital].size()-1)
+  assert(segment_nr == segments_[orbital].size()-1); 
+  it_next = segments_[orbital].begin();
+  if( (it_next->c_start_ == it->c_end_) && (it_next->c_start_ == WORM_COLOR) )
+     return true;
+  else
+     return false;
+}
+
+
+std::set<segment>::iterator local_configuration::get_worm_head() 
+{ 
+   std::set<segment>::iterator it = segments_[worm_orbital].begin();
+
+   //linear search...
+   for( ; it != segments_[worm_orbital].end(); ++it) { if(it->t_start_ == worm_position.first) break; }
+
+   if(it == segments_[worm_orbital].end())
+      throw std::runtime_error("worm head not found!");
+   if(it->c_start_ != WORM_COLOR)
+      throw std::runtime_error("something is wrong when trying to find the worm head!");
+   return it;
 }
