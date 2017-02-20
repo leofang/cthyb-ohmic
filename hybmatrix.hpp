@@ -98,6 +98,7 @@ public:
   void worm_creep(double new_worm_head, double old_worm_head, double worm_tail, int orbital, const hybfun &Delta);
   bool is_worm_cache_empty() { return inv_Delta_small ? false : true; }
   void clear_worm_cache() { delete inv_Delta_small; inv_Delta_small = 0; }
+  int count_c_cdagger_imbalance(double t_min, double t_max) const;
 
   friend std::ostream &operator<<(std::ostream &os, const hybmatrix &hyb_mat);
 

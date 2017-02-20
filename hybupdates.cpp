@@ -1527,6 +1527,7 @@ void hybridization::worm_creep_update()
   {
     nacc[16]++;
     if(weight_change < 0) sign*=-1.;
+    if(hybridization_weight_change < 0) std::cout << "***** need to flip sign *****" << std::endl;
     hyb_config.worm_creep(*new_worm_head, t_start, worm_tail, orbital);
     local_config.set_worm(orbital, new_worm_head->t_start_);
     std::swap(new_worm_head->c_start_, old_worm_head->c_start_);

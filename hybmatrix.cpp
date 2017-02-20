@@ -465,7 +465,7 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
   //then rebuild the hybridization matrix
   rebuild_hyb_matrix(orbital, Delta);
 
-  ////observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
+  //observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
   if(permutation_sign_ != time_ordering_sign_)
       throw std::runtime_error("Error in hybmatrix::rebuild_ordered_hyb_matrix: permutation_sign_ != time_ordering_sign_. Abort.");
 }
@@ -806,29 +806,25 @@ double hybmatrix::hyb_weight_change_worm_creep(double new_worm_head, double old_
   //   weight_ratio_ *= -1.;
   
   weight_ratio_ = S_tilde_old * S_tilde_inv;
+
   if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
-  {
      weight_ratio_ *= -1.;
 
-     if(n_env_ != 1)
-     {
-        std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound((new_worm_head>worm_tail?worm_tail:new_worm_head));
-        std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.lower_bound((new_worm_head<worm_tail?worm_tail:new_worm_head));
-        int counter = 0;
-        for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
-        { 
-           if(it->second == 1) 
-              counter++; 
-           else 
-              counter--;
-        }
-	if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
-	    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
-	   counter++;
+  if(n_env_ != 1)
+  {
+     double t_min = std::min(worm_tail, std::min(old_worm_head, new_worm_head)); 
+     double t_max = std::max(worm_tail, std::max(old_worm_head, new_worm_head)); 
+     int counter_old = count_c_cdagger_imbalance( (worm_tail < old_worm_head ? worm_tail : old_worm_head), \
+	                                          (worm_tail > old_worm_head ? worm_tail : old_worm_head));
+     int counter_new = count_c_cdagger_imbalance( (worm_tail < new_worm_head ? worm_tail : new_worm_head), \
+	                                          (worm_tail > new_worm_head ? worm_tail : new_worm_head));
+     //old_worm_head has not been added to the map yet, so we need to count it manually
+     if( (new_worm_head < old_worm_head && old_worm_head < worm_tail) || (worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+     //if(t_min < old_worm_head && old_worm_head < t_max)
+        counter_new++;
 
-        if(counter != 0)      
-           weight_ratio_ *= -1.;
-     }
+     if( (counter_new - counter_old) % 2 != 0)
+        weight_ratio_ *= -1.;
   }
 
   return weight_ratio_;
@@ -863,6 +859,26 @@ void hybmatrix::worm_creep(double new_worm_head, double old_worm_head, double wo
    }
   }
   
+  if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
+     permutation_sign_ *= -1.;
+
+  if(n_env_ != 1)
+  {
+     double t_min = std::min(worm_tail, std::min(old_worm_head, new_worm_head)); 
+     double t_max = std::max(worm_tail, std::max(old_worm_head, new_worm_head)); 
+     int counter_old = count_c_cdagger_imbalance( (worm_tail < old_worm_head ? worm_tail : old_worm_head), \
+	                                          (worm_tail > old_worm_head ? worm_tail : old_worm_head));
+     int counter_new = count_c_cdagger_imbalance( (worm_tail < new_worm_head ? worm_tail : new_worm_head), \
+	                                          (worm_tail > new_worm_head ? worm_tail : new_worm_head));
+     //old_worm_head has not been added to the map yet, so we need to count it manually
+     if( (new_worm_head < old_worm_head && old_worm_head < worm_tail) || (worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+     //if(t_min < old_worm_head && old_worm_head < t_max)
+        counter_new++;
+
+     if( (counter_new - counter_old) % 2 != 0)
+        permutation_sign_ *= -1.;
+  }
+
   ////TODO: test
   ////pick up a wrapping sign if c^dagger passes through odd number of c
   //std::map<double, size_t>::const_iterator it_low = cdagger_index_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
@@ -872,30 +888,35 @@ void hybmatrix::worm_creep(double new_worm_head, double old_worm_head, double wo
   //if( (counter % 2) && !(size() % 2) )
   //   permutation_sign_ *= -1.;
 
-  if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
-  {
-     permutation_sign_ *= -1.;
+  //if(n_env_ != 1)
+  //{
+  //   //TODO: make this part a helper function
+  //   int counter = 0;
+  //   double t_max = std::max(worm_tail, std::max(old_worm_head, new_worm_head)); 
+  //   double t_min = std::min(worm_tail, std::min(old_worm_head, new_worm_head)); 
+  //   std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound(t_min);
+  //   std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.lower_bound(t_max);
+  //   for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
+  //   { 
+  //      if(it->second == 1) //c^dagger
+  //         counter++; 
+  //      else //c
+  //         counter--;
+  //   }
+  //   //old_worm_head has not been added to the map yet, so we need to count it manually
+  //   //if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
+  //   //    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+  //   if(t_min < old_worm_head && old_worm_head < t_max)
+  //      counter++;
 
-     if(n_env_ != 1)
-     {
-        std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound((new_worm_head>worm_tail?worm_tail:new_worm_head));
-        std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.upper_bound((new_worm_head<worm_tail?worm_tail:new_worm_head));
-        int counter = 0;
-        for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
-        { 
-           if(it->second == 1) 
-              counter++; 
-           else 
-              counter--;
-        }
-	if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
-	    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
-	   counter++;
-
-        if(counter != 0)      
-           permutation_sign_ *= -1.;
-     }
-  }
+  //   if(counter % 2 != 0)      
+  //      permutation_sign_ *= -1.;
+  //}
+  //else //N_ENV=1
+  //{
+  //   if( (worm_tail > old_worm_head && worm_tail > new_worm_head) || (worm_tail < old_worm_head && worm_tail < new_worm_head) )
+  //      permutation_sign_ *= -1.;
+  //}
 
   ////pick up a wrapping sign if c^dagger passes through odd number of c
   //std::map<double, size_t>::const_iterator it_low = c_cdagger_map_.lower_bound((old_worm_head>new_worm_head?new_worm_head:old_worm_head));
@@ -928,4 +949,25 @@ void hybmatrix::worm_creep(double new_worm_head, double old_worm_head, double wo
   //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
   //time_ordering_sign_check(time_ordering_sign_, disordered_times);
   time_ordering_sign_check();
+}
+
+
+int hybmatrix::count_c_cdagger_imbalance(double t_min, double t_max) const
+{
+  int counter = 0;
+  std::map<double, size_t>::const_iterator it_low  = c_cdagger_map_.upper_bound(t_min);
+  std::map<double, size_t>::const_iterator it_high = c_cdagger_map_.lower_bound(t_max);
+  for(std::map<double, size_t>::const_iterator it = it_low; it != it_high; ++it) 
+  { 
+     if(it->second == 1) //c^dagger
+        counter++; 
+     else //c
+        counter--;
+  }
+  ////old_worm_head has not been added to the map yet, so we need to count it manually
+  ////if( (new_worm_head < worm_tail && new_worm_head < old_worm_head && old_worm_head < worm_tail) ||
+  ////    (worm_tail < new_worm_head && worm_tail < old_worm_head && old_worm_head < new_worm_head) )
+  //if(t_min < old_worm_head && old_worm_head < t_max)
+  //   counter++;
+  return counter;
 }
