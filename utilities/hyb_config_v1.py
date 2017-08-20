@@ -17,7 +17,7 @@ U        = 0    # for others
 #v        = sqrt(U/16.)     # symmetric coupling strength; U/\Gamma=8; semicircular; two leads
 #v        = sqrt(U/(2.*pi))     # symmetric coupling strength; U/\Gamma=8; flat
 V0        = sqrt(0.25)
-V1        = sqrt(0.30)
+V1        = sqrt(0.25)
 V        = np.array([V0, V1])*W # coupling strength to colors 0 and 1
 N_ORBITALS = 1
 N_ENV = 2
@@ -73,12 +73,19 @@ DEBUGGER = 50000
 VERY_VERBOSE = 0
 MEASURE_time = 0
 MEASURE_nnw = 0
+
 MEASURE_conductance = 1
 N_W=10
+
 r=0
 Dissipation=0
 C0=0
+
 COLORFLIP=1
+
+WORM = 1
+ETA = 0.2
+MEASURE_time_worm = 0
 
 ################### condor parameters ################
 RunOnOSG = True
@@ -89,4 +96,4 @@ executable = "cthyb-ohmic-conductance/cthyb_ohmic"
 #output_dir = "cthyb_semicircular_test2"
 #output_dir = "cthyb_semicircular_spinful_n_V_%.3f_U_%.3f_lead_%i"%(V[0], U, N_ENV)
 #output_dir = "20170127_semicircular_sigma_%i_lead_%i_orb_V_%.3f_U_%.3f_MAX_TIME_%.1f_hrs"%(N_ENV, N_ORBITALS, (V[0] if N_ENV is 1 else sqrt(V[0]**2+V[1]**2)), U, MAX_TIME/3600.)
-output_dir = "20170202_asymmetric_5%"
+output_dir = "20170212_worm"

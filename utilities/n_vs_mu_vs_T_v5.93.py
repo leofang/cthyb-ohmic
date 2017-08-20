@@ -191,6 +191,8 @@ for T in Tvalues:
                    'COLORFLIP'          : COLORFLIP,  # color flip update
                    'V0'                 : V[0],       # hybridization strength of lead 0
                    'V1'                 : V[1],       # hybridization strength of lead 1
+                   'WORM'               : WORM,       # for worm update
+                   'ETA'                : ETA,        # for worm update
     #               'DELTA'              : "delta-00.dat", # for N_ENV=1
     #               'DELTA0'             : "delta-00.dat",                    
     #               'DELTA1'		    : "delta-01.dat",
@@ -209,6 +211,7 @@ for T in Tvalues:
                    # measurements
                    'MEASURE_nnw'        : MEASURE_nnw,                               
                    'MEASURE_time'       : MEASURE_time,
+                   'MEASURE_time_worm'  : MEASURE_time_worm,   #for worm update
                    'MEASURE_conductance': MEASURE_conductance,
                    # measurement parameters
                    'N_HISTOGRAM_ORDERS' : N_HISTOGRAM_ORDERS,           
