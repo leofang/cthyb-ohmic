@@ -1191,6 +1191,41 @@ void local_configuration::flip_color(int orbital, size_t color_1, size_t color_2
 }
 
 
+//Leo: swap the colors of a given c and cdagger if the update is accepted
+void local_configuration::swap_color(int orbital, size_t color_tar, size_t color_des, double times[2])
+{
+   size_t counter = 0; //exist when counter=2
+   //std::cerr << *this << std::endl;
+
+   for(std::set<segment>::iterator it=segments_[orbital].begin(); it!=segments_[orbital].end(); ++it)
+   {
+      if(it->t_start_ == times[0]) //paint the cdagger operator
+      {
+	 assert(it->c_start_ == color_tar); //TODO: remove this line
+         it->c_start_ = color_des;
+	 counter++;
+      }
+
+      if(it->t_end_ == times[1]) //paint the c operator
+      {
+	 assert(it->c_end_ == color_tar); //TODO: remove this line
+         it->c_end_ = color_des;
+	 counter++;
+      }
+
+      if(counter==2) return;
+   }
+   
+   //std::cerr << *this << std::endl;
+   throw std::logic_error("re-painting fails...\n");
+   ////change n_segments_ //TODO: do this part if needed in the future
+   //std::vector<int> new_n_segments = get_n_segments(orbital);
+   //std::swap(new_n_segments[color_1], new_n_segments[color_2]);
+   //std::swap(new_n_segments[color_1+n_env_], new_n_segments[color_2+n_env_]);
+   //set_n_segments(orbital, new_n_segments);
+}
+
+
 //return true if the worm's head and tail are adjacent and form a segment, otherwise false
 bool local_configuration::is_worm_segment(int &segment_nr, int orbital) const
 {

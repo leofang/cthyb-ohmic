@@ -27,6 +27,7 @@
  *
  *****************************************************************************/
 
+#include <alps/mcbase.hpp> //for random()
 #include "hybmatrix.hpp"
 #include "hybblasmatrix.hpp" //Leo: for matrix inversion; TODO: remove this after debugging!
 //#include "combinatorial.hpp"   //Leo: for test purpose
@@ -970,4 +971,22 @@ int hybmatrix::count_c_cdagger_imbalance(double t_min, double t_max) const
   //if(t_min < old_worm_head && old_worm_head < t_max)
   //   counter++;
   return counter;
+}
+
+
+double hybmatrix::pick_cdagger(double rand) const
+{
+   int i=(int)(rand*cdagger_index_map_.size());
+   hyb_map_t::const_iterator it= cdagger_index_map_.begin();
+   for(int j=0; j<i; j++) ++it;
+   return it->first;
+}
+
+
+double hybmatrix::pick_c(double rand) const
+{
+   int i=(int)(rand*c_index_map_.size());
+   hyb_map_t::const_iterator it= c_index_map_.begin();
+   for(int j=0; j<i; j++) ++it;
+   return it->first;
 }

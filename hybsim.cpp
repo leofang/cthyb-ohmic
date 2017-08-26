@@ -53,6 +53,7 @@ ohmic_config(parms)
   update_type.push_back("Z: swap segment               ");
   update_type.push_back("Z: global flip                ");
   update_type.push_back("Z: color flip                 ");
+  update_type.push_back("Z: color swap                 ");
   update_type.push_back("Z: insert worm (segment)      ");
   update_type.push_back("Z: insert worm (anti-segment) ");
   update_type.push_back("G: remove worm (segment)      ");
@@ -123,7 +124,8 @@ ohmic_config(parms)
 
   debug_number = parms["DEBUGGER"]|5;   //Leo: number for debug purpose
   Dissipation = parms["Dissipation"]|0; //Leo: whether to turn on the bosonic environment (default is no)
-  color_flip = parms["COLORFLIP"]| 0;   //Leo: whether to perform color-flip updates
+  color_flip = parms["COLORFLIP"]| 0;   //leo: whether to perform color-flip updates
+  color_swap = parms["COLORSWAP"]| 0;   //leo: whether to perform color-swap updates
 
   //******************** for worm update ********************
   worm_update = parms["WORM"] | false;                          //default off (no worm update)
@@ -200,10 +202,11 @@ void hybridization::sanity_check(const alps::params &parms)
      //TODO: prevent N_ENV from being larger than WORM_COLOR, which is reserved for the "worm color" defined in hyblocal.hpp
   }
 
-  //Leo: meanless to flip color if there's only one
+  //Leo: meanless to flip or swap color if there's only one
   if( (!parms.defined("N_ENV") || (parms.defined("N_ENV") && parms["N_ENV"].cast<int>() == 1)) 
-       && (parms.defined("COLORFLIP") && parms["COLORFLIP"].cast<bool>()) )
-        throw std::invalid_argument("The system has only one color, so COLORFLIP=1 is invalid. Abort.");
+       && ( (parms.defined("COLORFLIP") && parms["COLORFLIP"].cast<bool>()) || 
+	    (parms.defined("COLORSWAP") && parms["COLORSWAP"].cast<bool>()) ) )
+        throw std::invalid_argument("The system has only one color, so COLORFLIP=1 or COLORSWAP=1 is invalid. Abort.");
 
   //Leo: I'm surprised that this check was omitted...
   if(parms["N_ORBITALS"].cast<int>() == 1 && (parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>()))

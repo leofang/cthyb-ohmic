@@ -101,6 +101,9 @@ public:
   //Leo: for color flip update
   void flip_color(int orbital, size_t color_1, size_t color_2);
 
+  //Leo: for color swap update
+  void swap_color(int orbital, size_t color_1, size_t color_2, double times[2]);
+
   //Leo: for worm update
   bool is_worm_segment(int &segment_nr, int orbital) const; 
   bool is_worm_antisegment(int &segment_nr, int orbital) const; 

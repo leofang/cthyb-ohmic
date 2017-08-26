@@ -277,6 +277,32 @@ int hybridization_configuration::flip_color(int orbital, size_t color_1, size_t 
 }
 
 
+//two random numbers are stored in times in exchange for the c and cdagger times!
+double hybridization_configuration::hyb_weight_change_swap(int orbital, size_t color_tar, size_t color_des, double times[2])
+{
+   times[0] = hybmat_[orbital][color_tar].pick_cdagger(times[0]);
+   times[1] = hybmat_[orbital][color_tar].pick_c(times[1]);
+   double weight_change = 1.;
+   segment segment_tar(times[0], times[1], color_tar, color_tar);
+   segment segment_des(times[0], times[1], color_des, color_des);
+
+   //replace the (anti)segment's color by color_des
+   weight_change /= hybmat_[orbital][color_tar].hyb_weight_change_remove(segment_tar, orbital, Delta[color_tar]);
+   weight_change *= hybmat_[orbital][color_des].hyb_weight_change_insert(segment_des, orbital, Delta[color_des]);
+
+   return weight_change;
+}
+
+
+void hybridization_configuration::swap_color(int orbital, size_t color_tar, size_t color_des, double times[2])
+{
+   segment segment_tar(times[0], times[1], color_tar, color_tar);
+   segment segment_des(times[0], times[1], color_des, color_des);
+   hybmat_[orbital][color_tar].remove_segment(segment_tar, orbital);
+   hybmat_[orbital][color_des].insert_segment(segment_des, orbital);
+}
+
+
 double hybridization_configuration::hyb_weight_change_insert(const segment &new_segment, int orbital, size_t color)
 {
 //  if(new_segment.c_start_ == new_segment.c_end_) //Leo: the colors of both ends of a (anti-)segment should be the same!

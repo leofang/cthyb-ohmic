@@ -189,6 +189,7 @@ for T in Tvalues:
                    'Dissipation'        : Dissipation, # trun dissipation on or off 
                    'N_W'                : N_W,   # =1 for static susceptibility chi(0) 
                    'COLORFLIP'          : COLORFLIP,  # color flip update
+                   'COLORSWAP'          : COLORSWAP,  # color swap update
                    'V0'                 : V[0],       # hybridization strength of lead 0
                    'V1'                 : V[1],       # hybridization strength of lead 1
                    'WORM'               : WORM,       # for worm update

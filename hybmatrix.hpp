@@ -125,6 +125,10 @@ public:
   inline void access_c_times(std::vector<double> &c_times) const
   {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times.push_back(it->first);}
 
+  //make random choices; rand is a random number, see the implementation note
+  double pick_cdagger(double rand) const;
+  double pick_c(double rand) const;
+
   //Leo: for swapping two hybmatrix objects
   friend void swap(hybmatrix &A, hybmatrix &B);
 

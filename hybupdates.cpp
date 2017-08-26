@@ -79,6 +79,10 @@ void hybridization::update()
     {
       worm_creep_update();
     }
+    else if (update_type < 0.15) //TODO: think a better, cleverer way
+    {
+      color_swap_update();
+    }
     else if (update_type < rates[0]) 
     {
       insert_remove_segment_update();
@@ -420,6 +424,15 @@ void hybridization::color_flip_update()
 }
 
 
+void hybridization::color_swap_update()
+{
+  //choose the orbital in which we do the update
+  int orbital=(int)(random()*n_orbitals);
+
+  color_swap_update(orbital);
+}
+
+
 void hybridization::insert_worm_update()
 {
   //choose the orbital in which we do the update
@@ -518,7 +531,7 @@ void hybridization::insert_segment_update(int orbital)
   }
   else //in G-space
   {
-     nprop[12]++; N_G++;
+     nprop[13]++; N_G++;
   }
 
   //std::cout<<clred<<"starting insertion update."<<cblack<<std::endl;
@@ -604,7 +617,7 @@ void hybridization::insert_segment_update(int orbital)
     }
     else //in G-space
     {
-       nacc[12]++;
+       nacc[13]++;
     }
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
@@ -651,7 +664,7 @@ void hybridization::remove_segment_update(int orbital)
   }
   else //in G-space
   {
-     nprop[13]++; N_G++;
+     nprop[14]++; N_G++;
   }
 
   //std::cout<<clblue<<"starting removal update."<<cblack<<std::endl;
@@ -719,7 +732,7 @@ void hybridization::remove_segment_update(int orbital)
     }
     else //in G-space
     {
-       nacc[13]++;
+       nacc[14]++;
     }
     if(weight_change < 0) sign*=-1.;
 
@@ -770,7 +783,7 @@ void hybridization::insert_antisegment_update(int orbital)
   }
   else //in G-space
   {
-     nprop[14]++; N_G++;
+     nprop[15]++; N_G++;
   }
 
   if(local_config.order(orbital)==0 && !local_config.zero_order_orbital_occupied(orbital)) return; //can't insert an antisegment, orbital is empty.
@@ -854,7 +867,7 @@ void hybridization::insert_antisegment_update(int orbital)
     }
     else //in G-space
     {
-       nacc[14]++;
+       nacc[15]++;
     }
 
     //std::cout<<cred<<"accepting insert antisegment."<<cblack<<std::endl;
@@ -904,7 +917,7 @@ void hybridization::remove_antisegment_update(int orbital)
   }
   else //in G-space
   {
-     nprop[15]++; N_G++;
+     nprop[16]++; N_G++;
   }
 
   int k=local_config.order(orbital);
@@ -977,7 +990,7 @@ void hybridization::remove_antisegment_update(int orbital)
     }
     else //in G-space
     {
-       nacc[15]++;
+       nacc[16]++;
     }
   
     //std::cout<<cred<<"accepting remove antisegment."<<cblack<<std::endl;
@@ -1195,7 +1208,7 @@ void hybridization::check_consistency(const int &counter)
 
 void hybridization::insert_worm_segment_update(int orbital)
 {
-  nprop[8]++; N_Z++;
+  nprop[9]++; N_Z++;
 
   //cannot have more than one worm at the same time
   if(has_worm) return;
@@ -1245,7 +1258,7 @@ void hybridization::insert_worm_segment_update(int orbital)
 
   if(std::abs(weight_change)>random())
   {
-    nacc[8]++;
+    nacc[9]++;
     has_worm = true;
     if(weight_change < 0) sign*=-1.;
     local_config.insert_segment(new_segment, orbital);
@@ -1264,7 +1277,7 @@ void hybridization::insert_worm_segment_update(int orbital)
     //Leo: for test purpose, print out a lot of things...
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-       debug_output(8, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
+       debug_output(9, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
     }
   }
 }
@@ -1273,7 +1286,7 @@ void hybridization::insert_worm_segment_update(int orbital)
 
 void hybridization::remove_worm_segment_update(int orbital)
 {
-  nprop[10]++; N_G++;
+  nprop[11]++; N_G++;
 
   //cannot remove worm if there's none
   if(!has_worm) return;
@@ -1304,7 +1317,7 @@ void hybridization::remove_worm_segment_update(int orbital)
 
   if(std::abs(weight_change)>random())
   {
-    nacc[10]++;
+    nacc[11]++;
     has_worm = false;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_segment(worm, orbital);
@@ -1327,7 +1340,7 @@ void hybridization::remove_worm_segment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-        debug_output(10, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
+        debug_output(11, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
     }
   }
 }
@@ -1336,7 +1349,7 @@ void hybridization::remove_worm_segment_update(int orbital)
 
 void hybridization::insert_worm_antisegment_update(int orbital)
 {
-  nprop[9]++; N_Z++;
+  nprop[10]++; N_Z++;
 
   //cannot have more than one worm at the same time
   if(has_worm) return;
@@ -1387,7 +1400,7 @@ void hybridization::insert_worm_antisegment_update(int orbital)
 
   if(std::abs(weight_change)>random())
   {
-    nacc[9]++;
+    nacc[10]++;
     has_worm = true;
     //std::cout<<cred<<"accepting insert antisegment."<<cblack<<std::endl;
     if(weight_change < 0) sign*=-1.;
@@ -1408,7 +1421,7 @@ void hybridization::insert_worm_antisegment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     {
-        debug_output(9, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
+        debug_output(10, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
     }
   }
 }
@@ -1416,7 +1429,7 @@ void hybridization::insert_worm_antisegment_update(int orbital)
 
 void hybridization::remove_worm_antisegment_update(int orbital)
 {
-  nprop[11]++; N_G++;
+  nprop[12]++; N_G++;
 
   //cannot remove worm if there's none
   if(!has_worm) return;
@@ -1462,7 +1475,7 @@ void hybridization::remove_worm_antisegment_update(int orbital)
 
   if(std::abs(weight_change)>random())
   {
-    nacc[11]++;
+    nacc[12]++;
     has_worm = false;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_antisegment(antisegment, orbital);
@@ -1483,7 +1496,7 @@ void hybridization::remove_worm_antisegment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     {
-        debug_output(11, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
+        debug_output(12, local_weight_change, 1.0, dissipation_weight_change, permutation_factor); 
     }
   }
 }
@@ -1492,7 +1505,7 @@ void hybridization::remove_worm_antisegment_update(int orbital)
 //this update attemps to swap the worm head with any d^dagger attached to a hybridization line
 void hybridization::worm_creep_update()
 {
-  nprop[16]++; N_G++;
+  nprop[17]++; N_G++;
 
   //cannot move the worm if there's none
   if(!has_worm) return;
@@ -1525,7 +1538,7 @@ void hybridization::worm_creep_update()
 
   if(std::abs(weight_change)>random())
   {
-    nacc[16]++;
+    nacc[17]++;
     if(weight_change < 0) sign*=-1.;
     if(hybridization_weight_change < 0) std::cout << "***** need to flip sign *****" << std::endl;
     hyb_config.worm_creep(*new_worm_head, t_start, worm_tail, orbital);
@@ -1543,7 +1556,66 @@ void hybridization::worm_creep_update()
     //Leo: for test purpose, print out a lot of things...
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-       debug_output(16, 1.0, hybridization_weight_change, dissipation_weight_change, 1.0); 
+       debug_output(17, 1.0, hybridization_weight_change, dissipation_weight_change, 1.0); 
+    }
+  }
+}
+
+
+//Leo: experimental local color swapping in a randomly chosen orbital
+//Notes:
+//1. currently only two colors are supported, so this part should be extended in the future //TODO
+//2. local weight will not be affected by this update
+//3. color_tar is to be replaced by color_des
+void hybridization::color_swap_update(int orbital)
+{
+  nprop[8]++; N_Z++;
+  if(has_worm) return;
+
+  if( local_config.order(orbital)==0 ) return; //no segment for swapping
+  
+  //Leo: choose the color in which we do the update
+  //Now only two colors (red/1 and blue/0) are considered, but it can be easily changed
+  size_t color_tar = (int)(random()*n_env);
+  size_t color_des = (color_tar ? 0 : 1); //TODO: change this line for more colors
+
+  if(hyb_config.color_matrix_size(orbital, color_tar)==0) return; //target color does not exist
+
+  //compute hybridization weight change
+  double times[2] = {random(), random()}; //pass two random numbers to get times = {t_start, t_end}
+  double hybridization_weight_change = hyb_config.hyb_weight_change_swap(orbital, color_tar, color_des, times);
+
+  //compute the dissipation weight change //TODO
+  double dissipation_weight_change = 1.;//ohmic_config.color_flip_weight_change(orbital, color_1, color_2, local_config);
+  
+  //perform metropolis
+  double weight_change = hybridization_weight_change * dissipation_weight_change;
+
+  //std::cout << "cdagger time: " << times[0] << std::endl;
+  //std::cout << "c time: " << times[1] << std::endl;
+  //std::cout << local_config << std::endl;
+  //std::cout << hyb_config << std::endl;
+
+  if(std::abs(weight_change)>random())
+  {
+    nacc[8]++;
+    if(weight_change < 0) sign*=-1.;
+    local_config.swap_color(orbital, color_tar, color_des, times); 
+    hyb_config.swap_color(orbital, color_tar, color_des, times);
+    dissipation_weight_ratio = dissipation_weight_change; //TODO: check if necessary
+
+    //Leo: record the updated color 
+    ncolor[color_tar]++;
+    ncolor[color_des]++;
+    ncolor_diff[color_tar]--;  //Leo: + for insertion, - for removal 
+    ncolor_diff[color_des]++;  //Leo: + for insertion, - for removal 
+    updated_colors[color_tar]++; 
+    updated_colors[color_des]++; 
+
+    //Leo: for test purpose, print out a lot of things...
+    if(VERY_VERBOSE && sweeps<=debug_number) 
+    { 
+       debug_output(8, 0, hybridization_weight_change, dissipation_weight_change, 0); 
     }
   }
 }

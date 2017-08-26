@@ -89,9 +89,14 @@ public:
   double hyb_weight_change_worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital);
   void worm_creep(const segment &new_segment, double old_worm_head, double worm_tail, int orbital);
 
+  //for color swap update
+  double hyb_weight_change_swap(int orbital, size_t color_1, size_t color_2, double times[2]);
+  void swap_color(int orbital, size_t color_1, size_t color_2, double times[2]);
+
   //Leo: since the size of reservoir matrices coupled to the same orbital are correlated,
   //     there should be a consistency check after each update to gaurantee we're doing it correctly
   int total_color_matrix_size(int orbital) const;
+  int color_matrix_size(int orbital, size_t color) const {return hybmat_[orbital][color].size();}
   //Leo: check overall sign of color matrices
   int overall_color_matrix_sign() const;
   //Leo: initialize the Delta vector 
