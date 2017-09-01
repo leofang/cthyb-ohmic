@@ -582,9 +582,9 @@ void local_configuration::check_consistency()const
     }
   }
 
-  //Leo: also check the consistency of number of segments and antisegments
-  for (int i=0; i<n_orbitals_; ++i) 
-     check_n_segments_consistency(i);
+  // //Leo: also check the consistency of number of segments and antisegments
+  // for (int i=0; i<n_orbitals_; ++i) 
+  //    check_n_segments_consistency(i);
 }
 
 

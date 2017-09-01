@@ -177,6 +177,18 @@ void hybridization::sanity_check(const alps::params &parms)
   //check whether the input parameters make sense before computing
   //NOTE: these checks are likely not to be complete, passing all checks does not guarantee all parameters to be meaningful!
   
+  //**** Leo: disable the four updates in this branch ****
+  //TODO: re-open them in the future
+  if( parms.defined("WORM") && parms["WORM"].cast<bool>() )
+     throw std::invalid_argument("The worm update is disabled in this version. Please set WORM=0.");
+  if( parms.defined("COLORFLIP") && parms["COLORFLIP"].cast<bool>() )
+     throw std::invalid_argument("The color flip update is disabled in this version. Please set COLORFLIP=0");
+  if( parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>() )
+     throw std::invalid_argument("The spin flip update is disabled in this version. Please set SPINFLIP=0");
+  if( parms.defined("GLOBALFLIP") && parms["GLOBALFLIP"].cast<bool>() )
+     throw std::invalid_argument("The global (spin) flip update is disabled in this version. Please set GLOBALFLIP=0");
+  //*******************************************************
+  
   //first check that all mandatory parameters are defined
   if(!parms.defined("N_TAU")) 
 	throw std::invalid_argument("please specify the parameter N_TAU");

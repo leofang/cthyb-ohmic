@@ -27,7 +27,6 @@
  *
  *****************************************************************************/
 
-#include <alps/mcbase.hpp> //for random()
 #include "hybmatrix.hpp"
 #include "hybblasmatrix.hpp" //Leo: for matrix inversion; TODO: remove this after debugging!
 //#include "combinatorial.hpp"   //Leo: for test purpose
@@ -974,6 +973,10 @@ int hybmatrix::count_c_cdagger_imbalance(double t_min, double t_max) const
 }
 
 
+//the two functions below randomly pick and return a c/cdagger time;
+//note that they both take a random number as the argument (rand)
+//because the function random() is not accessible in this class...
+//TODO: think a better way to do this!
 double hybmatrix::pick_cdagger(double rand) const
 {
    int i=(int)(rand*cdagger_index_map_.size());

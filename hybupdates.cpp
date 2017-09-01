@@ -79,7 +79,7 @@ void hybridization::update()
     {
       worm_creep_update();
     }
-    else if (update_type < 0.15) //TODO: think a better, cleverer way
+    else if (update_type < 0.2 && color_swap) //TODO: think a better, cleverer way
     {
       color_swap_update();
     }
@@ -161,7 +161,7 @@ void hybridization::change_zero_order_state_update()
          sign*=-1.;
       if(VERY_VERBOSE && sweeps<=debug_number) 
       { 
-         debug_output(0, local_weight_change, 1, 1, 1); 
+         debug_output(0, local_weight_change, 1, 1, 1);
       }
     }
   }
@@ -500,24 +500,8 @@ void hybridization::color_flip_update(int orbital)
     /* Leo Fang: for test purpose, print out a lot of things... */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-       debug_output(7, 0, hybridization_weight_change, dissipation_weight_change, 0); 
-//       check_consistency();
-//       std::cout << std::endl;    
-//
-//       hyb_config.haunt_missing_sign(orbital);
-//
-//       int number_segments = 0;
-//       int number_antisegments = 0;
-//       for(int i=0; i<n_env; i++)
-//       {
-//           number_segments += n_segments_temp[i];
-//           number_antisegments += n_segments_temp[i+n_env];
-//       }
-//       if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
-//         std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." << std::endl;
+       debug_output(7, 1, hybridization_weight_change, dissipation_weight_change, 1); 
     }
-    //check_consistency();
-    //std::cout << std::endl;    
   }
 }
 
@@ -610,10 +594,10 @@ void hybridization::insert_segment_update(int orbital)
     if(!has_worm) //in Z-space
     {
        nacc[1]++;
-       //Leo: compute the number of segments and antisegments of the new configuration
-       //only do this in the Z-space
-       std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_segment(new_segment, orbital);
-       local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+       // //Leo: compute the number of segments and antisegments of the new configuration
+       // //only do this in the Z-space
+       // std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_segment(new_segment, orbital);
+       // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     }
     else //in G-space
     {
@@ -634,24 +618,8 @@ void hybridization::insert_segment_update(int orbital)
     /* Leo Fang: for test purpose, print out a lot of things... */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-       debug_output(1, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//       check_consistency();
-//       std::cout << std::endl;    
-//
-//       hyb_config.haunt_missing_sign(orbital);
-//
-//       int number_segments = 0;
-//       int number_antisegments = 0;
-//       for(int i=0; i<n_env; i++)
-//       {
-//           number_segments += n_segments_temp[i];
-//           number_antisegments += n_segments_temp[i+n_env];
-//       }
-//       if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
-//         std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." << std::endl;
+       debug_output( (!has_worm?1:13), local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
     }
-    //check_consistency();
-    //std::cout << std::endl;    
   }
 }
 
@@ -726,9 +694,9 @@ void hybridization::remove_segment_update(int orbital)
     if(!has_worm) //in Z-space
     {
        nacc[2]++;
-       //Leo: compute the number of segments and antisegments of the new configuration
-       std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_segment(segment_to_remove, orbital);
-       local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+       // //Leo: compute the number of segments and antisegments of the new configuration
+       // std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_segment(segment_to_remove, orbital);
+       // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     }
     else //in G-space
     {
@@ -753,24 +721,8 @@ void hybridization::remove_segment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-        debug_output(2, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//        check_consistency();
-//        std::cout << std::endl;    
-//
-//       hyb_config.haunt_missing_sign(orbital);
-//
-//    int number_segments = 0;
-//    int number_antisegments = 0;
-//    for(int i=0; i<n_env; i++)
-//    {
-//        number_segments += n_segments_temp[i];
-//        number_antisegments += n_segments_temp[i+n_env];
-//    }
-//    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
-//        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
+        debug_output( (!has_worm?2:14), local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
     }
-    //check_consistency();
-    //std::cout << std::endl;    
   }
 }
 
@@ -861,9 +813,9 @@ void hybridization::insert_antisegment_update(int orbital)
     if(!has_worm) //in Z-sapce
     {
        nacc[3]++;
-       //Leo: compute the number of segments and antisegments of the new configuration
-       std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_antisegment(new_antisegment, orbital);
-       local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+       // //Leo: compute the number of segments and antisegments of the new configuration
+       // std::vector<int> n_segments_temp = local_config.get_new_n_segments_insert_antisegment(new_antisegment, orbital);
+       // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     }
     else //in G-space
     {
@@ -887,24 +839,8 @@ void hybridization::insert_antisegment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     {
-        debug_output(3, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//        check_consistency();
-//        std::cout << std::endl;    
-//
-//       hyb_config.haunt_missing_sign(orbital);
-//
-//    int number_segments = 0;
-//    int number_antisegments = 0;
-//    for(int i=0; i<n_env; i++)
-//    {
-//        number_segments += n_segments_temp[i];
-//        number_antisegments += n_segments_temp[i+n_env];
-//    }
-//    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
-//        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
+        debug_output( (!has_worm?3:15), local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
     }
-    //check_consistency();
-    //std::cout << std::endl;    
   }
 }
 
@@ -984,9 +920,9 @@ void hybridization::remove_antisegment_update(int orbital)
     if(!has_worm) //in Z-space
     {
        nacc[4]++;
-       //Leo: compute the number of segments and antisegments of the new configuration
-       std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_antisegment(antisegment, orbital);
-       local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+       // //Leo: compute the number of segments and antisegments of the new configuration
+       // std::vector<int> n_segments_temp = local_config.get_new_n_segments_remove_antisegment(antisegment, orbital);
+       // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     }
     else //in G-space
     {
@@ -1011,24 +947,8 @@ void hybridization::remove_antisegment_update(int orbital)
     /* Leo Fang: for test purpose, print out the segment map */
     if(VERY_VERBOSE && sweeps<=debug_number) 
     {
-        debug_output(4, local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
-//        check_consistency();
-//        std::cout << std::endl;    
-//
-//       hyb_config.haunt_missing_sign(orbital);
-//
-//    int number_segments = 0;
-//    int number_antisegments = 0;
-//    for(int i=0; i<n_env; i++)
-//    {
-//        number_segments += n_segments_temp[i];
-//        number_antisegments += n_segments_temp[i+n_env];
-//    }
-//    if(local_config.order(orbital) != number_segments && local_config.order(orbital) != number_antisegments)
-//        std::cout << "charge transport happens " << (local_config.order(orbital)-number_segments)/2 << " times." <<std::endl;
+        debug_output( (!has_worm?4:16), local_weight_change, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
     }
-    //check_consistency();
-    //std::cout << std::endl;    
   }
 }
 
@@ -1321,9 +1241,9 @@ void hybridization::remove_worm_segment_update(int orbital)
     has_worm = false;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_segment(worm, orbital);
-    //Leo: compute the number of segments and antisegments of the new configuration
-    std::vector<int> n_segments_temp = local_config.rebuild_n_segments(orbital);
-    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments
+    // //Leo: compute the number of segments and antisegments of the new configuration
+    // std::vector<int> n_segments_temp = local_config.rebuild_n_segments(orbital);
+    // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments
 //      double fwo = full_weight();
     //hyb_config.remove_segment(worm, orbital, color_temp);
     dissipation_weight_ratio = dissipation_weight_change; //Leo: keep the weight change for measure_G //TODO 
@@ -1479,9 +1399,9 @@ void hybridization::remove_worm_antisegment_update(int orbital)
     has_worm = false;
     if(weight_change < 0) sign*=-1.;
     local_config.remove_antisegment(antisegment, orbital);
-    //Leo: compute the number of segments and antisegments of the new configuration
-    std::vector<int> n_segments_temp = local_config.rebuild_n_segments(orbital);
-    local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
+    // //Leo: compute the number of segments and antisegments of the new configuration
+    // std::vector<int> n_segments_temp = local_config.rebuild_n_segments(orbital);
+    // local_config.set_n_segments(orbital, n_segments_temp); //Leo: update the number of segments and antisegments 
     //hyb_config.remove_antisegment(antisegment, orbital, color_temp);
     dissipation_weight_ratio = dissipation_weight_change; //Leo: keep the weight change for measure_G //TODO
 
@@ -1579,7 +1499,9 @@ void hybridization::color_swap_update(int orbital)
   size_t color_tar = (int)(random()*n_env);
   size_t color_des = (color_tar ? 0 : 1); //TODO: change this line for more colors
 
-  if(hyb_config.color_matrix_size(orbital, color_tar)==0) return; //target color does not exist
+  int color_tar_mat_size = hyb_config.color_matrix_size(orbital, color_tar);
+  int color_des_mat_size = hyb_config.color_matrix_size(orbital, color_des);
+  if(color_tar_mat_size==0) return; //target color does not exist
 
   //compute hybridization weight change
   double times[2] = {random(), random()}; //pass two random numbers to get times = {t_start, t_end}
@@ -1587,9 +1509,14 @@ void hybridization::color_swap_update(int orbital)
 
   //compute the dissipation weight change //TODO
   double dissipation_weight_change = 1.;//ohmic_config.color_flip_weight_change(orbital, color_1, color_2, local_config);
+
+  //Leo: test!
+  //double permutation_factor = (color_tar_mat_size*color_tar_mat_size) / ((color_tar_mat_size+1.0)*(color_tar_mat_size+1.0));
+  double permutation_factor = (color_tar_mat_size*color_tar_mat_size) / ((color_des_mat_size+1.0)*(color_des_mat_size+1.0));
+  //double permutation_factor = (color_tar_mat_size) / (color_tar_mat_size+1.0);
   
   //perform metropolis
-  double weight_change = hybridization_weight_change * dissipation_weight_change;
+  double weight_change = hybridization_weight_change * dissipation_weight_change * permutation_factor;
 
   //std::cout << "cdagger time: " << times[0] << std::endl;
   //std::cout << "c time: " << times[1] << std::endl;
@@ -1615,7 +1542,7 @@ void hybridization::color_swap_update(int orbital)
     //Leo: for test purpose, print out a lot of things...
     if(VERY_VERBOSE && sweeps<=debug_number) 
     { 
-       debug_output(8, 0, hybridization_weight_change, dissipation_weight_change, 0); 
+       debug_output(8, 1, hybridization_weight_change, dissipation_weight_change, permutation_factor); 
     }
   }
 }

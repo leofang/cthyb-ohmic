@@ -90,7 +90,7 @@ void evaluate_basics(const alps::results_type<hybridization>::type &results,
       sim_file << "  Total acceptance rate = " << std::setprecision(2) << std::fixed;
       sim_file << (((double)tot_acc)/(sweep_count*N_meas))*100 << "%" << std::endl;
       sim_file << "  Individual acceptance rate for update (N_Z = " << N_Z << ", N_G = " << N_G << ")" << std::endl;
-      for (int i=0;i<nacc.size();i++) 
+      for (int i=0;i<((parms["WORM"]|false)?nacc.size():9);i++) //Leo: hard-wire the number
       {
           sim_file << "     " << update_type[i] << " = ";
           sim_file << std::setprecision(2) << std::fixed << (((double)nacc[i])/(sweep_count*N_meas))*100 << "%";
