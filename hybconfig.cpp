@@ -298,6 +298,17 @@ void hybridization_configuration::swap_color(int orbital, size_t color_tar, size
 {
    segment segment_tar(times[0], times[1], color_tar, color_tar);
    segment segment_des(times[0], times[1], color_des, color_des);
+
+   //Leo: test minus sign issue in color swap...
+   double t_min = (times[0]<times[1]?times[0]:times[1]);
+   double t_max = (times[0]<times[1]?times[1]:times[0]);
+   int counter = hybmat_[orbital][color_tar].count_c_cdagger_imbalance(t_min, t_max);
+   if(counter % 2)
+   {
+      hybmat_[orbital][color_tar].change_sign();
+      hybmat_[orbital][color_des].change_sign();
+   }
+
    hybmat_[orbital][color_tar].remove_segment(segment_tar, orbital);
    hybmat_[orbital][color_des].insert_segment(segment_des, orbital);
 }

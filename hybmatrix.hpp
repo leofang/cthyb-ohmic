@@ -124,6 +124,9 @@ public:
   {for (hyb_map_t::const_iterator it= cdagger_index_map_.begin(); it != cdagger_index_map_.end(); ++it) cdagger_times.push_back(it->first);}
   inline void access_c_times(std::vector<double> &c_times) const
   {for (hyb_map_t::const_iterator it= c_index_map_.begin(); it != c_index_map_.end(); ++it) c_times.push_back(it->first);}
+  
+  //Leo: test minus sign issue in color swap...
+  void change_sign() { permutation_sign_ *= -1; }
 
   //make random choices; rand is a random number, see the implementation note
   double pick_cdagger(double rand) const;

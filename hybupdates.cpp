@@ -55,7 +55,7 @@ void hybridization::update()
     double update_type=random();
 
     //if (update_type < 0.02 && global_flip)
-    if (update_type < 0.05 && color_flip)
+    if (update_type < 0.02 && color_flip)
     {
       //global_flip_update();
       color_flip_update();
@@ -473,7 +473,7 @@ void hybridization::color_flip_update(int orbital)
   double hybridization_weight_change = hyb_config.hyb_weight_change_flip(orbital, color_1, color_2);
 
   //compute the dissipation weight change
-  double dissipation_weight_change = ohmic_config.color_flip_weight_change(orbital, color_1, color_2, local_config);
+  double dissipation_weight_change = 1.0;//ohmic_config.color_flip_weight_change(orbital, color_1, color_2, local_config);
   
   //perform metropolis
   double weight_change = hybridization_weight_change * dissipation_weight_change;
@@ -488,8 +488,10 @@ void hybridization::color_flip_update(int orbital)
 
     //Leo: record the updated color 
     //color = color_temp;
-    updated_colors[(color_diff > 0 ? color_2 : color_1)]++; //increase the count only on one color; no need to worry about
-    ncolor[(color_diff > 0 ? color_2 : color_1)]++;         //imbalance in principle because the color is randomly chosen
+    updated_colors[color_1]++;
+    updated_colors[color_2]++;
+    ncolor[color_1]++;
+    ncolor[color_2]++;
     //updated_colors[color_1] += abs(color_diff);
     //updated_colors[color_2] += abs(color_diff);
     //ncolor[color_1] += abs(color_diff);
