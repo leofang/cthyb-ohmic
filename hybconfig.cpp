@@ -361,7 +361,7 @@ void hybridization_configuration::remove_antisegment(const segment &new_antisegm
   //std::cout<<clmagenta<<"after as remove recompute "<<cblack<<std::endl;
   
   //Leo: temporarily disable this as color flip also rebuilds the matrices //TODO: evaluate this decision
-  if(hybmat_[orbital][color].size()>0) hybmat_[orbital][color].rebuild_ordered_hyb_matrix(orbital, Delta[color]);
+  if(hybmat_[orbital][color].size()>0) hybmat_[orbital][color].rebuild_hyb_matrix(orbital, Delta[color]);
   
   //std::cout<<clmagenta<<"done after as remove recompute "<<cblack<<std::endl;
 }

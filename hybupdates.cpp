@@ -48,7 +48,7 @@ void hybridization::update()
   //one sweep is composed of N_MEAS Monte Carlo updates and one measurement (the latter only if thermalized)
   sweeps++;
   
-  double rates[2] = {(spin_flip)?0.55:0.65,(spin_flip)?0.9:1.0};
+  double rates[2] = {(spin_flip)?0.55:0.65,(spin_flip)?0.95:1.0};
 
   for(std::size_t i=0;i<N_meas;++i)
   {
@@ -79,7 +79,7 @@ void hybridization::update()
     {
       worm_creep_update();
     }
-    else if (update_type < 0.15 && color_swap) //TODO: think a better, cleverer way
+    else if (update_type < 0.1 && color_swap) //TODO: think a better, cleverer way
     {
       color_swap_update();
     }
@@ -1039,7 +1039,7 @@ void hybridization::spin_flip_update(int orbital)
   } 
   else 
   { //rejected
-    //Leo: nothing to be changed except for the sign
+    //Leo: nothing to be restored except for the sign
     if(hybridization_weight_change_1 < 0) sign *= -1;
     
     // //Not accepted, thus restore old configuration
