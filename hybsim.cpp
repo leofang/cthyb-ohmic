@@ -183,8 +183,8 @@ void hybridization::sanity_check(const alps::params &parms)
      throw std::invalid_argument("The worm update is disabled in this version. Please set WORM=0.");
   //if( parms.defined("COLORFLIP") && parms["COLORFLIP"].cast<bool>() )
   //   throw std::invalid_argument("The color flip update is disabled in this version. Please set COLORFLIP=0");
-  if( parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>() )
-     throw std::invalid_argument("The spin flip update is disabled in this version. Please set SPINFLIP=0");
+  //if( parms.defined("SPINFLIP") && parms["SPINFLIP"].cast<bool>() )
+  //   throw std::invalid_argument("The spin flip update is disabled in this version. Please set SPINFLIP=0");
   if( parms.defined("GLOBALFLIP") && parms["GLOBALFLIP"].cast<bool>() )
      throw std::invalid_argument("The global (spin) flip update is disabled in this version. Please set GLOBALFLIP=0");
   //*******************************************************

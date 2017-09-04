@@ -48,7 +48,7 @@ void hybridization::update()
   //one sweep is composed of N_MEAS Monte Carlo updates and one measurement (the latter only if thermalized)
   sweeps++;
   
-  double rates[2] = {(spin_flip)?0.5:0.65,(spin_flip)?0.8:1.0};
+  double rates[2] = {(spin_flip)?0.55:0.65,(spin_flip)?0.9:1.0};
 
   for(std::size_t i=0;i<N_meas;++i)
   {
@@ -60,7 +60,7 @@ void hybridization::update()
       //global_flip_update();
       color_flip_update();
     } 
-    else if (update_type<0.1) 
+    else if (update_type<0.05)
 //    if (update_type<0.1)
     {
       change_zero_order_state_update();
@@ -79,7 +79,7 @@ void hybridization::update()
     {
       worm_creep_update();
     }
-    else if (update_type < 0.2 && color_swap) //TODO: think a better, cleverer way
+    else if (update_type < 0.15 && color_swap) //TODO: think a better, cleverer way
     {
       color_swap_update();
     }
@@ -955,82 +955,81 @@ void hybridization::remove_antisegment_update(int orbital)
 }
 
 
-//Leo: TODO: remove this!
-/********************************************************\
- New spin-flip updates
- Idea: take remove_segment_update and insert_segment_update and combine them so one segment is removed from on orbital (spin up or down) and inserted on the corresponding other_orbital (spin down or up), if the other_orbital is not filled.
- \********************************************************/
+//remove one segment from a random orbital (spin up or down) and insert it to the other orbital (spin down or up), 
+//if the other orbital is not filled.
 void hybridization::spin_flip_update(int orbital)
 {  
   nprop[5]++;
+
+  //don't do this update if the worm is present
+  if(has_worm) return;
   
-  int k=local_config.order(orbital);
-  
+  int k = local_config.order(orbital);
   if(k==0) return; //no point, this is an empty orbital
-  //    if (local_config.zero_order_orbital_occupied(orbital)) return;
-  int other_orbital=(int)(random()*(n_orbitals-1));
+
+  int other_orbital = (int)(random()*(n_orbitals-1));
   other_orbital = (other_orbital<orbital)?other_orbital:1+other_orbital;
-  int other_orbital_order=local_config.order(other_orbital);
-  if (orbital == other_orbital) return;
-  if (local_config.zero_order_orbital_occupied(other_orbital)) return;
-  int segment_nr=(int)(random()*k);
-  segment segment_to_flip=local_config.get_segment(segment_nr, orbital);
+  if (local_config.zero_order_orbital_occupied(other_orbital)) return; //the other orbital is completely occupied
+
+  int segment_nr = (int)(random()*k);
+  segment segment_to_flip = local_config.get_segment(segment_nr, orbital);
  
-  std::size_t color_temp = segment_to_flip.c_start_; 
-  //Leo: check if the colors of both ends and the randomly picked color are all the same
-  if(color_temp == segment_to_flip.c_end_) ; //do nothing
-  else {return;} //cannot flip because of the different colors
+  //Leo: check if the color of both ends is the same
+  size_t color_temp = segment_to_flip.c_start_; 
+  if(color_temp != segment_to_flip.c_end_) return; //cannot flip because of the different colors
   
-  if (local_config.has_overlap(segment_to_flip,other_orbital)) return;
-  
-  double t_next_segment_start=local_config.find_next_segment_start_distance(segment_to_flip.t_start_,other_orbital);
-  double t_next_segment_end=local_config.find_next_segment_end_distance(segment_to_flip.t_start_,other_orbital);
+  //Leo: calculate the distances in the other orbital (NOT the current one!)
+  double t_next_segment_start = local_config.find_next_segment_start_distance(segment_to_flip.t_start_, other_orbital);
+  double t_next_segment_end   = local_config.find_next_segment_end_distance(segment_to_flip.t_start_, other_orbital);
   double seg_length = segment_to_flip.t_end_ - segment_to_flip.t_start_;
   if (seg_length<0.0) seg_length += beta;
   
-  //Leo: copied from the cthyb code on GitHub
-  // check whether other_orbital is already filled where we want to insert the segment; 
-  // confer with insert_antisegment
-  if ((t_next_segment_start > t_next_segment_end)||
-      (t_next_segment_start<seg_length)||
-      (t_next_segment_end-beta>0)) return; 
+  //Leo: check whether other_orbital is already filled where we want to insert the segment 
+  if ( (t_next_segment_start > t_next_segment_end) || //overlap with the previous segment
+      (t_next_segment_start < seg_length) ) return;   //overlap with the next segment
 
-  //Totally experimential - mistakes here?
-  //Leo: this part excludes the possibility of flipping a wrapping segment!
-  //     Furthermore, it's impossible for t_end to be larger than beta or smaller than 0
-  //     This part is to be fixed, at least to sync with alps-cthyb hosted on GitHub 
-  //Leo: fixed by imposing the above part of code and commenting out the third line below
-  double t_start = segment_to_flip.t_start_, t_end=segment_to_flip.t_end_;
-  if(t_end >= beta) t_end-=beta;
-  //if(t_end<=t_start || t_end<=0.0) { /*std::cerr<<"rare (impossible?) event: t_start = t_end."<<std::endl; */return; }
-  
-  //compute local weight change: As we intend to propose a flip, we can
-  //safely ignore the intermediate state and directly compare the energies
-  //of the two states involved
-  // This energy is associated with the present segment. We give it a negative weight
-  // because it is to be removed
-  double de = -local_config.local_energy(segment_to_flip,orbital); //Leo: This line is problematic; see GitHub version.
-  //double full_weight_orig=full_weight();
-  double hybridization_weight_change_1=1./hyb_config.hyb_weight_change_remove(segment_to_flip, orbital, color_temp); // from line 187 - remove_segment_update
-  double weight_change_1=hybridization_weight_change_1;
-  if (weight_change_1<0) sign*=-1;
-  local_config.remove_segment(segment_to_flip, orbital);
-  hyb_config.remove_segment(segment_to_flip, orbital, color_temp);
-  //double full_weight_removed=full_weight();
-  segment new_segment(t_start, t_end, color_temp, color_temp);
-  de += local_config.local_energy(new_segment,other_orbital);
-  double hybridization_weight_change_2=hyb_config.hyb_weight_change_insert(new_segment, other_orbital, color_temp);   
-  double weight_change_2=std::exp(de)*hybridization_weight_change_2;
+  //compute local weight change: As we intend to propose a flip, we can safely ignore the 
+  //intermediate state and directly compare the energies of the two states involved
+  // Leo: the on-site interaction can be ignored because we just guaranteed there is no overlap
+  double local_weight_change = std::exp( (local_config.mu(other_orbital)-local_config.mu(orbital)) * seg_length);
 
-  //the permutation factor has the probability of proposing this move (the old order in this orbital) divided by the probability of proposing the reverse move (the new order in the new orbital)
-  double permutation_factor=k/(double)(other_orbital_order+1.);
+  //compute hyb weight change for removal
+  double hybridization_weight_change_1 = 1./hyb_config.hyb_weight_change_remove(segment_to_flip, orbital, color_temp);
+  if (hybridization_weight_change_1 < 0) sign *= -1;
 
-  if(std::abs(weight_change_1*weight_change_2*permutation_factor)>random())
+  //temporarily remove the segment for the chosen orbital
+  //Leo: I think it's unnecessary...
+  //local_config.remove_segment(segment_to_flip, orbital);
+  //hyb_config.remove_segment(segment_to_flip, orbital, color_temp);
+
+  //compute hyb weight change for insertion
+  double hybridization_weight_change_2 = hyb_config.hyb_weight_change_insert(segment_to_flip, other_orbital, color_temp);   
+
+  double dissipation_weight_change = 1.0; //TODO: write this part!
+
+  //the permutation factor has the probability of proposing this move (the old order in this orbital) 
+  //divided by the probability of proposing the reverse move (the new order in the new orbital)
+  //Leo: note that the "next_segment_start_distance" for the two moves are different, and that the 
+  //common beta factor is canceled out
+  double permutation_factor = k / local_config.find_next_segment_start_distance(segment_to_flip.t_start_, orbital)  //for removal
+			      * t_next_segment_start / (local_config.order(other_orbital)+1);                       //for insertion   
+
+  double total_weight_change = local_weight_change * hybridization_weight_change_1 * hybridization_weight_change_2
+			       * dissipation_weight_change * permutation_factor;
+
+  if(std::abs(total_weight_change)>random())
   { //Accepted
     nacc[5]++;
-    if(weight_change_2 < 0) sign*=-1.;
-    local_config.insert_segment(new_segment, other_orbital);
-    hyb_config.insert_segment(new_segment, other_orbital, color_temp);
+    if(hybridization_weight_change_2 < 0) sign *= -1.;
+
+    //remove from the orbital
+    local_config.remove_segment(segment_to_flip, orbital);
+    hyb_config.remove_segment(segment_to_flip, orbital, color_temp);
+
+    //insert to the other orbital
+    local_config.insert_segment(segment_to_flip, other_orbital);
+    hyb_config.insert_segment(segment_to_flip, other_orbital, color_temp);
+
     //Leo: record the updated color and set color_updated to true
     color = color_temp;
     updated_colors[color]++;
@@ -1039,11 +1038,21 @@ void hybridization::spin_flip_update(int orbital)
     //color_updated = true;
   } 
   else 
-  { //Not accepted, thus restore old configuration
-    double wc = hyb_config.hyb_weight_change_insert(new_segment, orbital, color_temp);
-    if (wc<0.0) sign *= -1;
-    local_config.insert_segment(new_segment, orbital);
-    hyb_config.insert_segment(new_segment, orbital, color_temp);
+  { //rejected
+    //Leo: nothing to be changed except for the sign
+    if(hybridization_weight_change_1 < 0) sign *= -1;
+    
+    // //Not accepted, thus restore old configuration
+    // double wc = hyb_config.hyb_weight_change_insert(segment_to_flip, orbital, color_temp);
+    // if (wc<0.0) sign *= -1;
+    // local_config.insert_segment(segment_to_flip, orbital);
+    // hyb_config.insert_segment(segment_to_flip, orbital, color_temp);
+  }
+
+  //Leo: for test purpose, print out a lot of things...
+  if(VERY_VERBOSE && sweeps<=debug_number) 
+  { 
+     debug_output(5, local_weight_change, hybridization_weight_change_1*hybridization_weight_change_2, dissipation_weight_change, permutation_factor); 
   }
 }
 
