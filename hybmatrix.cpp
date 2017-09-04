@@ -152,10 +152,10 @@ void hybmatrix::insert_segment(const segment &new_segment, int orbital)
   //std::cout<<clred<<*this<<cblack<<std::endl;
   //consistency_check(); 
 
-  //Leo: keep track of the time ordering sign due to operator time ordering
-  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
-  //time_ordering_sign_check(time_ordering_sign_, disordered_times);
-  time_ordering_sign_check();
+  // //Leo: keep track of the time ordering sign due to operator time ordering
+  // //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  // //time_ordering_sign_check(time_ordering_sign_, disordered_times);
+  // time_ordering_sign_check();
 }
 
 
@@ -253,10 +253,10 @@ void hybmatrix::remove_segment(const segment &new_segment, int orbital)
    std::cout<<clred<<"incremental determinant: "<<determinant_<<" actual determinant: "<<determinant()<<" prev determinant: "<<determinant_old_<<cblack<<std::endl;
    determinant_old_=determinant_;*/
 
-  //Leo: keep track of the time ordering sign due to operator time ordering
-  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
-  //time_ordering_sign_check(time_ordering_sign_, disordered_times); 
-  time_ordering_sign_check();
+  // //Leo: keep track of the time ordering sign due to operator time ordering
+  // //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  // //time_ordering_sign_check(time_ordering_sign_, disordered_times); 
+  // time_ordering_sign_check();
 }
 
 
@@ -464,6 +464,9 @@ void hybmatrix::rebuild_ordered_hyb_matrix(int orbital, const hybfun &Delta)
 
   //then rebuild the hybridization matrix
   rebuild_hyb_matrix(orbital, Delta);
+
+  //update the time ordering sign as it is turned off in all other updates
+  time_ordering_sign_check();
 
   //observation: when time is ordered, permutation_sign_ should be equal to time_ordering_sign_ (check!)
   if(permutation_sign_ != time_ordering_sign_)
@@ -945,10 +948,10 @@ void hybmatrix::worm_creep(double new_worm_head, double old_worm_head, double wo
   cdagger_index_map_.insert(std::make_pair(old_worm_head, last));
   c_cdagger_map_    .insert(std::make_pair(old_worm_head, 1)); //Leo: 1 means c_dagger
   
-  //Leo: keep track of the time ordering sign due to operator time ordering
-  //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
-  //time_ordering_sign_check(time_ordering_sign_, disordered_times);
-  time_ordering_sign_check();
+  // //Leo: keep track of the time ordering sign due to operator time ordering
+  // //TODO: move this to Green function measurements because this sign wouldn't affect other local measurements.
+  // //time_ordering_sign_check(time_ordering_sign_, disordered_times);
+  // time_ordering_sign_check();
 }
 
 
