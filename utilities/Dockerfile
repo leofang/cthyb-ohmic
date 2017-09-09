@@ -9,6 +9,7 @@ ADD http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-wit
 ADD . /opt/cthyb-ohmic/
 
 # check everything is in place
+RUN ls -l /opt/
 RUN ls -l /opt/cthyb-ohmic/
 RUN ls -l /opt/alps-2.2.b3-r7462-src-with-boost/
 
