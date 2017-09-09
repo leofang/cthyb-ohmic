@@ -1,13 +1,16 @@
 FROM centos:latest
 
 # get alps
-RUN cd /opt/
-RUN yum -y install wget git
-RUN wget http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz
-RUN tar -xzvf alps-2.2.b3-r7462-src-with-boost.tar.gz 1> /dev/null
+#RUN yum -y install wget git
+ADD http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz /opt/
+#RUN tar -xzvf alps-2.2.b3-r7462-src-with-boost.tar.gz -C /opt/ 1> /dev/null
 
 # get cthyb-ohmic; note the relative path
 ADD . /opt/cthyb-ohmic/
+
+# check everything is in place
+RUN ls -l /opt/cthyb-ohmic/
+RUN ls -l /opt/alps-2.2.b3-r7462-src-with-boost/
 
 # install build tools
 RUN yum -y install epel-release # for hdf5
