@@ -7,7 +7,7 @@ RUN wget http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-sr
 RUN tar -xzvf alps-2.2.b3-r7462-src-with-boost.tar.gz 1> /dev/null
 
 # get cthyb-ohmic
-RUN git clone -b color_swap https://github.com/leofang/cthyb-ohmic.git
+RUN git clone -b color_swap git@github.com:leofang/cthyb-ohmic.git
 
 # install build tools
 RUN yum -y install epel-release # for hdf5
