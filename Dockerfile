@@ -25,19 +25,14 @@ RUN mkdir /opt/alps_build && cd /opt/alps_build && cmake \
       -D CMAKE_INSTALL_PREFIX=/usr/local/ \
       -D Boost_ROOT_DIR=/opt/alps-2.2.b3-r7462-src-with-boost/boost/ \
       /opt/alps-2.2.b3-r7462-src-with-boost/alps/ \
-    && make -j 2 && make install
+    && make && make install
 
 # install cthyb-ohmic
-RUN cd /opt/cthyb-ohmic/ && cmake ./ && make -j 2 && mv cthyb_ohmic /usr/local/bin/
+RUN cd /opt/cthyb-ohmic/ && cmake ./ && make && mv cthyb_ohmic /usr/local/bin/
 
 # clean up
-RUN yum clean all && cd /opt/ \
-    && rm -rf cthyb-ohmic/ alps-2.2.b3-r7462-src-with-boost/ alps_build/ alps-2.2.b3-r7462-src-with-boost.tar.gz
+RUN yum clean all && rm -rf /opt/
 
-# catch current time
-ARG build_time=$(date +"%b. %d, %T %Z, %Y")
-
-LABEL Maintainer  = "Leo Fang <leofang@phy.duke.edu>" \
-      Description = "A Singularity container for cthyb-ohmic" \
-      License     = "WTFPL v2" \
-      Build_date  = $build_time
+# make a label
+# TODO: find a way to label the build-complete time
+LABEL Maintainer="Leo Fang <leofang@phy.duke.edu>" Description="A Singularity container for cthyb-ohmic" License="WTFPL v2"
