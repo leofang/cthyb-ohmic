@@ -1,8 +1,9 @@
 FROM centos:latest
 
 # get alps
-RUN yum -y install wget 1> /dev/null
-RUN wget http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz | tar -xzvfC /opt/ 1> /dev/null
+RUN yum -y install wget
+RUN wget http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz \
+    && tar -xzf alps-2.2.b3-r7462-src-with-boost.tar.gz -C /opt/
 #RUN tar -xzvf /opt/alps-2.2.b3-r7462-src-with-boost.tar.gz 1> /dev/null
 
 # get cthyb-ohmic
