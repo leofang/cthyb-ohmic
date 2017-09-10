@@ -1,12 +1,11 @@
 FROM centos:latest
 
-# get cthyb-ohmic
+# get cthyb-ohmic; this layer will expose the source, so remember to squash when building!
 ADD . /opt/cthyb-ohmic/
 
-# get alps
-RUN yum -y install wget \
-    && wget -q http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz \
-    && tar -xzf alps-2.2.b3-r7462-src-with-boost.tar.gz -C /opt/
+# get alps; note the pipe slot after tar
+RUN curl -s http://alps.comp-phys.org/static/software/releases/alps-2.2.b3-r7462-src-with-boost.tar.gz | \
+    tar -xzf - -C /opt/
 
 # install build tools
 RUN yum -y install epel-release \
@@ -25,14 +24,17 @@ RUN mkdir /opt/alps_build && cd /opt/alps_build && cmake \
       -D CMAKE_INSTALL_PREFIX=/usr/local/ \
       -D Boost_ROOT_DIR=/opt/alps-2.2.b3-r7462-src-with-boost/boost/ \
       /opt/alps-2.2.b3-r7462-src-with-boost/alps/ \
-    && make && make install
+    && make -j 2 && make install
 
 # install cthyb-ohmic
-RUN cd /opt/cthyb-ohmic/ && cmake ./ && make && mv cthyb_ohmic /usr/local/bin/
+RUN cd /opt/cthyb-ohmic/ && cmake ./ && make -j 2 && mv cthyb_ohmic /usr/local/bin/
 
-# clean up
+# clean up; again, this layer has no effect without squashing
 RUN yum clean all && rm -rf /opt/
 
-# make a label
-# TODO: find a way to label the build-complete time
-LABEL Maintainer="Leo Fang <leofang@phy.duke.edu>" Description="A Singularity container for cthyb-ohmic" License="WTFPL v2"
+# create labels 
+ARG arg_build_time
+LABEL Maintainer="Leo Fang <leofang@phy.duke.edu>" Description="A Docker image for cthyb-ohmic" License="WTFPL v2" "Build time"=$arg_build_time
+
+# set Docker command
+ENTRYPOINT ["/usr/local/bin/cthyb_ohmic"]
